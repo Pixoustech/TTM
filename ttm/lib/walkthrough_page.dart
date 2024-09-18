@@ -22,8 +22,8 @@ class _WalkthroughPageState extends State<WalkthroughPage> {
             controller: _controller,
             children: [
               Walkthrough1(controller: _controller), // Pass the controller to pages if needed
-              Walkthrough2(),
-              Walkthrough3(),
+              Walkthrough2(controller: _controller),
+              Walkthrough3(controller: _controller), // Pass the controller here as well
             ],
           ),
           Positioned(
@@ -49,6 +49,7 @@ class _WalkthroughPageState extends State<WalkthroughPage> {
     );
   }
 }
+
 
 class Walkthrough1 extends StatelessWidget {
   final PageController controller;
@@ -188,7 +189,12 @@ class Walkthrough1 extends StatelessWidget {
             child: TextButton(
               onPressed: () {
                 // Navigate to the last page or skip to home screen
-                controller.jumpToPage(2); // Example to skip to the last page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FaceRecognitionWalkthroughPage(),
+                  ),
+                ); // Example to skip to the last page
               },
               child: Text(
                 'Skip',
@@ -209,7 +215,10 @@ class Walkthrough1 extends StatelessWidget {
 
 // Example pages to demonstrate the page view
 class Walkthrough2 extends StatelessWidget {
-  late final PageController controller;
+  final PageController controller; // Accept PageController
+
+  const Walkthrough2({super.key, required this.controller});
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -330,19 +339,16 @@ class Walkthrough2 extends StatelessWidget {
   }
 }
 
+
 class Walkthrough3 extends StatelessWidget {
-  late final PageController controller;
+  final PageController controller; // Accept PageController
+
+  const Walkthrough3({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
-    final screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
       width: screenWidth,

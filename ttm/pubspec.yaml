@@ -38,6 +38,9 @@ dependencies:
   smooth_page_indicator: ^1.2.0+3
   flip_card: ^0.7.0
   page_transition: ^2.0.0
+  flutter_statusbarcolor_ns: ^0.5.0
+  camera: ^0.10.0
+  image_picker: ^0.8.5+3
 
 dev_dependencies:
   flutter_test:

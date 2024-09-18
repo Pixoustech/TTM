@@ -1,4 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_statusbarcolor_ns/flutter_statusbarcolor_ns.dart'; // Import the flutter_statusbarcolor package
+
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: FaceRecognitionWalkthroughPage(),
+    );
+  }
+}
 
 class FaceRecognitionWalkthroughPage extends StatelessWidget {
   @override
@@ -6,25 +18,31 @@ class FaceRecognitionWalkthroughPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Face Recognition Walkthrough'),
+        backgroundColor: Colors.red, // Set the AppBar color to red
+        elevation: 0, // Remove shadow to avoid overlapping with status bar
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Add your content here
-            Text(
-              'Welcome to the Face Recognition feature!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Expanded(
+              child: Center(
+                child: Image.asset(
+                  'assets/face_illustration.png', // Replace with your image asset path
+                  width: 250, // Adjust width as needed
+                  height: 400, // Adjust height as needed
+                  fit: BoxFit.cover, // Adjust fit as needed
+                ),
+              ),
             ),
-            SizedBox(height: 16),
-            Text(
-              'In this walkthrough, we will guide you through the process of using face recognition to log in to the application.',
-              style: TextStyle(fontSize: 16),
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              color: Colors.white,
+              child: Text(
+                'In this walkthrough, we will guide you through the process of using face recognition to log in to the application.',
+                style: TextStyle(fontSize: 16, color: Colors.black),
+                textAlign: TextAlign.center,
+              ),
             ),
-            SizedBox(height: 16),
-            // Add images or icons if needed
-            // Add buttons or other UI elements
           ],
         ),
       ),
