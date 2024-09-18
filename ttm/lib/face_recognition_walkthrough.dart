@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Import the google_fonts package
+import 'package:google_fonts/google_fonts.dart';
+
+import 'Constant.dart'; // Import the google_fonts package
 
 class MyApp extends StatelessWidget {
   @override
@@ -20,7 +22,7 @@ class FaceRecognitionWalkthroughPage extends StatelessWidget {
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(200.0), // Increase the height of the AppBar to 200
         child: AppBar(
-          backgroundColor: Color(0xFF7E1416), // Set the AppBar color
+          backgroundColor: AppColors.concolor, // Set the AppBar color
           elevation: 0, // Remove shadow
           flexibleSpace: Center(
             child: Container(
@@ -58,7 +60,7 @@ class FaceRecognitionWalkthroughPage extends StatelessWidget {
                   'Login with Face ID', // Main title text
                   style: GoogleFonts.montserrat( // Use Montserrat from Google Fonts
                     fontSize: 24,
-                    color: Color(0xFF7E1416),
+                    color: AppColors.concolor,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -92,7 +94,7 @@ class FaceRecognitionWalkthroughPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF7E1416),
+                    backgroundColor: AppColors.concolor,
                     padding: EdgeInsets.symmetric(vertical: 16.0),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.0),

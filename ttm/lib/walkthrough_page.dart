@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-
+import 'Constant.dart';
 import 'face_recognition_walkthrough.dart';
+
+
+
 
 class WalkthroughPage extends StatefulWidget {
   const WalkthroughPage({super.key});
@@ -37,7 +40,7 @@ class _WalkthroughPageState extends State<WalkthroughPage> {
                 count: 3, // Number of pages
                 effect: WormEffect(
                   dotColor: Colors.white,
-                  activeDotColor: Color(0xFF7E1416),
+                  activeDotColor: AppColors.concolor,
                   dotHeight: 8,
                   dotWidth: 8,
                   spacing: 16,
@@ -105,7 +108,7 @@ class Walkthrough1 extends StatelessWidget {
                                 TextSpan(
                                   text: 'Tasks',
                                   style: GoogleFonts.montserrat(
-                                    color: Color(0xFF7E1416),
+                                    color: AppColors.concolor,
                                     fontSize: 25,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -160,7 +163,7 @@ class Walkthrough1 extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF7E1416),
+                      backgroundColor: AppColors.concolor,
                       padding: EdgeInsets.symmetric(vertical: 16.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12.0),
@@ -269,7 +272,7 @@ class Walkthrough2 extends StatelessWidget {
                         child: Text(
                           'Notifications',
                           style: GoogleFonts.montserrat(
-                            color: Color(0xFF7E1416),
+                            color: AppColors.concolor,
                             fontSize: 25,
                             fontWeight: FontWeight.w600,
                           ),
@@ -307,7 +310,7 @@ class Walkthrough2 extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF7E1416),
+                  backgroundColor: AppColors.concolor,
                   padding: EdgeInsets.symmetric(vertical: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
@@ -382,7 +385,7 @@ class Walkthrough3 extends StatelessWidget {
                             TextSpan(
                               text: ' Progress',
                               style: GoogleFonts.montserrat(
-                                color: Color(0xFF7E1416),
+                                color: AppColors.concolor,
                                 fontSize: 25,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -407,7 +410,7 @@ class Walkthrough3 extends StatelessWidget {
                         child: Text(
                           'Achievements',
                           style: GoogleFonts.montserrat(
-                            color: Color(0xFF7E1416),
+                            color: AppColors.concolor,
                             fontSize: 25,
                             fontWeight: FontWeight.w600,
                           ),
@@ -447,7 +450,7 @@ class Walkthrough3 extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF7E1416),
+                  backgroundColor: AppColors.concolor,
                   padding: EdgeInsets.symmetric(vertical: 16.0),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12.0),
