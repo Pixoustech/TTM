@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import 'face_recognition_walkthrough.dart';
@@ -87,7 +88,7 @@ class Walkthrough1 extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: screenWidth * 0.85,
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text.rich(
@@ -95,19 +96,17 @@ class Walkthrough1 extends StatelessWidget {
                               children: [
                                 TextSpan(
                                   text: 'Manage Your ',
-                                  style: TextStyle(
+                                  style: GoogleFonts.montserrat(
                                     color: Colors.black,
                                     fontSize: 25,
-                                    fontFamily: 'Montserrat',
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 TextSpan(
                                   text: 'Tasks',
-                                  style: TextStyle(
+                                  style: GoogleFonts.montserrat(
                                     color: Color(0xFF7E1416),
                                     fontSize: 25,
-                                    fontFamily: 'Montserrat',
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -117,15 +116,14 @@ class Walkthrough1 extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          SizedBox(height: 1.0),
+                          const SizedBox(height: 1.0),
                           Align(
                             alignment: Alignment.center,
                             child: Text(
                               'Effortlessly',
-                              style: TextStyle(
+                              style: GoogleFonts.montserrat(
                                 color: Colors.black,
                                 fontSize: 25,
-                                fontFamily: 'Montserrat',
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -139,10 +137,9 @@ class Walkthrough1 extends StatelessWidget {
                       child: Text(
                         'Organize your day by adding your\nown tasks or handling\nthose assigned to you.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: GoogleFonts.montserrat(
                           color: Color(0xFF777777),
                           fontSize: 15,
-                          fontFamily: 'Montserrat',
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -171,10 +168,9 @@ class Walkthrough1 extends StatelessWidget {
                     ),
                     child: Text(
                       'NEXT',
-                      style: TextStyle(
+                      style: GoogleFonts.montserrat(
                         color: Colors.white,
                         fontSize: screenWidth * 0.04,
-                        fontFamily: 'Montserrat',
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -198,10 +194,9 @@ class Walkthrough1 extends StatelessWidget {
               },
               child: Text(
                 'Skip',
-                style: TextStyle(
+                style: GoogleFonts.montserrat(
                   color: Colors.black,
                   fontSize: 18,
-                  fontFamily: 'Montserrat',
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -248,7 +243,7 @@ class Walkthrough2 extends StatelessWidget {
               children: [
                 SizedBox(
                   width: screenWidth * 0.85,
-                  child: const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text.rich(
@@ -256,10 +251,9 @@ class Walkthrough2 extends StatelessWidget {
                           children: [
                             TextSpan(
                               text: 'Stay On Track with  ',
-                              style: TextStyle(
+                              style: GoogleFonts.montserrat(
                                 color: Colors.black,
                                 fontSize: 25,
-                                fontFamily: 'Montserrat',
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -269,15 +263,14 @@ class Walkthrough2 extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 1.0),
+                      const SizedBox(height: 1.0),
                       Align(
                         alignment: Alignment.center,
                         child: Text(
                           'Notifications',
-                          style: TextStyle(
+                          style: GoogleFonts.montserrat(
                             color: Color(0xFF7E1416),
                             fontSize: 25,
-                            fontFamily: 'Montserrat',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -291,10 +284,9 @@ class Walkthrough2 extends StatelessWidget {
                   child: Text(
                     'Receive reminders for upcoming\tasks and notifications for tasks\assigned to you',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: GoogleFonts.montserrat(
                       color: Color(0xFF777777),
                       fontSize: 15,
-                      fontFamily: 'Montserrat',
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -323,10 +315,9 @@ class Walkthrough2 extends StatelessWidget {
                 ),
                 child: Text(
                   'NEXT',
-                  style: TextStyle(
+                  style: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontSize: screenWidth * 0.04,
-                    fontFamily: 'Montserrat',
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -374,7 +365,7 @@ class Walkthrough3 extends StatelessWidget {
               children: [
                 SizedBox(
                   width: screenWidth * 0.85,
-                  child: const Column(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text.rich(
@@ -382,28 +373,25 @@ class Walkthrough3 extends StatelessWidget {
                           children: [
                             TextSpan(
                               text: 'Monitor Your',
-                              style: TextStyle(
+                              style: GoogleFonts.montserrat(
                                 color: Colors.black,
                                 fontSize: 25,
-                                fontFamily: 'Montserrat',
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             TextSpan(
                               text: ' Progress',
-                              style: TextStyle(
+                              style: GoogleFonts.montserrat(
                                 color: Color(0xFF7E1416),
                                 fontSize: 25,
-                                fontFamily: 'Montserrat',
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                             TextSpan(
                               text: ' and',
-                              style: TextStyle(
+                              style: GoogleFonts.montserrat(
                                 color: Colors.black,
                                 fontSize: 25,
-                                fontFamily: 'Montserrat',
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -413,15 +401,14 @@ class Walkthrough3 extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 1.0),
+                      const SizedBox(height: 1.0),
                       Align(
                         alignment: Alignment.center,
                         child: Text(
                           'Achievements',
-                          style: TextStyle(
+                          style: GoogleFonts.montserrat(
                             color: Color(0xFF7E1416),
                             fontSize: 25,
-                            fontFamily: 'Montserrat',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -435,10 +422,9 @@ class Walkthrough3 extends StatelessWidget {
                   child: Text(
                     "View completed tasks and monitor\your progress to see how much\you've achieved",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: GoogleFonts.montserrat(
                       color: Color(0xFF777777),
                       fontSize: 15,
-                      fontFamily: 'Montserrat',
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -469,10 +455,9 @@ class Walkthrough3 extends StatelessWidget {
                 ),
                 child: Text(
                   'Get started',
-                  style: TextStyle(
+                  style: GoogleFonts.montserrat(
                     color: Colors.white,
                     fontSize: screenWidth * 0.04,
-                    fontFamily: 'Montserrat',
                     fontWeight: FontWeight.w600,
                   ),
                 ),
