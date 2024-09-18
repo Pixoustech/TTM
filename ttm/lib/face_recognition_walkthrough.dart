@@ -27,9 +27,9 @@ class FaceRecognitionWalkthroughPage extends StatelessWidget {
             Expanded(
               child: Center(
                 child: Image.asset(
-                  'Assets/Images/face.png', // Replace with your image asset path
-                  width: 250, // Adjust width as needed
-                  height: 400, // Adjust height as needed
+                  'Assets/Images/face1.png', // Replace with your image asset path
+                  width: 150, // Adjust width as needed
+                  height: 150, // Adjust height as needed
                   fit: BoxFit.cover, // Adjust fit as needed
                 ),
               ),
