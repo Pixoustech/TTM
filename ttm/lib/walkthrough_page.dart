@@ -185,7 +185,7 @@ class Walkthrough1 extends StatelessWidget {
             child: TextButton(
               onPressed: () {
                 // Navigate to the last page or skip to home screen
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => FaceRecognitionWalkthroughPage(),

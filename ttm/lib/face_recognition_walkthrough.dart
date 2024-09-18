@@ -13,6 +13,9 @@ class MyApp extends StatelessWidget {
 class FaceRecognitionWalkthroughPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // Get the screen width
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(200.0), // Increase the height of the AppBar to 200
@@ -35,29 +38,75 @@ class FaceRecognitionWalkthroughPage extends StatelessWidget {
       ),
       body: SafeArea(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between content and bottom
           children: [
-            // Image moved to the top
-            Padding(
-              padding: const EdgeInsets.only(top: 16.0), // Adjust the top padding
-              child: Center(
-                child: Image.asset(
-                  'Assets/Images/face1.png', // Replace with your image asset path
-                  width: 150, // Adjust width as needed
-                  height: 150, // Adjust height as needed
-                  fit: BoxFit.cover, // Adjust fit as needed
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 50.0), // Adjust the top padding
+                  child: Center(
+                    child: Image.asset(
+                      'Assets/Images/face1.png', // Replace with your image asset path
+                      width: 150, // Adjust width as needed
+                      height: 150, // Adjust height as needed
+                      fit: BoxFit.cover, // Adjust fit as needed
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(height: 30), // Space between image and text
+                Text(
+                  'Login with Face ID', // Main title text
+                  style: GoogleFonts.montserrat( // Use Montserrat from Google Fonts
+                    fontSize: 24,
+                    color: Color(0xFF7E1416),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16), // Space between title and bottom text
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0), // Horizontal padding
+                  child: Text(
+                    'Unlock your account quickly and securely with Face ID', // Bottom text
+                    style: GoogleFonts.montserrat( // Use Montserrat from Google Fonts
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 20), // Add some space between the image and the text
-            Container(
+            // Button at the bottom
+            Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Login with Face ID', // New text here
-                style: GoogleFonts.montserrat( // Use Montserrat from Google Fonts
-                  fontSize: 24,
-                  color: Color(0xFF7E1416),
+              child: Container(
+                margin: EdgeInsets.only(bottom: 100.0),
+                width: screenWidth * 0.85, // Adjust button width based on screen width
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FaceRecognitionWalkthroughPage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF7E1416),
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  child: Text(
+                    'Scan my face',
+                    style: GoogleFonts.montserrat(
+                      color: Colors.white,
+                      fontSize: screenWidth * 0.04, // Adjust text size based on screen width
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
           ],
