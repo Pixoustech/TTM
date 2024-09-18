@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'Constant.dart'; // Import the google_fonts package
+import 'Constant.dart';
+import 'face_scanning_page.dart'; // Import the google_fonts package
 
 class MyApp extends StatelessWidget {
   @override
@@ -86,10 +87,10 @@ class FaceRecognitionWalkthroughPage extends StatelessWidget {
                 width: screenWidth * 0.85, // Adjust button width based on screen width
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => FaceRecognitionWalkthroughPage(),
+                        builder: (context) => Facescanning (),
                       ),
                     );
                   },
