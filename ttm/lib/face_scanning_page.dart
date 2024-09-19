@@ -1,45 +1,58 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:camera/camera.dart';
-import 'Constant.dart'; // Import your constants file
+import 'package:google_ml_kit/google_ml_kit.dart';
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Facescanning(),
-    );
-  }
-}
+import 'Constant.dart';
 
 class Facescanning extends StatefulWidget {
   @override
   _FacescanningState createState() => _FacescanningState();
 }
 
-class _FacescanningState extends State<Facescanning> {
+class _FacescanningState extends State<Facescanning> with SingleTickerProviderStateMixin {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
   late List<CameraDescription> _cameras;
   late CameraDescription _currentCamera;
+  late FaceDetector _faceDetector;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _initializeCameras();
+    _initializeFaceDetector();
+    // Set up the periodic image processing
+    _timer = Timer.periodic(Duration(seconds: 2), (Timer timer) {
+      _processImage();
+    });
   }
 
   Future<void> _initializeCameras() async {
     _cameras = await availableCameras();
-    _currentCamera = _cameras.first; // Default to the first camera (usually the back camera)
+    _currentCamera = _cameras.first;
     _controller = CameraController(_currentCamera, ResolutionPreset.medium);
     _initializeControllerFuture = _controller.initialize();
     setState(() {});
   }
 
+  Future<void> _initializeFaceDetector() async {
+    final options = FaceDetectorOptions(
+      enableContours: true,
+      enableClassification: true,
+      enableTracking: true,
+    );
+    _faceDetector = GoogleMlKit.vision.faceDetector(options);
+  }
+
   @override
   void dispose() {
     _controller.dispose();
+    _faceDetector.close();
+    _timer?.cancel(); // Cancel the timer when disposing
     super.dispose();
   }
 
@@ -57,45 +70,74 @@ class _FacescanningState extends State<Facescanning> {
     }
   }
 
+  Future<void> _processImage() async {
+    try {
+      final image = await _controller.takePicture();
+      final inputImage = InputImage.fromFilePath(image.path);
+
+      // Ensure _faceDetector is initialized
+      await _initializeFaceDetector();
+
+      final faces = await _faceDetector.processImage(inputImage);
+
+      if (faces.isNotEmpty) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => NextPage()),
+        );
+      }
+    } catch (e) {
+      print('Error processing image: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Get the screen width and height
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(200.0), // Increase the height of the AppBar to 200
-        child: AppBar(
-          backgroundColor: AppColors.concolor, // Set the AppBar color
-          elevation: 0, // Remove shadow
-          flexibleSpace: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Face Verification', // Main title text
-                  style: GoogleFonts.montserrat(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white, // Text color
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 10), // Space between title and description
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
-                  child: Text(
-                    'Please put your phone in front of your face to log in', // Description text
+        preferredSize: Size.fromHeight(200.0),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment(-0.18, -0.98),
+              end: Alignment(0.18, 0.98),
+              colors: [Color(0xFFD28F91), Colors.white],
+            ),
+          ),
+          child: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            flexibleSpace: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    'Face Verification',
                     style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.concolor,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                  SizedBox(height: 10),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+                    child: Text(
+                      'Please put your phone in front of your face to log in',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -103,58 +145,36 @@ class _FacescanningState extends State<Facescanning> {
       body: SafeArea(
         child: GestureDetector(
           onDoubleTap: _switchCamera,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between content and bottom
-            children: [
-              Expanded(
-                child: FutureBuilder<void>(
-                  future: _initializeControllerFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      return Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.blue, width: 4),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: CameraPreview(_controller),
-                      );
-                    } else {
-                      return Center(child: CircularProgressIndicator());
-                    }
-                  },
-                ),
-              ),
-              // Button at the bottom
-              Padding(
-                padding: EdgeInsets.all(screenWidth * 0.05), // Padding is 5% of screen width
-                child: Container(
-                  margin: EdgeInsets.only(bottom: screenHeight * 0.05), // Bottom margin is 5% of screen height
-                  width: screenWidth * 0.85, // Button width is 85% of screen width
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Implement face scanning functionality here
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.concolor,
-                      padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02), // Vertical padding is 2% of screen height
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(screenWidth * 0.03), // Border radius is 3% of screen width
-                      ),
-                    ),
-                    child: Text(
-                      'Start Scanning',
-                      style: GoogleFonts.montserrat(
-                        color: Colors.white,
-                        fontSize: screenWidth * 0.04, // Adjust text size based on screen width
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+          child: FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return Center(
+                  child: Transform.scale(
+                    scaleX: -1,
+                    child: CameraPreview(_controller),
                   ),
-                ),
-              ),
-            ],
+                );
+              } else {
+                return Center(child: CircularProgressIndicator());
+              }
+            },
           ),
         ),
+      ),
+    );
+  }
+}
+
+class NextPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Next Page'),
+      ),
+      body: Center(
+        child: Text('Welcome to the next page!'),
       ),
     );
   }
