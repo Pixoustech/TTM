@@ -48,6 +48,8 @@ dependencies:
   google_mlkit_image_labeling: ^0.12.0
   path_provider: ^2.0.11
   permission_handler: ^10.2.0  # For handling runtime permissions
+  dotted_border: ^2.1.0
+
 
 
 dev_dependencies:
@@ -76,6 +78,7 @@ flutter:
   assets:
      - Assets/Images/TTM.png
      - Assets/Images/face1.png
+     - Assets/Images/Locktick.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

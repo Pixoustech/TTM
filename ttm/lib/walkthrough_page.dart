@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'Constant.dart';
-import 'face_recognition_walkthrough.dart';
+import 'login_page.dart';
 
 
 
@@ -191,7 +191,7 @@ class Walkthrough1 extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => FaceRecognitionWalkthroughPage(),
+                    builder: (context) => LoginPage(),
                   ),
                 ); // Example to skip to the last page
               },
@@ -378,7 +378,7 @@ class Walkthrough3 extends StatelessWidget {
                               text: 'Monitor Your',
                               style: GoogleFonts.montserrat(
                                 color: Colors.black,
-                                fontSize: 25,
+                                fontSize: 23,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -386,7 +386,7 @@ class Walkthrough3 extends StatelessWidget {
                               text: ' Progress',
                               style: GoogleFonts.montserrat(
                                 color: AppColors.concolor,
-                                fontSize: 25,
+                                fontSize: 23,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -442,10 +442,10 @@ class Walkthrough3 extends StatelessWidget {
               width: screenWidth * 0.85,
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
+                  Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => FaceRecognitionWalkthroughPage(),
+                      builder: (context) => LoginPage(),
                     ),
                   );
                 },
