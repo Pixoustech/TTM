@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'Constant.dart';
+import 'Constant.dart'; // Ensure you have this defined correctly.
 import 'login_page.dart';
-
-
-
 
 class WalkthroughPage extends StatefulWidget {
   const WalkthroughPage({super.key});
@@ -25,9 +22,9 @@ class _WalkthroughPageState extends State<WalkthroughPage> {
           PageView(
             controller: _controller,
             children: [
-              Walkthrough1(controller: _controller), // Pass the controller to pages if needed
+              Walkthrough1(controller: _controller), // Pass the controller to pages
               Walkthrough2(controller: _controller),
-              Walkthrough3(controller: _controller), // Pass the controller here as well
+              Walkthrough3(controller: _controller),
             ],
           ),
           Positioned(
@@ -53,7 +50,6 @@ class _WalkthroughPageState extends State<WalkthroughPage> {
     );
   }
 }
-
 
 class Walkthrough1 extends StatelessWidget {
   final PageController controller;
@@ -187,13 +183,12 @@ class Walkthrough1 extends StatelessWidget {
             right: 16,
             child: TextButton(
               onPressed: () {
-                // Navigate to the last page or skip to home screen
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => LoginPage(),
                   ),
-                ); // Example to skip to the last page
+                ); // Skip to login page
               },
               child: Text(
                 'Skip',
@@ -211,9 +206,8 @@ class Walkthrough1 extends StatelessWidget {
   }
 }
 
-// Example pages to demonstrate the page view
 class Walkthrough2 extends StatelessWidget {
-  final PageController controller; // Accept PageController
+  final PageController controller;
 
   const Walkthrough2({super.key, required this.controller});
 
@@ -285,7 +279,7 @@ class Walkthrough2 extends StatelessWidget {
                 SizedBox(
                   width: screenWidth * 0.85,
                   child: Text(
-                    'Receive reminders for upcoming\tasks and notifications for tasks\assigned to you',
+                    'Receive reminders for upcoming tasks and notifications for tasks assigned to you.',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.montserrat(
                       color: Color(0xFF777777),
@@ -333,9 +327,8 @@ class Walkthrough2 extends StatelessWidget {
   }
 }
 
-
 class Walkthrough3 extends StatelessWidget {
-  final PageController controller; // Accept PageController
+  final PageController controller;
 
   const Walkthrough3({super.key, required this.controller});
 
@@ -355,114 +348,136 @@ class Walkthrough3 extends StatelessWidget {
           colors: [Color(0xFFD28F91), Colors.white],
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Stack(
         children: [
-          Container(
-            height: screenHeight * 0.4,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: screenWidth * 0.85,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text.rich(
-                        TextSpan(
-                          children: [
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                height: screenHeight * 0.4,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: screenWidth * 0.85,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text.rich(
                             TextSpan(
-                              text: 'Monitor Your',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.black,
-                                fontSize: 23,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Monitor Your ',
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.black,
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: 'Progress',
+                                  style: GoogleFonts.montserrat(
+                                    color: AppColors.concolor, // Red color for Progress
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' and ',
+                                  style: GoogleFonts.montserrat(
+                                    color: Colors.black,
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: 'Achievements',
+                                  style: GoogleFonts.montserrat(
+                                    color: AppColors.concolor, // Red color for Achievements
+                                    fontSize: 25,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                            TextSpan(
-                              text: ' Progress',
-                              style: GoogleFonts.montserrat(
-                                color: AppColors.concolor,
-                                fontSize: 23,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' and',
-                              style: GoogleFonts.montserrat(
-                                color: Colors.black,
-                                fontSize: 25,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 1.0),
-                      Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Achievements',
-                          style: GoogleFonts.montserrat(
-                            color: AppColors.concolor,
-                            fontSize: 25,
-                            fontWeight: FontWeight.w600,
+                            textAlign: TextAlign.center,
+                            maxLines: 2, // Allow for two lines
+                            overflow: TextOverflow.visible, // Allows text to wrap to next line
                           ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 15.0),
+                    SizedBox(
+                      width: screenWidth * 0.85,
+                      child: Text(
+                        'View completed tasks and monitor your progress to see how much you’ve achieved',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.montserrat(
+                          color: Color(0xFF777777),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                SizedBox(height: 15.0),
-                SizedBox(
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 100.0),
                   width: screenWidth * 0.85,
-                  child: Text(
-                    "View completed tasks and monitor\your progress to see how much\you've achieved",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.montserrat(
-                      color: Color(0xFF777777),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LoginPage(),
+                        ),
+                      ); // Navigate to login page
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.concolor,
+                      padding: EdgeInsets.symmetric(vertical: 16.0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                    ),
+                    child: Text(
+                      'GET STARTED',
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                        fontSize: screenWidth * 0.04,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              margin: EdgeInsets.only(bottom: 100.0),
-              width: screenWidth * 0.85,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LoginPage(),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.concolor,
-                  padding: EdgeInsets.symmetric(vertical: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.0),
+          Positioned(
+            top: 40,
+            right: 16,
+            child: TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(),
                   ),
-                ),
-                child: Text(
-                  'Get started',
-                  style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontSize: screenWidth * 0.04,
-                    fontWeight: FontWeight.w600,
-                  ),
+                ); // Skip to login page
+              },
+              child: Text(
+                'Skip',
+                style: GoogleFonts.montserrat(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
@@ -472,3 +487,5 @@ class Walkthrough3 extends StatelessWidget {
     );
   }
 }
+
+

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_switch/flutter_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:ttm/Splash_Screen.dart';
 import 'Constant.dart';
-import 'ForgotPasswordPage.dart'; // Import your constants and other necessary files
+import 'ForgotPasswordPage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +19,29 @@ class _LoginPageState extends State<LoginPage> {
   String? _errorMessage;
   bool _isPasswordVisible = false; // Track password visibility
   bool _useFaceId = false; // Track Face ID toggle state
+  FocusNode _usernameFocusNode = FocusNode(); // Focus node for username field
+  FocusNode _passwordFocusNode = FocusNode(); // Focus node for password field
+
+  @override
+  void initState() {
+    super.initState();
+    // Add listeners to focus nodes to rebuild when focus changes
+    _usernameFocusNode.addListener(() {
+      setState(() {});
+    });
+    _passwordFocusNode.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _usernameFocusNode.dispose(); // Dispose the focus nodes
+    _passwordFocusNode.dispose();
+    _usernameController.dispose(); // Dispose the text controllers
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _login() {
     setState(() {
@@ -30,9 +55,12 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = false;
       });
 
-      if (_usernameController.text == "admin" && _passwordController.text == "123") {
+      if (_usernameController.text == "" && _passwordController.text == "") {
         // If login is successful, navigate to the next page (e.g., home page)
-        Navigator.pushReplacementNamed(context, '/home');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SplashScreen()), // Directly push the ForgotPasswordPage
+        );
       } else {
         setState(() {
           _errorMessage = "Invalid username or password";
@@ -55,10 +83,10 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Colors.white, // Set the background of the entire scaffold to white
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(200.0), // Set your desired height here
+        preferredSize: const Size.fromHeight(200.0), // Set your desired height here
         child: AppBar(
           flexibleSpace: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
                   Color(0xFFBE898A), // Gradient color 1
@@ -80,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
             // Login form overlay
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 40.0), // Adjust vertical padding to move the container up
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 1.0), // Adjust vertical padding to move the container up
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisAlignment: MainAxisAlignment.start, // Align to start
@@ -105,44 +133,78 @@ class _LoginPageState extends State<LoginPage> {
                       textAlign: TextAlign.left,
                     ),
                     SizedBox(height: 30),
-                    // Username label
-                    Text(
-                      'Username',
+                    // Username text field with hint
+                    TextField(
+                      focusNode: _usernameFocusNode, // Set the focus node
+                      controller: _usernameController,
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black,
+                        color: Colors.black, // Set text color to black
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    TextField(
-                      controller: _usernameController,
+                      cursorColor: AppColors.concolor,
                       decoration: InputDecoration(
+                        labelText: 'Username', // Use labelText for a floating label effect
+                        labelStyle: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: _usernameFocusNode.hasFocus || _usernameController.text.isNotEmpty ? Colors.black : Colors.grey, // Change color based on focus or if text is not empty
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
+                        focusedBorder: OutlineInputBorder( // Define the focused border
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: AppColors.concolor, // Change border color when focused
+                            width: 2.0, // Set the width of the border
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder( // Define the enabled border
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: Colors.grey, // Color of the border when not focused
+                            width: 1.0, // Set the width of the border
+                          ),
+                        ),
                       ),
                     ),
+
                     SizedBox(height: 20),
-                    // Password label
-                    Text(
-                      'Password',
+                    // Password text field with hint
+// Password text field with hint
+                    TextField(
+                      focusNode: _passwordFocusNode, // Set the focus node
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible, // Toggle visibility
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black,
+                        color: Colors.black, // Set text color to black when typing
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: !_isPasswordVisible, // Toggle visibility
+                      cursorColor: AppColors.concolor,
                       decoration: InputDecoration(
+                        labelText: 'Password', // Add floating label
+                        labelStyle: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: _passwordFocusNode.hasFocus || _passwordController.text.isNotEmpty
+                              ? Colors.black
+                              : Colors.grey, // Change color based on focus
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder( // Define the focused border
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: AppColors.concolor, // Change border color when focused
+                            width: 2.0, // Set the width of the border
+                          ),
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
+                            color: AppColors.concolor,
                             _isPasswordVisible
                                 ? Icons.visibility // Show icon when visible
                                 : Icons.visibility_off, // Hide icon when hidden
@@ -155,28 +217,31 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 20),
-                    if (_errorMessage != null) ...[
-                      Text(
-                        _errorMessage!,
-                        style: TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 10),
-                    ],
+
+// Increased space between the password field and "Use Face ID" toggle
+                    SizedBox(height: 10), // Increased from 20 to 40 to add more space
+// Use Face ID toggle and Forgot password row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Switch(
+                            FlutterSwitch(
+                              width: 35.0,
+                              height: 17.0,
                               value: _useFaceId,
-                              onChanged: (value) {
+                              borderRadius: 10.0, // Rounded corners
+                              padding: 2.0,
+                              activeColor: AppColors.concolor,
+                              inactiveColor: Colors.grey,
+                              toggleSize: 13.0, // Size of the toggle handle
+                              onToggle: (value) {
                                 setState(() {
-                                  _useFaceId = value; // Update the Face ID state
+                                  _useFaceId = value;
                                 });
                               },
                             ),
+                            SizedBox(width: 10),
                             Text(
                               'Use Face ID',
                               style: GoogleFonts.montserrat(
@@ -188,39 +253,43 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         ),
                         GestureDetector(
-                          onTap: _navigateToForgotPassword, // Navigate to Forgot Password Page
+                          onTap: _navigateToForgotPassword,
                           child: Text(
-                            'Forgot Password?',
+                            'Forgot password?',
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
-                              color: Colors.black,
+                              color: AppColors.concolor,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 20),
+
+                    SizedBox(height: 30),
                     ElevatedButton(
-                      onPressed: _isLoading ? null : _login,
+                      onPressed: _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.concolor,
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        backgroundColor: AppColors.concolor, // Set the button background color
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
+                        padding: EdgeInsets.symmetric(vertical: 16),
                       ),
                       child: _isLoading
-                          ? CircularProgressIndicator(color: Colors.white)
+                          ? CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
                           : Text(
                         'Login',
                         style: GoogleFonts.montserrat(
-                          color: Colors.white,
-                          fontSize: screenWidth * 0.045,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                     ),
+                    SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -229,12 +298,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }
