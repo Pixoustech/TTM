@@ -8,313 +8,589 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Initialize the button text
   String buttonText = "Check In";
   String _selectedButton = '';
 
-  // Function to handle button press
   void _toggleCheckInOut() {
     setState(() {
-      // Toggle between "Check In" and "Check Out"
       buttonText = (buttonText == "Check In") ? "Check Out" : "Check In";
     });
-    print("$buttonText button pressed"); // Optional: Print the current button state
+    print("$buttonText button pressed");
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Content with gradient background only at the top
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFBE898A), // Start color for the gradient
-                  Color(0xFFFFFFFF), // End color transitioning to white
-                ],
-                begin: Alignment.topRight, // Gradient starts at the top-right
-                end: Alignment.bottomRight, // Ends at the bottom-right
-                stops: [0.0, 0.6], // Control how much of the gradient is shown
+      body: SingleChildScrollView( // Wrap the Column in SingleChildScrollView
+        child: Column(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFFBE898A),
+                    Color(0xFFFFFFFF),
+                  ],
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomRight,
+                  stops: [0.0, 0.6],
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0), // Add padding around the content
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start, // Align items to the start (left)
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between logo and profile icon
-                    children: [
-                      // Logo at the top left
-                      Image.asset(
-                        'Assets/Images/TTMlogo.png', // Replace with your logo asset path
-                        height: 100, // Set height of the logo
-                        width: 100, // Set width of the logo
-                      ),
-                      // Profile icon at the top right
-                      IconButton(
-                        icon: Icon(Icons.account_circle, size: 40, color: AppColors.concolor), // Profile icon
-                        onPressed: () {
-                          // Action when profile icon is pressed
-                        },
-                      ),
-                    ],
-                  ),
-                  // Using Transform to move Hello user text up
-                  Transform.translate(
-                    offset: const Offset(0, -20), // Move text up by 30 pixels
-                    child: Column( // Use a Column to hold both texts
-                      crossAxisAlignment: CrossAxisAlignment.start,
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Good Morning, John Harry M',
-                          style: TextStyle(
-                            fontSize: 14, // Font size for the text
-                            fontWeight: FontWeight.bold, // Bold text
-                            color: Color(0xFF505050), // Text color #505050
-                          ),
+                        Image.asset(
+                          'Assets/Images/TTMlogo.png',
+                          height: 100,
+                          width: 100,
                         ),
-                        const SizedBox(height: 4), // Space between the two texts
-                        const Text(
-                          "Let’s get to work!",
-                          style: TextStyle(
-                            fontSize: 14, // Font size for the text
-                            fontWeight: FontWeight.bold, // Normal text weight
-                            color: Colors.black, // Text color
-                          ),
+                        IconButton(
+                          icon: Icon(Icons.account_circle, size: 40, color: AppColors.concolor),
+                          onPressed: () {},
                         ),
-                        const SizedBox(height: 20), // Space between the two texts
-                        // Elevated button to toggle check in/out
-                        ElevatedButton(
-                          onPressed: _toggleCheckInOut,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.concolor,
-                            minimumSize: const Size(double.infinity, 45), // Set the button height to 45
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      ],
+                    ),
+                    Transform.translate(
+                      offset: const Offset(0, -20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Good Morning, John Harry M',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF505050),
                             ),
                           ),
-                          child: Center(
-                            child: Text(
-                              buttonText, // Display the dynamic button text
-                              style: GoogleFonts.montserrat(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            "Let’s get to work!",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10), // Add some space between the button and the buttons row
-
-                        // Search box
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 0.0), // No padding to take full width
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 0.0), // Reduce the margin to make the search box wider
-                            height: 45, // Set the desired height
-                            width: double.infinity, // Set full width
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12), // Rounded corners for the container
-                              gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFFBE898A), // Start color of the gradient
-                                  Color(0xFFFFE8E8), // End color of the gradient (lighter)
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: _toggleCheckInOut,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.concolor,
+                              minimumSize: const Size(double.infinity, 45),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              boxShadow: [ // Add shadow to the search box
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.5), // Shadow color with opacity
-                                  spreadRadius: 2, // How much the shadow spreads
-                                  blurRadius: 6, // How blurry the shadow looks
-                                  offset: const Offset(0, 3), // Position of the shadow (horizontal, vertical)
+                            ),
+                            child: Center(
+                              child: Text(
+                                buttonText,
+                                style: GoogleFonts.montserrat(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                 ),
-                              ],
+                              ),
                             ),
+                          ),
+                          const SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
                             child: Container(
-                              height: 45, // Explicitly setting height for inner container
-                              width: double.infinity, // Full width for inner container
+                              height: 45,
+                              width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Colors.white, // White background for the inner container
-                                borderRadius: BorderRadius.circular(12), // Same rounded corners for the inner container
-                              ),
-                              child: TextField(
-                                cursorColor: AppColors.concolor, // Set the custom cursor color
-                                style: TextStyle(
-                                  color: AppColors.concolor, // Set the text color
+                                borderRadius: BorderRadius.circular(12),
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFBE898A),
+                                    Color(0xFFFFE8E8),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
-                                decoration: InputDecoration(
-                                  prefixIcon: Icon(Icons.search, color: AppColors.concolor), // Search icon inside the text field
-                                  hintText: 'Search', // Placeholder text
-                                  hintStyle: TextStyle(color: Colors.grey), // Color for the placeholder text
-                                  filled: true, // Fill color behind the text field
-                                  fillColor: Colors.white, // Background color of the text field
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12), // Rounded corners
-                                    borderSide: BorderSide.none, // No visible border
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.5),
+                                    spreadRadius: 2,
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Container(
+                                height: 45,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: TextField(
+                                  cursorColor: AppColors.concolor,
+                                  style: TextStyle(
+                                    color: AppColors.concolor,
+                                  ),
+                                  decoration: InputDecoration(
+                                    prefixIcon: Icon(Icons.search, color: AppColors.concolor),
+                                    hintText: 'Search',
+                                    hintStyle: TextStyle(color: Colors.grey),
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            Expanded(
-                              child: _buildFilterButton('Previous'),
-                            ),
-                            const SizedBox(width: 10), // Add spacing between the buttons
-                            Expanded(
-                              child: _buildFilterButton('Today'),
-                            ),
-                            const SizedBox(width: 10), // Add spacing between the buttons
-                            Expanded(
-                              child: _buildFilterButton('Upcoming'),
-                            ),
-                          ],
-                        ),
-
-                        AppWidgets.divider(),
-
-                        // Add the task boxes below the divider
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          const SizedBox(height: 10),
+                          Row(
+                            mainAxisSize: MainAxisSize.min, // Minimize the space taken by the row
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              _buildTaskBox('Not Started', Colors.grey, 123, 90, 5),
-                              _buildTaskBox('In Progress', Colors.orange, 160, 90, 10),
+                              _buildFilterButton('Previous'),
+                              const SizedBox(width: 10), // Adjust space between buttons
+                              _buildFilterButton('Today'),
+                              const SizedBox(width: 10),
+                              _buildFilterButton('Upcoming'),
                             ],
                           ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-
-                              _buildTaskBox('Completed', Colors.green, 160, 90, 10),
-                              _buildTaskBox('Overdue', Colors.red, 123, 90, 5),
-
-                            ],
+                          AppWidgets.divider(),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start, // Align to the start (left)
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildTaskBox('Not Started', Colors.grey, double.infinity, 90, 5,Icons.pending),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  flex: 3,
+                                  child: _buildTaskBox('In Progress', Colors.orange, double.infinity, 90, 10,Icons.rotate_left),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start, // Align to the start (left)
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: _buildTaskBox('Completed', Colors.green, double.infinity, 90, 10,Icons.check_circle),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  flex: 2,
+                                  child: _buildTaskBox('Overdue', Color(0xFFC52D28), double.infinity, 90, 5,Icons.timer),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'TASK',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF505050),
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                const Text(
+                                  'You have 3 Tasks Today',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                SizedBox(
+                                  height: 200, // Adjust height as needed
+                                  child: ListView(
+                                    scrollDirection: Axis.horizontal,
+                                    children: [
+                                      _buildTaskDetailBox(
+                                        'App Design',
+                                        'The current website design needs a refresh to improve user experience and enhance visual appeal.',
+                                        Colors.white,
+                                        'High',
+                                        'In Progress',
+                                        DateTime.now(), // Current date for the task
+                                        'New York', // Location for the task
+                                      ),
+                                      const SizedBox(width: 10), // Space between boxes
+                                      _buildTaskDetailBox(
+                                        'App Development',
+                                        'The current website design needs a refresh to improve user experience and enhance visual appeal.......',
+                                        Colors.white,
+                                        'Medium',
+                                        'Overdue',
+                                        DateTime.now().add(Duration(days: -2)), // Overdue date example
+                                        'San Francisco', // Location for the task
+                                      ),
+                                      const SizedBox(width: 10),
+                                      _buildTaskDetailBox(
+                                        'Testing',
+                                        'The current website design needs a refresh to improve user experience and enhance visual appeal',
+                                        Colors.white,
+                                        'Low',
+                                        'Completed',
+                                        DateTime.now().add(Duration(days: -1)), // Completed date example
+                                        'Los Angeles', // Location for the task
+                                      ),
+                                    ],
+                                  ),
+                                ),
 
-                      ],
+
+
+
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20), // Optional spacing at the bottom
+          ],
+        ),
+      ),
+    );
+  }
+
+
+Widget _buildFilterButton(String text) {
+    return SizedBox(
+      width: 100, // Ensure this width is enough for your text
+      child: ElevatedButton(
+        onPressed: () {
+          setState(() {
+            _selectedButton = text;
+          });
+          print('$text button pressed');
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _selectedButton == text
+              ? AppColors.concolor
+              : Colors.white,
+          elevation: 3,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: AppColors.concolor,
+              width: 1,
+            ),
+          ),
+          minimumSize: const Size(100, 45), // Ensure buttons are consistently sized
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: TextStyle(
+              color: _selectedButton == text
+                  ? Colors.white
+                  : AppColors.concolor,
+              fontSize: 10,
+              fontWeight: FontWeight.w500, // Consider making the text a bit bolder
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildTaskBox(String title, Color color, double width, double height, int taskCount, IconData iconData) {
+    return Container(
+      width: width,
+      height: height,
+      margin: const EdgeInsets.only(left: 0.0), // Adjust the left margin as needed
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: color,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start, // Align to the start (left)
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0), // Add some padding
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start, // Align text to the start
+                mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 5), // Space between title and count
+                  Text(
+                    '$taskCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-
-          const Spacer(), // This will push everything below it to the bottom if needed
+          // Add the icon to the right side of the box
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0), // Adjust padding as needed
+            child: Icon(
+              iconData,
+              color: Colors.white,
+              size: 24, // Adjust size as needed
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // Helper method to build filter buttons
-  Widget _buildFilterButton(String text) {
-    return ElevatedButton(
-      onPressed: () {
-        setState(() {
-          _selectedButton = text; // Update the selected button
-        });
-        print('$text button pressed');
-      },
-      style: ElevatedButton.styleFrom(
-        backgroundColor: _selectedButton == text
-            ? AppColors.concolor // Change color to red if selected
-            : Colors.white, // Default color
-        elevation: 3, // Button shadow effect
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6), // Rounded corners
-          side: BorderSide(
-            color: AppColors.concolor, // Border color
-            width: 1, // Border width
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), // Padding inside the button
-      ),
-      child: Text(
-        text,
-        style: GoogleFonts.montserrat(
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-          color: _selectedButton == text ? Colors.white : AppColors.concolor, // Text color based on selection
-        ),
-      ),
-    );
-  }
 
-// Helper method to build task boxes
-  Widget _buildTaskBox(String title, Color color, double width, double height, int count) {
+  Widget _buildTaskDetailBox(String title, String description, Color color, String priority, String status,DateTime date, String location ) {
     return Container(
-      width: width,
-      height: height,
+      width: 260, // Keep the width as needed
+      height: 120, // Increase the height here to accommodate the rectangles
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 2,
-            blurRadius: 6,
-            offset: const Offset(0, 3),
+            color: Colors.grey.withOpacity(0.5), // Shadow color
+            spreadRadius: 2, // Spread radius of the shadow
+            blurRadius: 6, // Blur radius of the shadow
+            offset: const Offset(0, 3), // Offset of the shadow
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between title and icon
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Adjusted padding
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Title and count
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0), // Add padding to the left
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // Center items vertically
-              crossAxisAlignment: CrossAxisAlignment.start, // Align text to the start (left)
-              children: [
-                Text(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, // Align title and priority to opposite ends
+            children: [
+              Expanded( // Expanded to use available space
+                child: Text(
                   title,
-                  style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                    fontSize: 9,
+                  style: const TextStyle(
+                    fontSize: 16, // Font size for title
                     fontWeight: FontWeight.bold,
+                    color: Colors.black,
                   ),
                 ),
-                const SizedBox(height: 4), // Space between title and count
-                Text(
-                  '$count', // Display the count below the title
-                  style: GoogleFonts.montserrat(
+              ),
+              // Add the priority text on the right side
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2), // Decreased vertical padding
+                decoration: BoxDecoration(
+                  color: _getPriorityColor(priority), // Function to get the color based on priority
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  priority,
+                  style: const TextStyle(
+                    fontSize: 10, // Adjusted font size if needed
                     color: Colors.white,
-                    fontSize: 14, // Adjust font size as needed
-                    fontWeight: FontWeight.w600, // Semi-bold text for count
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4), // Reduced space between title and description
+          Text(
+            description,
+            style: const TextStyle(
+              fontSize: 12, // Font size for description (can also be adjusted)
+              color: Colors.grey,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis, // Ensure description uses ellipsis
+          ),
+          const SizedBox(height: 8), // Space between description and status
+          Text(
+            status, // Add the status text
+            style: const TextStyle(
+              fontSize: 12, // Font size for status
+              color: Colors.black, // Function to get the color based on status
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8), // Space between status and rectangles
+          if (status == "In Progress") ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Two yellow rectangles
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.yellow, // Color of the first rectangle
+                  ),
+                ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.yellow, // Color of the second rectangle
+                  ),
+                ),
+                // One grey rectangle
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.grey, // Color of the third rectangle
                   ),
                 ),
               ],
             ),
-          ),
-          // Icon on the right
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0), // Add padding to the right
-            child: Icon(
-              Icons.check_circle, // Replace with the appropriate icon for your use case
-              color: Colors.white, // Icon color
-              size: 30, // Adjust size as needed
+          ],
+          if (status == "Overdue") ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Two yellow rectangles
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.red, // Color of the first rectangle
+                  ),
+                ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.red, // Color of the second rectangle
+                  ),
+                ),
+                // One grey rectangle
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.grey, // Color of the third rectangle
+                  ),
+                ),
+              ],
             ),
+          ],
+          if (status == "Completed") ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Two yellow rectangles
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.green, // Color of the first rectangle
+                  ),
+                ),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.green, // Color of the second rectangle
+                  ),
+                ),
+                // One grey rectangle
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(5), // Rounded corners
+                  child: Container(
+                    width: 60, // Width of each rectangle
+                    height: 5, // Height of each rectangle
+                    color: Colors.green, // Color of the third rectangle
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 10), // Space between rectangles and date/location icons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between icons
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 16,color: AppColors.concolor,), // Date icon
+                  const SizedBox(width: 4), // Space between icon and date
+                  Text(
+                    "${date.day}/${date.month}/${date.year}", // Display date
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Icon(Icons.location_on, size: 16,color:AppColors.concolor), // Location icon
+                  const SizedBox(width: 4), // Space between icon and location
+                  Text(
+                    location, // Display location
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),
     );
   }
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'High':
+        return Colors.red; // Red for high priority
+      case 'Medium':
+        return Colors.orange; // Orange for medium priority
+      case 'Low':
+        return Colors.green; // Green for low priority
+      default:
+        return Colors.grey; // Default color
+    }
+  }
 
-}
+  }
