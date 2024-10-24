@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:ttm/Splash_Screen.dart';
 import 'Constant.dart';
 import 'ForgotPasswordPage.dart';
+import 'Navigation_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -57,9 +58,9 @@ class _LoginPageState extends State<LoginPage> {
 
       if (_usernameController.text == "" && _passwordController.text == "") {
         // If login is successful, navigate to the next page (e.g., home page)
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => SplashScreen()), // Directly push the ForgotPasswordPage
+          MaterialPageRoute(builder: (context) => Navigation()), // Directly push the ForgotPasswordPage
         );
       } else {
         setState(() {
