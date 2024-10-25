@@ -13,7 +13,7 @@ Widget buildFilterButton(String text, String selectedButton, Function onPressed)
         backgroundColor: selectedButton == text ? AppColors.concolor : Colors.white,
         elevation: 3,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(5),
           side: BorderSide(
             color: AppColors.concolor,
             width: 1,
@@ -36,14 +36,13 @@ Widget buildFilterButton(String text, String selectedButton, Function onPressed)
 }
 
 
-
 Widget buildTaskBox(String title, Color color, double width, double height, int taskCount, IconData iconData) {
   return Container(
     width: width,
     height: height,
     margin: const EdgeInsets.only (left: 0.0),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(6),
       color: color,
     ),
     child: Row(
@@ -88,13 +87,20 @@ Widget buildTaskBox(String title, Color color, double width, double height, int 
   );
 }
 
-Widget buildTaskDetailBox(String title, String description, Color color, String priority, String status, DateTime date, String location) {
+Widget buildTaskDetailBox(
+    String title,
+    String description,
+    Color color,
+    String priority,
+    String status,
+    DateTime date,
+    String location) {
   return Container(
     width: 260,
-    height: 100,
+    height: 140, // Increased height to prevent overflow
     decoration: BoxDecoration(
       color: color,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(5),
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.5),
@@ -110,18 +116,17 @@ Widget buildTaskDetailBox(String title, String description, Color color, String 
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.montserrat(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+            Text(
+              title,
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
+            const SizedBox(width: 8), // Optional space between title and priority
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               decoration: BoxDecoration(
@@ -157,6 +162,39 @@ Widget buildTaskDetailBox(String title, String description, Color color, String 
             fontWeight: FontWeight.bold,
           ),
         ),
+        const SizedBox(height: 10),
+
+        // Progress rectangles
+        Row(
+          children: List.generate(3, (index) {
+            // Check the status and adjust the colors based on it
+            Color rectangleColor;
+            if (status == "In Progress") {
+              // Set to red for the first two rectangles if status is "In progress"
+              rectangleColor = index < 2 ? Colors.yellow : Colors.grey;
+            }
+            if (status == "Overdue") {
+              // Set to red for the first two rectangles if status is "In progress"
+              rectangleColor = index < 2 ? Colors.red : Colors.grey;
+            }
+            else {
+              rectangleColor = index < 3 ? Colors.green : Colors.grey;
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Container(
+                width: 20,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: rectangleColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            );
+          }),
+        ),
+
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -194,6 +232,8 @@ Widget buildTaskDetailBox(String title, String description, Color color, String 
   );
 }
 
+
+// Function to build the meeting detail box
 Widget buildMeetingDetailBox(
     String title,
     String description,
@@ -204,13 +244,14 @@ Widget buildMeetingDetailBox(
     DateTime toDate,
     String fromTime,
     String toTime,
-    String location) {
+    String location,
+    ) {
   return Container(
     width: 400,
-    height: 150, // Increased height for added content
+    height: 120,
     decoration: BoxDecoration(
       color: color,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(5),
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.5),
@@ -227,24 +268,23 @@ Widget buildMeetingDetailBox(
       children: [
         // Title and Priority Row
         Row(
-          mainAxisAlignment: MainAxisAlignment.center, // Space between title and priority
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             // Title on the left
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.montserrat(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+            Text(
+              title,
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
-            // Priority on the right
+            const SizedBox(width: 8), // Optional space between title and priority
+            // Priority on the right, closer to the title
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               decoration: BoxDecoration(
-                color: getPriorityColor(priority),
+                color: getPriorityColor(priority), // Use the getPriorityColor function
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -257,7 +297,7 @@ Widget buildMeetingDetailBox(
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 3), // Optional, adjust spacing as needed
 
         // Calendar Icon, From and To Dates, Time Icon, From and To Times
         Row(
@@ -295,28 +335,46 @@ Widget buildMeetingDetailBox(
         ),
         const SizedBox(height: 8),
 
-        // Status
-        Text(
-          status,
-          style: GoogleFonts.montserrat(
-            fontSize: 12,
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-          ),
+        // Dashed line separator
+        CustomPaint(
+          size: Size(double.infinity, 1), // Width and height of the dashed line
+          painter: DashedLinePainter(),
         ),
 
         const SizedBox(height: 8),
 
-        // Location Icon and Text
+        // Row for address on the left and status on the right
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(Icons.location_on, size: 16, color: Colors.grey),
-            const SizedBox(width: 4),
-            Text(
-              location,
-              style: GoogleFonts.montserrat(
-                fontSize: 12,
-                color: Colors.black,
+            // Address on the left
+            Row(
+              children: [
+                Icon(Icons.location_on, size: 16, color: AppColors.concolor),
+                const SizedBox(width: 4),
+                Text(
+                  location,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 12,
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+            // Status on the right
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: getStatusColor(status ), // Use the getStatusColor function
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                status,
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: getStatusTextColor(status), // Use the getStatusTextColor function
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
@@ -326,13 +384,41 @@ Widget buildMeetingDetailBox(
   );
 }
 
+// Function to get the status text color
+Color getStatusTextColor(String status) {
+  if (status == "In Progress") {
+    return Colors.white;
+  } else if (status == "Completed") {
+    return Colors.white;
+  } else if (status == "Not started") {
+    return Colors.white;
+  } else {
+    return Colors.black; // Default color for any other status
+  }
+}
+
+// Function to get the status background color
+Color getStatusColor(String status) {
+  if (status == "In Progress") {
+    return Colors.orange;
+  } else if (status == "Completed") {
+    return Colors.green;
+  } else if (status == "Not started") {
+    return Colors.grey;
+  } else {
+    return Colors.blue; // Default color for any other status
+  }
+}
+
+
+
 
 Color getPriorityColor(String priority) {
   switch (priority) {
     case 'High':
       return Colors.red;
     case 'Medium':
-      return Colors.orange;
+      return Color(0xFFFFC107);
     case 'Low':
       return Colors.green;
     default:
