@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ttm/Splash_Screen.dart';
-import 'Constant.dart';
-import 'ForgotPasswordPage.dart';
-import 'Navigation_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'api_service.dart'; // Import the API service
+import 'model.dart';
+import '../Constant.dart';
+import '../ForgotPasswordPage.dart';
+import '../Navigation_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _useFaceId = false; // Track Face ID toggle state
   FocusNode _usernameFocusNode = FocusNode(); // Focus node for username field
   FocusNode _passwordFocusNode = FocusNode(); // Focus node for password field
+  final ApiService _apiService = ApiService(); // Create an instance of ApiService
 
   @override
   void initState() {
@@ -44,41 +47,56 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
+
+  void _login() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    // Simulate a network request or perform actual login logic here
-    Future.delayed(Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
+    try {
+      // Call the login method from ApiService
+      UserModel? user = await _apiService.login(
+        _usernameController.text,
+        _passwordController.text,
+      );
 
-      if (_usernameController.text == "" && _passwordController.text == "") {
-        // If login is successful, navigate to the next page (e.g., home page)
+      if (user != null) {
+        // Save the token to shared preferences
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('token', user.token);
+
+        // Navigate to the next screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => Navigation()), // Directly push the ForgotPasswordPage
+          MaterialPageRoute(builder: (context) => Navigation()),
         );
       } else {
         setState(() {
-          _errorMessage = "Invalid username or password";
+          _errorMessage = "Invalid login credentials.";
         });
       }
-    });
+    } catch (e) {
+      setState(() {
+        _errorMessage = "Invalid username or password";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
+
 
   void _navigateToForgotPassword() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ForgotPasswordPage()), // Directly push the ForgotPasswordPage
-    ); // Navigate to ForgotPasswordPage
+      MaterialPageRoute(builder: (context) => ForgotPasswordPage()), // Navigate to ForgotPasswordPage
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build (BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(

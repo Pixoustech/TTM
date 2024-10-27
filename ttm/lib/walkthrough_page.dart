@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'Constant.dart'; // Ensure you have this defined correctly.
-import 'login_page.dart';
+import 'Login_Page/login_page.dart';
 
 class WalkthroughPage extends StatefulWidget {
   const WalkthroughPage({super.key});

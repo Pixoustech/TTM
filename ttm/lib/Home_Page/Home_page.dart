@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Make sure to import Google Fonts
 import 'package:ttm/Constant.dart';
+
+import '../Widgets_page.dart';
 import 'Home_page_Widgets.dart';
+
 
 class HomePage extends StatefulWidget {
   @override
