@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ttm/walkthrough_page.dart';
+import 'Home_Page/Home_page.dart';
 import 'Login_Page/login_page.dart';
+import 'Navigation_page.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -55,7 +57,9 @@ class _SplashPageState extends State<SplashScreen>
   Future<void> _checkFirstLaunch() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool? isFirstLaunch = prefs.getBool('isFirstLaunch');
+    String? userToken = prefs.getString('userToken'); // Retrieve stored token
 
+    // Delay for splash screen effect
     await Future.delayed(const Duration(seconds: 3));
 
     if (isFirstLaunch == null || isFirstLaunch) {
@@ -64,13 +68,21 @@ class _SplashPageState extends State<SplashScreen>
         context,
         MaterialPageRoute(builder: (context) => const WalkthroughPage()),
       );
+    } else if (userToken != null) {
+      // Redirect to HomePage if token exists
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Navigation()),
+      );
     } else {
+      // Redirect to LoginPage if no token
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     }
   }
+
 
   @override
   void dispose() {

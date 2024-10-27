@@ -56,9 +56,10 @@ dependencies:
   google_maps_flutter: ^2.5.3
   url_launcher: ^6.3.1
   flutter_google_street_view: ^3.1.4
-  intl: ^0.17.0
+  intl: ^0.19.0
   geocoding: ^2.0.0
   dio: ^5.7.0
+  table_calendar: ^3.1.2
 
 
 

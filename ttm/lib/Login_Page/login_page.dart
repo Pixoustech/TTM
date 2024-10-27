@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
       if (user != null) {
         // Save the token to shared preferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('token', user.token);
+        await prefs.setString('userToken', user.token); // Save token for automatic login
 
         // Navigate to the next screen
         Navigator.pushReplacement(
@@ -72,19 +72,28 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (context) => Navigation()),
         );
       } else {
-        setState(() {
-          _errorMessage = "Invalid login credentials.";
-        });
+        // If user is null, show Snackbar for invalid credentials
+        _showSnackbar("Username and password wrong");
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = "Invalid username or password";
-      });
+      // Show Snackbar for any error that occurs
+      _showSnackbar("Username and password wrong");
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+// Method to show Snackbar
+  void _showSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: Duration(seconds: 2), // Duration for the Snackbar
+        backgroundColor: Colors.red, // Background color for the Snackbar
+      ),
+    );
   }
 
 
