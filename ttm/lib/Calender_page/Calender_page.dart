@@ -3,9 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart'; // Import the table_calendar package
 import 'package:ttm/Constant.dart';
-import 'Home_Page/Home_page.dart';
-import 'Home_Page/Home_page_Widgets.dart';
-import 'Navigation_page.dart';
+import '../Home_Page/Home_page.dart';
+import '../Home_Page/Home_page_Widgets.dart';
+import '../Navigation_page.dart';
+import '../Widgets_page.dart';
+import 'model.dart';
 
 class CalendarPage extends StatefulWidget {
   @override
@@ -19,6 +21,12 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime? _endDate; // Variable for the end date
   DateTime? _selectedDate; // Variable for the selected date
 
+  final List<LeaveStatus> _leaveStatuses = [
+    LeaveStatus(fromDate: DateTime(2024, 10, 1), toDate: DateTime(2024, 10, 1), status: "Approved",title:"Design"),
+    LeaveStatus(fromDate: DateTime(2024, 9, 15), toDate: DateTime(2024, 9, 16), status: "Rejected",title:"App develop"),
+    LeaveStatus(fromDate: DateTime(2024, 12, 25), toDate: DateTime(2024, 12, 30), status: "Waiting",title:"App develop"), // Example with a range
+  ];
+
   // Sample data for task statuses
   final Map<String, int> _taskStatuses = {
     'Not Started': 5,
@@ -26,6 +34,7 @@ class _CalendarPageState extends State<CalendarPage> {
     'Completed': 10,
     'Overdue': 6,
   };
+
 
   // Sample holiday data
   final Map<DateTime, String> _holidays = {
@@ -120,30 +129,39 @@ class _CalendarPageState extends State<CalendarPage> {
                   onDaySelected: (selectedDay, focusedDay) {
                     setState(() {
                       _focusedDay = focusedDay;
-                      _selectedDate = selectedDay; // Set the selected date
+                      _selectedDate = selectedDay;
 
-                      // Reset the time component to midnight for accurate comparison
                       DateTime selectedDateAtMidnight = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
-
-                      // Check if the selected date is a holiday
                       if (_holidays.containsKey(selectedDateAtMidnight)) {
-                        _holidayDetail = _holidays[selectedDateAtMidnight]; // Get the holiday detail
+                        _holidayDetail = _holidays[selectedDateAtMidnight];
                       } else {
-                        _holidayDetail = null; // Reset holiday detail if not a holiday
+                        _holidayDetail = null;
                       }
+                    });
+                  },
+                  onPageChanged: (focusedDay) {
+                    setState(() {
+                      _focusedDay = focusedDay; // Update the focused day when the user swipes
                     });
                   },
                   headerVisible: false,
                   calendarStyle: CalendarStyle(
                     selectedDecoration: BoxDecoration(
                       color: _selectedDate != null && _selectedDate == _focusedDay
-                          ? const Color(0xBBB35258) // Color for the selected date
+                          ? const Color(0xBBB35258)
                           : AppColors.concolor,
                       shape: BoxShape.circle,
                     ),
                     todayDecoration: const BoxDecoration(
                       color: Color(0xFF910002),
                       shape: BoxShape.circle,
+                    ),
+                    holidayDecoration: BoxDecoration(
+                      color: Color(0xFFFFF2F2), // Color for holidays
+                      shape: BoxShape.circle,
+                    ),
+                    holidayTextStyle: TextStyle(
+                      color: Colors.black, // Text color for holidays
                     ),
                   ),
                   daysOfWeekStyle: DaysOfWeekStyle(
@@ -153,8 +171,11 @@ class _CalendarPageState extends State<CalendarPage> {
                   selectedDayPredicate: (day) {
                     return _selectedDate != null && _selectedDate == day;
                   },
+                  holidayPredicate: (day) {
+                    return _holidays.containsKey(normalizeDate(day));
+                  },
                 )
-                    : TableCalendar(
+                    :_currentView == 'events'? TableCalendar(
                   firstDay: DateTime.utc(2020, 1, 1),
                   lastDay: DateTime.utc(2030, 12, 31),
                   focusedDay: _focusedDay,
@@ -179,6 +200,11 @@ class _CalendarPageState extends State<CalendarPage> {
                         _startDate = selectedDay; // Reset start date
                         _endDate = null; // Reset end date
                       }
+                    });
+                  },
+                  onPageChanged: (focusedDay) {
+                    setState(() {
+                      _focusedDay = focusedDay; // Update the focused day when the user swipes
                     });
                   },
                   headerVisible: false,
@@ -217,7 +243,59 @@ class _CalendarPageState extends State<CalendarPage> {
                     }
                     return _selectedDate != null && _selectedDate == day;
                   },
-                ),
+                )
+                    : _currentView == 'leave' ? // In your TableCalendar widget for 'leave'
+                TableCalendar(
+                  firstDay: DateTime.utc(2020, 1, 1),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  focusedDay: _focusedDay,
+                  calendarFormat: CalendarFormat.month,
+                  onDaySelected: (selectedDay, focusedDay) {
+                    setState(() {
+                      _focusedDay = focusedDay;
+                      _selectedDate = selectedDay;
+                    });
+                  },
+                  onPageChanged: (focusedDay) {
+                    setState(() {
+                      _focusedDay = focusedDay; // Update the focused day when the user swipes
+                    });
+                  },
+                  headerVisible: false,
+                  calendarStyle: CalendarStyle(
+                    selectedDecoration: BoxDecoration(
+                      color: _selectedDate != null && _selectedDate == _focusedDay
+                          ? const Color(0xBBB35258)
+                          : AppColors.concolor,
+                      shape: BoxShape.circle,
+                    ),
+                    todayDecoration: const BoxDecoration(
+                      color: Color(0xFF910002),
+                      shape: BoxShape.circle,
+                    ),
+                    holidayDecoration: BoxDecoration(
+                      color: Color(0x94FFAEB1), // Set the background color for leave dates
+                      shape: BoxShape.circle,
+                    ),
+                    holidayTextStyle: TextStyle(
+                      color: Colors.white, // Text color for holidays
+                    ),
+                  ),
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: TextStyle(color: Colors.grey),
+                    weekendStyle: TextStyle(color: Colors.grey),
+                  ),
+                  selectedDayPredicate: (day) {
+                    return _selectedDate != null && _selectedDate == day;
+                  },
+                  holidayPredicate: (day) {
+                    // Check if the date is within any leave range
+                    return _leaveStatuses.any((leaveStatus) =>
+                    day.isAfter(leaveStatus.fromDate.subtract(Duration(days: 1))) &&
+                        day.isBefore(leaveStatus.toDate.add(Duration(days: 1))));
+                  },
+                ):
+                Container(),
               ),
               SizedBox(height: 16),
               // Show task status summary only for Events
@@ -230,12 +308,185 @@ class _CalendarPageState extends State<CalendarPage> {
 
               if (_currentView == 'holidays' && _selectedDate != null)
                 _buildHolidayDetail(),
+              if (_currentView == 'leave' && _selectedDate != null)
+                _buildLeaveDetail(),
             ],
           ),
         ),
       ),
     );
   }
+
+
+  Widget _buildLeaveDetail() {
+    if (_selectedDate == null) return Container();
+
+    LeaveStatus? leaveStatus = getLeaveStatusForDate(_selectedDate!);
+    if (leaveStatus == null) {
+      return Container();
+    }
+
+    // Extract day, month, year, and status for UI
+    String day = DateFormat('d').format(_selectedDate!);
+    String month = DateFormat('MMMM').format(_selectedDate!);
+    String year = DateFormat('y').format(_selectedDate!);
+    String status = leaveStatus.status;
+    String title = leaveStatus.title;
+    DateTime fromDate = leaveStatus.fromDate;
+    DateTime toDate = leaveStatus.toDate;
+
+    final Map<String, Color> statuses = {
+      'Approved': Colors.green,
+      'Rejected': Colors.red,
+      'Waiting': Colors.orange,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            SizedBox(
+              height: 50,
+              child: Text(
+                day,
+                style: GoogleFonts.montserrat(fontSize: 50, fontWeight: FontWeight.bold),
+              ),
+            ),
+            SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(month, style: GoogleFonts.montserrat(fontSize: 16)),
+                Text(year, style: GoogleFonts.montserrat(fontSize: 16)),
+              ],
+            ),
+          ],
+        ),
+        Divider(height: 20, thickness: 1, color: Colors.grey),
+        SizedBox(height: 2),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: statuses.keys.map((s) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(color: statuses[s]!, shape: BoxShape.circle),
+                    ),
+                    SizedBox(width: 4),
+                    Text(s, style: GoogleFonts.montserrat(fontSize: 10)),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 16),
+        // Outer container for the status box
+        Row(
+          children: [
+            // Color bar on the left side, outside the main content
+            Container(
+              width: 10, // Adjust the width as needed
+              height: 120, // Set the same height as the main content
+              decoration: BoxDecoration(
+                color: statuses[status] ?? Colors.grey,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(10),
+                  bottomLeft: Radius.circular(10),
+                ),
+              ),
+            ),
+            SizedBox(width: 0), // Space between the bar and content
+            // Main content section with dynamic size
+            Expanded(
+              child: Container(
+                height: 120, // Set a default height
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 0,
+                      blurRadius: 5,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Stack( // Use Stack to position the status badge
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.all(10), // Adjusted padding for a more compact look
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$title [${leaveStatus.toDate.difference(leaveStatus.fromDate).inDays + 1} Days]',
+                            style: GoogleFonts.montserrat(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: 16, color: Colors.black),
+                              SizedBox(width: 4),
+                              Text(
+                                'From: ${DateFormat('MMMM d, y').format(fromDate)}',
+                                style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today, size: 16, color: Colors.black),
+                              SizedBox(width: 4),
+                              Text(
+                                'To: ${DateFormat('MMMM d, y').format(toDate)}',
+                                style: GoogleFonts.montserrat(fontSize: 12, color: Colors.black),
+                              ),
+                            ],
+                          ),
+                          Divider(),
+                        ],
+                      ),
+                    ),
+                    // Status badge positioned at the top right corner
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statuses[status] ?? Colors.grey,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          status,
+                          style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 16),
+      ],
+    );
+  }
+
+
+
 
   Widget _buildHolidayDetail() {
     // Check if a date is selected
@@ -245,20 +496,21 @@ class _CalendarPageState extends State<CalendarPage> {
 
     // Format the date components
     String day = DateFormat('dd').format(_selectedDate!); // Get the day
-    String month = DateFormat('MMMM').format(_selectedDate!); // Get the full month name
+    String month =
+    DateFormat('MMMM').format(_selectedDate!); // Get the full month name
     String year = DateFormat('yyyy').format(_selectedDate!); // Get the year
 
-    String selecteddate=_selectedDate.toString();
     // Check if the selected date is a holiday
-    String holidayDetail = _holidays[selecteddate] ?? 'No holiday on this date.'; // Get holiday detail or default message
+    String holidayDetail = _holidayDetail ??
+        'No holiday on this date.'; // Get holiday detail or default message
 
     return Container(
       padding: EdgeInsets.all(16), // Add padding for better spacing
       margin: EdgeInsets.only(top: 16), // Margin for spacing from other widgets
       decoration: BoxDecoration(
-        color: Colors.blue[50], // Light blue background for the holiday box
+        color: Color(0xBBD6D6D6), // Light blue background for the holiday box
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.blue, width: 1),
+        border: Border.all(color: Color(0xFF7E1416), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start, // Align text to the left
@@ -278,7 +530,8 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
               SizedBox(width: 8), // Space between day and month/year
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start, // Align month and year to the left
+                crossAxisAlignment: CrossAxisAlignment
+                    .start, // Align month and year to the left
                 children: [
                   SizedBox(
                     height: 20, // Height for the month
@@ -286,7 +539,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       month, // Show the month
                       style: GoogleFonts.montserrat(
                         fontSize: 16, // Size for the month
-                        fontWeight: FontWeight.normal, // Normal weight for month
+                        fontWeight:
+                        FontWeight.normal, // Normal weight for month
                       ),
                     ),
                   ),
@@ -304,7 +558,7 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ],
           ),
-          SizedBox(height: 8), // Space between date and holiday detail
+          SizedBox(height: 0), // Space between date and holiday detail
           Text(
             holidayDetail, // Show the holiday detail
             style: GoogleFonts.montserrat(fontSize: 16),
@@ -314,6 +568,7 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
     );
   }
+
 
 
   // New widget to display task status summary
@@ -373,12 +628,11 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget _buildCustomHeader() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween, // Space between the two sides
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         // Month and Year on the left
         Text(
-          DateFormat('MMMM yyyy')
-              .format(_focusedDay), // Format to show full month name and year
+          DateFormat('MMMM yyyy').format(_focusedDay), // Format to show full month name and year
           style: GoogleFonts.montserrat(
             fontSize: 20,
             fontWeight: FontWeight.bold,
@@ -391,8 +645,7 @@ class _CalendarPageState extends State<CalendarPage> {
               icon: Icon(Icons.chevron_left, color: AppColors.concolor),
               onPressed: () {
                 setState(() {
-                  _focusedDay =
-                      DateTime(_focusedDay.year, _focusedDay.month - 1);
+                  _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
                 });
               },
             ),
@@ -400,8 +653,7 @@ class _CalendarPageState extends State<CalendarPage> {
               icon: Icon(Icons.chevron_right, color: AppColors.concolor),
               onPressed: () {
                 setState(() {
-                  _focusedDay =
-                      DateTime(_focusedDay.year, _focusedDay.month + 1);
+                  _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
                 });
               },
             ),
@@ -703,4 +955,16 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
     );
   }
+
+  LeaveStatus? getLeaveStatusForDate(DateTime selectedDate) {
+    for (var leaveStatus in _leaveStatuses) {
+      if (selectedDate.isAfter(leaveStatus.fromDate.subtract(Duration(days: 1))) &&
+          selectedDate.isBefore(leaveStatus.toDate.add(Duration(days: 1)))) {
+        return leaveStatus; // Return the leave data if the date is within range
+      }
+    }
+    return null; // Return null if there's no leave on the selected date
+  }
+
+
 }
