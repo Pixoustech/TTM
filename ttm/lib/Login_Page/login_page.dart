@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,7 +47,8 @@ class _LoginPageState extends State<LoginPage> {
     _passwordController.dispose();
     super.dispose();
   }
-
+// Create an instance of FlutterSecureStorage
+  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
 
   void _login() async {
     setState(() {
@@ -65,6 +67,13 @@ class _LoginPageState extends State<LoginPage> {
         // Save the token to shared preferences
         SharedPreferences prefs = await SharedPreferences.getInstance();
         await prefs.setString('userToken', user.token); // Save token for automatic login
+
+        // Save Face ID preference
+        await prefs.setBool('useFaceId', _useFaceId); // Save Face ID preference
+
+        // Store username and password securely
+        await secureStorage.write(key: 'username', value: _usernameController.text);
+        await secureStorage.write(key: 'password', value: _passwordController.text);
 
         // Navigate to the next screen
         Navigator.pushReplacement(

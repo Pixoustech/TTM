@@ -310,7 +310,6 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
-
   Widget _buildLeaveDetail() {
     // Ensure _selectedDate is not null
     if (_selectedDate == null) return Container();
@@ -342,7 +341,7 @@ class _CalendarPageState extends State<CalendarPage> {
         Row(
           children: [
             SizedBox(
-              height: 60,
+              height: 70,
               child: Text(
                 day,
                 style: GoogleFonts.montserrat(fontSize: 50, fontWeight: FontWeight.bold),
@@ -388,23 +387,42 @@ class _CalendarPageState extends State<CalendarPage> {
         SizedBox(height: 16),
 
         // Outer container for the status box
-        Container(
-          height: 120,
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                spreadRadius: 0,
-                blurRadius: 5,
-                offset: Offset(0, 3),
+        Stack(
+          children: [
+            // Vertical status indicator with rounded corners
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child:         Container(
+                width: 10 ,
+                height: 130,
+                decoration: BoxDecoration(
+    color: statuses[status] ?? Colors.grey,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                  ),
+                ),
               ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              Padding(
+            ),
+            // Main container for leave details
+            Container(
+              height: 120,
+              margin: EdgeInsets.only(left: 10), // Add margin to avoid overlap with the vertical line
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    spreadRadius: 0,
+                    blurRadius: 5,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Padding(
                 padding: EdgeInsets.all(10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -437,9 +455,9 @@ class _CalendarPageState extends State<CalendarPage> {
                           ),
                         ],
                       ),
-                      Divider (),
+                      Divider(),
                       Text(
-                        '$description ''',
+                        '$description ',
                         style: GoogleFonts.montserrat(fontSize: 10, color: Colors.black45),
                       ),
                     ] else ...[
@@ -464,31 +482,30 @@ class _CalendarPageState extends State<CalendarPage> {
                   ],
                 ),
               ),
-              // Status badge positioned at the top right corner
-              if (leaveStatus != null)
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statuses[status] ?? Colors.grey,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      status,
-                      style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
+            ),
+            // Status badge positioned at the top right corner
+            if (leaveStatus != null)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: statuses[status] ?? Colors.grey,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    status,
+                    style: GoogleFonts.montserrat(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
         SizedBox(height: 16),
       ],
     );
   }
-
 
   Widget _buildHolidayDetail() {
     // Check if a date is selected

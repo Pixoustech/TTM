@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import for SharedPreferences
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Import for secure storage
+import 'package:local_auth/local_auth.dart'; // Import for biometric authentication
 import 'package:ttm/Constant.dart';
+import 'Login_Page/login_page.dart';
+import 'Navigation_page.dart'; // Make sure you have this file
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -12,6 +17,60 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _useFaceId = false; // Track Face ID toggle state
   bool _locationEnabled = false; // Track Location toggle state
   bool _notificationsEnabled = false; // Track Notifications toggle state
+  final LocalAuthentication auth = LocalAuthentication();
+  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFaceIdPreference(); // Load Face ID preference when the profile page is initialized
+    _attemptBiometricLogin(); // Attempt biometric login if Face ID is enabled
+  }
+
+  Future<void> _loadFaceIdPreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _useFaceId = prefs.getBool('useFaceId') ?? false; // Load Face ID preference
+    });
+  }
+
+  Future<void> _attemptBiometricLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool useFaceId = prefs.getBool('useFaceId') ?? false;
+
+    if (useFaceId) {
+      // Check if the device supports biometric authentication
+      bool canCheckBiometrics = await auth.canCheckBiometrics;
+      if (canCheckBiometrics) {
+        // Attempt to authenticate
+        bool authenticated = await auth.authenticate(
+          localizedReason: 'Please authenticate to log in',
+          options: const AuthenticationOptions(
+            useErrorDialogs: true,
+            stickyAuth: true,
+          ),
+        );
+
+        if (authenticated) {
+          // If authentication is successful, retrieve stored credentials
+          String? username = await secureStorage.read(key: 'username');
+          String? password = await secureStorage.read(key: 'password');
+
+          // Perform login with stored credentials
+          if (username != null && password != null) {
+            // Call your login method here with the stored credentials
+            // Assuming you have a method to handle login
+            // await _apiService.login(username, password);
+            // Navigate to the next screen
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Navigation()),
+            );
+          }
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,35 +94,20 @@ class _ProfilePageState extends State<ProfilePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Profile Picture at the Center
               _buildUserProfile(),
               SizedBox(height: 20),
-
-              // Edit Profile Box
               _buildEditProfileBox(context),
               SizedBox(height: 10),
-
-              // Statistic Profile Box
               _buildStatisticBox(context),
               SizedBox(height: 10),
-
-              // Change Password Profile Box
               _buildChangePassBox(context),
               SizedBox(height: 10),
-
-              // Enable Face ID Profile Box
               _buildEnableFaceIDBox(context),
               SizedBox(height: 10),
-
-              // Location Profile Box
               _buildLocationBox(context),
               SizedBox(height: 10),
-
-              // Notification Profile Box
               _buildNotificationBox(context),
               SizedBox(height: 10),
-
-              // Logout Box
               _buildLogoutBox(context),
             ],
           ),
@@ -72,15 +116,12 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Function to create the user profile section
   Widget _buildUserProfile() {
     return Column(
       children: [
-        // Outer Circle with Gradient Border
         Stack(
           alignment: Alignment.center,
           children: [
-            // Outer gradient border
             Container(
               width: 155,
               height: 155,
@@ -97,7 +138,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
             ),
-            // Inner Circle with a solid background
             Container(
               width: 150,
               height: 150,
@@ -106,7 +146,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: Colors.white,
               ),
             ),
-            // Inner CircleAvatar with padding
             Container(
               padding: EdgeInsets.all(9),
               child: CircleAvatar(
@@ -137,7 +176,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Function to create the Edit Profile box
   Widget _buildEditProfileBox(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -211,8 +249,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-
-  // Function to create the Enable Face ID box with a toggle button
   Widget _buildEnableFaceIDBox(BuildContext context) {
     return _buildToggleBox(
       context,
@@ -223,11 +259,11 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           _useFaceId = value; // Update toggle state
         });
+        _saveFaceIdPreference(value); // Save Face ID preference
       },
     );
   }
 
-  // Function to create the LocationBox with a toggle button
   Widget _buildLocationBox(BuildContext context) {
     return _buildToggleBox(
       context,
@@ -242,7 +278,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Function to create the Notification Box with a toggle button
   Widget _buildNotificationBox(BuildContext context) {
     return _buildToggleBox(
       context,
@@ -257,7 +292,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Helper function to create toggle boxes
   Widget _buildToggleBox(BuildContext context, IconData icon, String title, bool value, Function(bool) onToggle) {
     return Container(
       padding: EdgeInsets.all(16.0),
@@ -306,7 +340,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildLogoutBox(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Handle Logout action
+        _showLogoutConfirmationDialog(context); // Show confirmation dialog
       },
       child: _buildProfileBox(
         context,
@@ -315,5 +349,50 @@ class _ProfilePageState extends State<ProfilePage> {
         textColor: Colors.red,
       ),
     );
+  }
+
+  // Method to show the logout confirmation dialog
+  Future<void> _showLogoutConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button to exit
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Logout'),
+          content: Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            TextButton(
+              child: Text('Confirm'),
+              onPressed: () {
+                logout(context); // Call the logout method
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Method to handle logout
+  Future<void> logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userToken'); // Remove token to log the user out
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
+  }
+
+  // Method to save Face ID preference
+  Future<void> _saveFaceIdPreference(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('useFaceId', value); // Save Face ID preference
   }
 }
