@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:local_auth/local_auth.dart'; // Import for biometric authentication
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart'; // Import the API service
 import 'model.dart';
 import '../Constant.dart';
-import '../ForgotPasswordPage.dart';
+import '../Password_pages/ForgotPasswordPage.dart';
 import '../Navigation_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -20,73 +21,91 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
-  String? _errorMessage;
   bool _isPasswordVisible = false; // Track password visibility
   bool _useFaceId = false; // Track Face ID toggle state
-  FocusNode _usernameFocusNode = FocusNode(); // Focus node for username field
-  FocusNode _passwordFocusNode = FocusNode(); // Focus node for password field
   final ApiService _apiService = ApiService(); // Create an instance of ApiService
+  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  final LocalAuthentication auth = LocalAuthentication(); // Local authentication instance
 
   @override
   void initState() {
     super.initState();
-    // Add listeners to focus nodes to rebuild when focus changes
-    _usernameFocusNode.addListener(() {
-      setState(() {});
-    });
-    _passwordFocusNode.addListener(() {
-      setState(() {});
-    });
+    _checkAutoLogin(); // Attempt auto-login if credentials are stored
   }
 
   @override
   void dispose() {
-    _usernameFocusNode.dispose(); // Dispose the focus nodes
-    _passwordFocusNode.dispose();
     _usernameController.dispose(); // Dispose the text controllers
     _passwordController.dispose();
     super.dispose();
   }
-// Create an instance of FlutterSecureStorage
-  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
 
-  void _login() async {
+  void _checkAutoLogin() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool useFaceId = prefs.getBool('useFaceId') ?? false; // Check Face ID preference
+
+    if (useFaceId) {
+      // Attempt biometric authentication
+      bool isAuthenticated = await _authenticateWithBiometrics();
+
+      if (isAuthenticated) {
+        // If authentication is successful, attempt to auto-login using stored credentials
+        String? username = await secureStorage.read(key: 'username');
+        String? password = await secureStorage.read(key: 'password');
+
+        if (username != null && password != null) {
+          _loginWithStoredCredentials(username, password);
+        }
+      }
+    }
+  }
+
+  Future<bool> _authenticateWithBiometrics() async {
+    try {
+      // Check if biometrics can be checked
+      final canCheckBiometrics = await auth.canCheckBiometrics;
+      print('canCheckBiometrics: $canCheckBiometrics');
+
+      if (!canCheckBiometrics) {
+        print('Biometric authentication is not available.');
+        return false;
+      }
+
+      // Get the available biometric types
+      final availableBiometrics = await auth.getAvailableBiometrics();
+      print('getAvailableBiometrics: $availableBiometrics');
+
+        return await auth.authenticate(
+          localizedReason: 'Please authenticate to log in using face recognition',
+          options: const AuthenticationOptions(
+            useErrorDialogs: true,
+            stickyAuth: true,
+            biometricOnly: true,
+          ),
+        );
+    } catch (e) {
+      print("Error during biometric authentication: $e");
+      return false;
+    }
+  }
+
+
+  void _loginWithStoredCredentials(String username, String password) async {
     setState(() {
       _isLoading = true;
-      _errorMessage = null;
     });
 
     try {
-      // Call the login method from ApiService
-      UserModel? user = await _apiService.login(
-        _usernameController.text,
-        _passwordController.text,
-      );
+      UserModel? user = await _apiService.login(username, password);
 
       if (user != null) {
-        // Save the token to shared preferences
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('userToken', user.token); // Save token for automatic login
-
-        // Save Face ID preference
-        await prefs.setBool('useFaceId', _useFaceId); // Save Face ID preference
-
-        // Store username and password securely
-        await secureStorage.write(key: 'username', value: _usernameController.text);
-        await secureStorage.write(key: 'password', value: _passwordController.text);
-
-        // Navigate to the next screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => Navigation()),
-        );
+        await _saveUserData(user);
+        _navigateToHome();
       } else {
-        // If user is null, show Snackbar for invalid credentials
-        _showSnackbar("Username and password wrong");
+        _showSnackbar("Invalid credentials");
       }
     } catch (e) {
-      // Show Snackbar for any error that occurs
-      _showSnackbar("Username and password wrong");
+      _showSnackbar("An error occurred during login");
     } finally {
       setState(() {
         _isLoading = false;
@@ -94,40 +113,77 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-// Method to show Snackbar
+  void _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      UserModel? user = await _apiService.login(
+        _usernameController.text,
+        _passwordController.text,
+      );
+
+      if (user != null) {
+        await _saveUserData(user);
+        _navigateToHome();
+      } else {
+        _showSnackbar("Invalid credentials");
+      }
+    } catch (e) {
+      _showSnackbar("An error occurred during login");
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _saveUserData(UserModel user) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userToken', user.token);
+    await prefs.setBool('useFaceId', _useFaceId); // Save Face ID preference
+    await secureStorage.write(key: 'username', value: _usernameController.text);
+    await secureStorage.write(key: 'password', value: _passwordController.text);
+  }
+
+  void _navigateToHome() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Navigation()),
+    );
+  }
+
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        duration: Duration(seconds: 2), // Duration for the Snackbar
-        backgroundColor: Colors.red, // Background color for the Snackbar
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.red,
       ),
     );
   }
 
-
   void _navigateToForgotPassword() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ForgotPasswordPage()), // Navigate to ForgotPasswordPage
+      MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
     );
   }
 
   @override
-  Widget build (BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set the background of the entire scaffold to white
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(200.0), // Set your desired height here
+        preferredSize: const Size.fromHeight(200.0),
         child: AppBar(
           flexibleSpace: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color(0xFFBE898A), // Gradient color 1
-                  Colors.white, // Gradient color 2
+                  Color(0xFFBE898A),
+                  Colors.white,
                 ],
                 begin: Alignment.topRight,
                 end: Alignment.bottomRight,
@@ -137,18 +193,17 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
       body: Container(
-        color: Colors.white, // Set your desired background color here
-        width: double.infinity, // Ensure the container takes the full width
-        height: double.infinity, // Ensure the container takes the full height
+        color: Colors.white,
+        width: double.infinity,
+        height: double.infinity,
         child: Stack(
           children: [
-            // Login form overlay
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 1.0), // Adjust vertical padding to move the container up
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 1.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisAlignment: MainAxisAlignment.start, // Align to start
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Text(
                       'Log in to your account',
@@ -170,94 +225,83 @@ class _LoginPageState extends State<LoginPage> {
                       textAlign: TextAlign.left,
                     ),
                     SizedBox(height: 30),
-                    // Username text field with hint
                     TextField(
-                      focusNode: _usernameFocusNode, // Set the focus node
                       controller: _usernameController,
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black, // Set text color to black
+                        color: Colors.black,
                       ),
                       cursorColor: AppColors.concolor,
                       decoration: InputDecoration(
-                        labelText: 'Username', // Use labelText for a floating label effect
+                        labelText: 'Username',
                         labelStyle: GoogleFonts.montserrat(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: _usernameFocusNode.hasFocus || _usernameController.text.isNotEmpty ? Colors.black : Colors.grey, // Change color based on focus or if text is not empty
+                          color: Colors.grey,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        focusedBorder: OutlineInputBorder( // Define the focused border
+                        focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: AppColors.concolor, // Change border color when focused
-                            width: 2.0, // Set the width of the border
+                            color: AppColors.concolor,
+                            width: 2.0,
                           ),
                         ),
-                        enabledBorder: OutlineInputBorder( // Define the enabled border
+                        enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: Colors.grey, // Color of the border when not focused
-                            width: 1.0, // Set the width of the border
+                            color: Colors.grey,
+                            width: 1.0,
                           ),
                         ),
                       ),
                     ),
-
                     SizedBox(height: 20),
-                    // Password text field with hint
-// Password text field with hint
                     TextField(
-                      focusNode: _passwordFocusNode, // Set the focus node
                       controller: _passwordController,
-                      obscureText: !_isPasswordVisible, // Toggle visibility
+                      obscureText: !_isPasswordVisible,
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black, // Set text color to black when typing
+                        color: Colors.black,
                       ),
                       cursorColor: AppColors.concolor,
                       decoration: InputDecoration(
-                        labelText: 'Password', // Add floating label
+                        labelText: 'Password',
                         labelStyle: GoogleFonts.montserrat(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: _passwordFocusNode.hasFocus || _passwordController.text.isNotEmpty
-                              ? Colors.black
-                              : Colors.grey, // Change color based on focus
+                          color: Colors.grey,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        focusedBorder: OutlineInputBorder( // Define the focused border
+                        focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: AppColors.concolor, // Change border color when focused
-                            width: 2.0, // Set the width of the border
+                            color: AppColors.concolor,
+                            width: 2.0,
                           ),
                         ),
                         suffixIcon: IconButton(
                           icon: Icon(
                             color: AppColors.concolor,
                             _isPasswordVisible
-                                ? Icons.visibility // Show icon when visible
-                                : Icons.visibility_off, // Hide icon when hidden
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                           ),
                           onPressed: () {
                             setState(() {
-                              _isPasswordVisible = !_isPasswordVisible; // Toggle password visibility
+                              _isPasswordVisible = !_isPasswordVisible;
                             });
                           },
                         ),
                       ),
                     ),
-
-// Increased space between the password field and "Use Face ID" toggle
-                    SizedBox(height: 10), // Increased from 20 to 40 to add more space
-// Use Face ID toggle and Forgot password row
+                    SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -267,11 +311,11 @@ class _LoginPageState extends State<LoginPage> {
                               width: 35.0,
                               height: 17.0,
                               value: _useFaceId,
-                              borderRadius: 10.0, // Rounded corners
+                              borderRadius: 10.0,
                               padding: 2.0,
                               activeColor: AppColors.concolor,
                               inactiveColor: Colors.grey,
-                              toggleSize: 13.0, // Size of the toggle handle
+                              toggleSize: 13.0,
                               onToggle: (value) {
                                 setState(() {
                                   _useFaceId = value;
@@ -302,12 +346,11 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
-
                     SizedBox(height: 30),
                     ElevatedButton(
                       onPressed: _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.concolor, // Set the button background color
+                        backgroundColor: AppColors.concolor,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -317,7 +360,7 @@ class _LoginPageState extends State<LoginPage> {
                           ? CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       )
-                          : Text(
+                          : Text (
                         'Login',
                         style: GoogleFonts.montserrat(
                           fontSize: 16,
