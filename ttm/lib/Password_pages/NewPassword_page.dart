@@ -3,7 +3,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'Constant.dart'; // Ensure you have your AppColors and other constants defined here.
+import '../Comman_pages/Constant.dart'; // Ensure you have your AppColors and other constants defined here.
 
 class CreateNewPasswordPage extends StatefulWidget {
   const CreateNewPasswordPage({Key? key}) : super(key: key);

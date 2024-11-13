@@ -1,6 +1,5 @@
-// api_service.dart
 import 'package:dio/dio.dart';
-import '../Constant.dart';
+import '../Comman_pages/Constant.dart';
 import 'model.dart';
 
 class ApiService {
@@ -11,6 +10,25 @@ class ApiService {
       receiveTimeout: Duration(seconds: 10),
     ),
   );
+
+  ApiService() {
+    // Add an interceptor for logging
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        print('Request: ${options.method} ${options.path}');
+        print('Request Data: ${options.data}');
+        return handler.next(options);
+      },
+      onResponse: (response, handler) {
+        print('Response: ${response.statusCode} ${response.data}');
+        return handler.next(response);
+      },
+      onError: (DioError e, handler) {
+        print('Error: ${e.message}');
+        return handler.next(e);
+      },
+    ));
+  }
 
   Future<UserModel?> login(String username, String password) async {
     try {
@@ -30,6 +48,8 @@ class ApiService {
         throw Exception(response.data['message'] ?? 'Login failed');
       }
     } catch (e) {
+      // Log the error for debugging
+      print('Login error: $e');
       throw Exception('Login error: $e');
     }
   }

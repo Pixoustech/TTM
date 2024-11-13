@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'Calender_page/Calender_page.dart';
+import '../Calender_page/Calender_page.dart';
 import 'Constant.dart';
-import 'Home_Page/Home_page.dart';
-import 'Profile_page.dart';
-import 'Task_Page.dart';
-import 'locationMap_google.dart';
-import 'location_page.dart'; // Assuming you have this file for color constants.
-
+import '../Home_Page/Home_page.dart';
+import '../Report_page/Report_Page.dart';
+import '../Event_Create_pages/Task_Page.dart';
+import '../Location_pages/locationMap_google.dart';
 
 class Navigation extends StatefulWidget {
   const Navigation({super.key});
@@ -23,9 +21,9 @@ class _NavigationPageState extends State<Navigation> {
   final List<Widget> _pages = [
     HomePage(),        // Home Page
     CalendarPage(),    // Calendar Page
-    OwnTaskPage(),     // Add Task Page
+    Createevent(),     // Add Task Page
     MapPage(),         // Map Page
-    ProfilePage(),     // Profile Page
+    ReportPage(),     // Profile Page
   ];
 
   void _onItemTapped(int index) {
@@ -61,7 +59,7 @@ class _NavigationPageState extends State<Navigation> {
             IconButton(
               icon: const Icon(Icons.add_circle, size: 50), // Center plus icon
               onPressed: () => _onItemTapped(2),
-              color: _selectedIndex == 2 ? AppColors.concolor : Colors.black,
+              color: _selectedIndex == 2 ? AppColors.concolor : AppColors.concolor,
               padding: EdgeInsets.zero, // Remove padding
             ),
             IconButton(
@@ -71,7 +69,7 @@ class _NavigationPageState extends State<Navigation> {
               padding: EdgeInsets.zero, // Remove padding
             ),
             IconButton(
-              icon: const Icon(Icons.person),
+              icon: const Icon(Icons.pie_chart),
               onPressed: () => _onItemTapped(4),
               color: _selectedIndex == 4 ? AppColors.concolor : Colors.black,
               padding: EdgeInsets.zero, // Remove padding

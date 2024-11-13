@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:ttm/Constant.dart';
+import 'package:ttm/Comman_pages/Constant.dart';
 
-import '../Widgets_page.dart';
+import '../Profile_Pages/Profile_page.dart';
+import '../Comman_pages/Widgets_page.dart';
+
 
 Widget buildFilterButton(String text, String selectedButton, Function onPressed) {
   return SizedBox(
@@ -12,8 +14,9 @@ Widget buildFilterButton(String text, String selectedButton, Function onPressed)
         onPressed();
       },
       style: ElevatedButton.styleFrom(
+        padding: EdgeInsets.zero, // Remove internal padding
         backgroundColor: selectedButton == text ? AppColors.concolor : Colors.white,
-        elevation: 3,
+        elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
           side: BorderSide(
@@ -26,16 +29,18 @@ Widget buildFilterButton(String text, String selectedButton, Function onPressed)
       child: Center(
         child: Text(
           text,
+          textAlign: TextAlign.center, // Center the text horizontally
           style: GoogleFonts.montserrat(
             color: selectedButton == text ? Colors.white : AppColors.concolor,
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
+            fontSize: 14, // Adjust the font size as needed
+            fontWeight: FontWeight.normal, // Change to bold for better visibility
           ),
         ),
       ),
     ),
   );
 }
+
 
 
 Widget buildTaskBox(String title, Color color, double width, double height, int taskCount, IconData iconData) {
@@ -105,7 +110,7 @@ Widget buildTaskDetailBox(
       borderRadius: BorderRadius.circular(5),
       boxShadow: [
         BoxShadow(
-          color: Colors.grey.withOpacity(0.5),
+          color: Colors.grey.withOpacity(0.2),
           spreadRadius: 2,
           blurRadius: 6,
           offset: const Offset(0, 3),
@@ -155,13 +160,13 @@ Widget buildTaskDetailBox(
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Text(
           status,
           style: GoogleFonts.montserrat(
             fontSize: 12,
             color: Colors.black,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.normal,
           ),
         ),
         const SizedBox(height: 10),
@@ -169,16 +174,19 @@ Widget buildTaskDetailBox(
         // Progress rectangles
         Row(
           children: List.generate(3, (index) {
-            // Check the status and adjust the colors based on it
             Color rectangleColor;
             if (status == "In Progress") {
-              // Set to red for the first two rectangles if status is "In progress"
-              rectangleColor = index < 2 ? Colors.yellow : Colors.grey;
+              rectangleColor = index < 2 ? Colors.orange : Colors.grey;
             }
-            if (status == "Overdue") {
-              // Set to red for the first two rectangles if status is "In progress"
+            else if (status == "Overdue")
+            {
               rectangleColor = index < 2 ? Colors.red : Colors.grey;
             }
+            else if (status == "Not Started")
+            {
+              rectangleColor = index < 2 ? Colors.grey : Colors.grey;
+            }
+
             else {
               rectangleColor = index < 3 ? Colors.green : Colors.grey;
             }
@@ -186,7 +194,7 @@ Widget buildTaskDetailBox(
             return Padding(
               padding: const EdgeInsets.only(right: 4),
               child: Container(
-                width: 20,
+                width: 72,
                 height: 6,
                 decoration: BoxDecoration(
                   color: rectangleColor,
@@ -214,18 +222,27 @@ Widget buildTaskDetailBox(
                 ),
               ],
             ),
-            Row(
-              children: [
-                Icon(Icons.location_on, size: 16, color: AppColors.concolor),
-                const SizedBox(width: 4),
-                Text(
-                  location,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    color: Colors.black,
+            // Wrap the Row in a Container with a defined width
+            Container(
+              width: 100, // Set a width that fits your layout
+              child: Row(
+                children: [
+                  Icon(Icons.location_on, size
+                      : 16, color: AppColors.concolor),
+                  const SizedBox(width: 4),
+                  Flexible(
+                    child: Text(
+                      location,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        color: Colors.black,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -256,7 +273,7 @@ Widget buildMeetingDetailBox(
       borderRadius: BorderRadius.circular(5),
       boxShadow: [
         BoxShadow(
-          color: Colors.grey.withOpacity(0.5),
+          color: Colors.grey.withOpacity(0.2),
           spreadRadius: 2,
           blurRadius: 6,
           offset: const Offset(0, 3),
@@ -264,7 +281,7 @@ Widget buildMeetingDetailBox(
       ],
     ),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 2),
+    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -399,31 +416,34 @@ Color getStatusTextColor(String status) {
   }
 }
 
-// Function to get the status background color
-Color getStatusColor(String status) {
-  if (status == "In Progress") {
-    return Colors.orange;
-  } else if (status == "Completed") {
-    return Colors.green;
-  } else if (status == "Not started") {
-    return Colors.grey;
-  } else {
-    return Colors.blue; // Default color for any other status
-  }
-}
 
-
-
-
-Color getPriorityColor(String priority) {
-  switch (priority) {
-    case 'High':
-      return Colors.red;
-    case 'Medium':
-      return Color(0xFFFFC107);
-    case 'Low':
-      return Colors.green;
+// Method to handle menu item selection
+void onMenuItemSelected(String value, BuildContext context) {
+  AuthService authService = AuthService();
+  switch (value) {
+    case 'profile':
+    // Navigate to profile page
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage()), // Navigate to ProfilePage
+      );
+      break;
+    case 'notification':
+    // Navigate to notification page
+      print('Notification selected');
+      break;
+    case 'help':
+    // Navigate to help page
+      print('Help selected');
+      break;
+    case 'logout':
+    // Handle logout
+      authService.showLogoutConfirmationDialog(context);
+      print('Logout selected');
+      break;
     default:
-      return Colors.grey;
+      break;
   }
+
+
 }

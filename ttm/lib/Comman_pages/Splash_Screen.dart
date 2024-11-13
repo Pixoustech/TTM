@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ttm/walkthrough_page.dart';
-import 'Home_Page/Home_page.dart';
-import 'Login_Page/login_page.dart';
+import 'package:ttm/Comman_pages/Constant.dart';
+import 'package:ttm/Comman_pages/walkthrough_page.dart';
+import '../Login_Page/login_page.dart';
 import 'Navigation_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -78,11 +78,10 @@ class _SplashPageState extends State<SplashScreen>
       // Redirect to LoginPage if no token
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
     }
   }
-
 
   @override
   void dispose() {
@@ -136,6 +135,9 @@ class _SplashPageState extends State<SplashScreen>
             double welcomeMessageTopPosition =
                 triangleTopPosition + 20; // Add some space below the triangle
 
+            // Responsive font size
+            double welcomeTextSize = MediaQuery.of(context).size.width * 0.04; // 4% of screen width
+
             return Stack(
               children: [
                 // Logo animation
@@ -163,9 +165,9 @@ class _SplashPageState extends State<SplashScreen>
                     child: Text(
                       'Task Tracking Management',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: welcomeTextSize,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: AppColors.concolor,
                       ),
                     ),
                   ),
@@ -182,6 +184,9 @@ class _SplashPageState extends State<SplashScreen>
 class ClipPathGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    double triangleWidth = MediaQuery.of(context).size.width * 0.5; // 50% of screen width
+    double triangleHeight = MediaQuery.of(context).size.height * 0.02; // 2% of screen height
+
     return Column(
       children: [
         Transform.rotate(
@@ -189,15 +194,15 @@ class ClipPathGroup extends StatelessWidget {
           child: ClipPath(
             clipper: RightTriangleClipper(),
             child: Container(
-              width: 200.0,
-              height: 10.0,
+              width: triangleWidth,
+              height: triangleHeight,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color(0xFFE05F71),
-                    Color(0xFFD2858A),
-                    Color(0xFFBBA8A6),
                     Color(0xFFC9C6C6),
+                    Color(0xFFBBA8A6),
+                    Color(0xFFD2858A),
+                    Color(0xFFE05F71),
                   ],
                   stops: [0.0, 0.33, 0.66, 1.0],
                   begin: Alignment.centerLeft,

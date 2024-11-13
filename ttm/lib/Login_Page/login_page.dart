@@ -6,9 +6,9 @@ import 'package:local_auth/local_auth.dart'; // Import for biometric authenticat
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart'; // Import the API service
 import 'model.dart';
-import '../Constant.dart';
+import '../Comman_pages/Constant.dart';
 import '../Password_pages/ForgotPasswordPage.dart';
-import '../Navigation_page.dart';
+import '../Comman_pages/Navigation_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -178,17 +178,29 @@ class _LoginPageState extends State<LoginPage> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(200.0),
         child: AppBar(
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xFFBE898A),
-                  Colors.white,
-                ],
-                begin: Alignment.topRight,
-                end: Alignment.bottomRight,
+          flexibleSpace: Stack(
+            children: [
+              Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFFBE898A),
+                      Colors.white,
+                    ],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
               ),
-            ),
+              Center(
+                child: Image.asset(
+                'Assets/Images/TTMlogo.png', // Replace with your logo's path
+                height: MediaQuery.of(context).size.height * 0.1, // 10% of screen height
+                width: MediaQuery.of(context).size.width * 0.5, // 50% of screen width (optional)
+                fit: BoxFit.contain, // Adjust how the logo fits
+              ),
+              ),
+            ],
           ),
         ),
       ),

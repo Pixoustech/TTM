@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'Constant.dart';
-import 'NewPassword_page.dart';
+import '../Comman_pages/Constant.dart';
+import '../Password_pages/NewPassword_page.dart';
 
 class VerifyOtpPage extends StatefulWidget {
   const VerifyOtpPage({super.key});

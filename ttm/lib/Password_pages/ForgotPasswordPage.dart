@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'Constant.dart';
-import 'Verify_OTP_page.dart';
+import '../Comman_pages/Constant.dart';
+import '../Login_Page/Verify_OTP_page.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -15,7 +15,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _phoneController = TextEditingController();
   final FocusNode _phoneFocusNode = FocusNode(); // Define the phone focus node
   bool _isLoading = false;
-  String? _successMessage;
   String? _errorMessage;
 
   @override
@@ -28,7 +27,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   void _resetPassword() {
     setState(() {
       _isLoading = true;
-      _successMessage = null;
       _errorMessage = null;
     });
 

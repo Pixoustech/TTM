@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 class AppWidgets {
   // Method to return a Divider widget
-  static Divider divider() {
-    return const Divider(
-      color: Colors.grey, // Color of the divider
-      thickness: 1, // Thickness of the divider
-      height: 20, // Space above and below the divider
+  static Widget divider({double width = 270.0}) {
+    return Container(
+      width: width, // Set the desired width here
+      child: const Divider(
+        color: Colors.grey, // Color of the divider
+        thickness: 1, // Thickness of the divider
+        height: 20, // Space above and below the divider
+      ),
     );
   }
 }
