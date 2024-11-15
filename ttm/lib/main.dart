@@ -1,7 +1,24 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart'; // Import SplashScreen
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-void main() {
+import 'Comman_pages/Splash_Screen.dart';
+
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize the notification settings
+  const AndroidInitializationSettings initializationSettingsAndroid =
+  AndroidInitializationSettings('@mipmap/ic_launcher'); // Your app icon
+
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
   runApp(const MyApp());
 }
 
@@ -12,7 +29,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'My App',
+      title: 'TTM',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
