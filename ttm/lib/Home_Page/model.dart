@@ -103,7 +103,7 @@ HomePageData getDefaultHomePageData() {
         title: 'Testing',
         description: 'The current website design needs a refresh to improve user experience and enhance visual appeal',
         priority: 'Low',
-        status: 'Completed',
+        status: 'Overdue',
         date: DateTime.now().add(Duration(days: -5)),
         location: 'Los Angeles',
         pdfUrls: [

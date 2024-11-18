@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ttm/Comman_pages/Constant.dart';
-
 import '../Profile_Pages/Profile_page.dart';
 import '../Comman_pages/Widgets_page.dart';
 
@@ -111,9 +110,9 @@ Widget buildTaskDetailBox(
       boxShadow: [
         BoxShadow(
           color: Colors.grey.withOpacity(0.2),
-          spreadRadius: 2,
-          blurRadius: 6,
-          offset: const Offset(0, 3),
+          spreadRadius: 3,
+          blurRadius: 1,
+          offset: const Offset(0, 0),
         ),
       ],
     ),
