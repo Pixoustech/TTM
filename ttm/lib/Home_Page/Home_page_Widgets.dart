@@ -100,10 +100,13 @@ Widget buildTaskDetailBox(
     String priority,
     String status,
     DateTime date,
-    String location) {
+    String location,
+    String event,
+    String assignedby)
+{
   return Container(
     width: 260,
-    height: 140, // Increased height to prevent overflow
+    height: 170, // Increased height to prevent overflow
     decoration: BoxDecoration(
       color: color,
       borderRadius: BorderRadius.circular(5),
@@ -122,31 +125,51 @@ Widget buildTaskDetailBox(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              title,
-              style: GoogleFonts.montserrat(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+            Flexible(
+              child: Text(
+                title,
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8), // Optional space between title and priority
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: getPriorityColor(priority),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                priority,
-                style: GoogleFonts.montserrat(
-                  fontSize: 10,
-                  color: Colors.white,
+            if (priority != null)
+              Container(
+                margin: const EdgeInsets.only(left: 4.00),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: getPriorityColor(priority),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  priority,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
+            if (assignedby != null && assignedby == "HQ")
+              Container(
+                margin: const EdgeInsets.only(left: 4.00),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.concolor,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  assignedby,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
           ],
         ),
         const SizedBox(height: 4),
@@ -158,6 +181,20 @@ Widget buildTaskDetailBox(
           ),
           maxLines: 3,
           overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Icon(Icons.calendar_today, size: 16, color: AppColors.concolor),
+            const SizedBox(width: 4),
+            Text(
+              "${date.day}/${date.month}/${date.year}",
+              style: GoogleFonts.montserrat(
+                fontSize: 12,
+                color: Colors.black,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 10),
         Text(
@@ -176,17 +213,11 @@ Widget buildTaskDetailBox(
             Color rectangleColor;
             if (status == "In Progress") {
               rectangleColor = index < 2 ? Colors.orange : Colors.grey;
-            }
-            else if (status == "Overdue")
-            {
+            } else if (status == "Overdue") {
               rectangleColor = index < 2 ? Colors.red : Colors.grey;
-            }
-            else if (status == "Not Started")
-            {
+            } else if (status == "Not Started") {
               rectangleColor = index < 2 ? Colors.grey : Colors.grey;
-            }
-
-            else {
+            } else {
               rectangleColor = index < 3 ? Colors.green : Colors.grey;
             }
 
@@ -210,10 +241,10 @@ Widget buildTaskDetailBox(
           children: [
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: AppColors.concolor),
+                Icon(Icons.location_on, size: 16, color: AppColors.concolor),
                 const SizedBox(width: 4),
                 Text(
-                  "${date.day}/${date.month}/${date.year}",
+                  location,
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
                     color: Colors.black,
@@ -223,18 +254,16 @@ Widget buildTaskDetailBox(
             ),
             // Wrap the Row in a Container with a defined width
             Container(
-              width: 100, // Set a width that fits your layout
+              width: 70, // Set a width that fits your layout
               child: Row(
                 children: [
-                  Icon(Icons.location_on, size
-                      : 16, color: AppColors.concolor),
-                  const SizedBox(width: 4),
+
                   Flexible(
                     child: Text(
-                      location,
+                      "[$event]",
                       style: GoogleFonts.montserrat(
                         fontSize: 12,
-                        color: Colors.black,
+                        color: AppColors.concolor,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -250,7 +279,6 @@ Widget buildTaskDetailBox(
   );
 }
 
-
 // Function to build the meeting detail box
 Widget buildMeetingDetailBox(
     String title,
@@ -263,6 +291,7 @@ Widget buildMeetingDetailBox(
     String fromTime,
     String toTime,
     String location,
+    String assignedby,
     ) {
   return Container(
     width: 400,
@@ -286,35 +315,54 @@ Widget buildMeetingDetailBox(
       children: [
         // Title and Priority Row
         Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Title on the left
-            Text(
-              title,
-              style: GoogleFonts.montserrat(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+            Flexible(
+              child: Text(
+                title,
+                style: GoogleFonts.montserrat(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8), // Optional space between title and priority
-            // Priority on the right, closer to the title
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              decoration: BoxDecoration(
-                color: getPriorityColor(priority), // Use the getPriorityColor function
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                priority,
-                style: GoogleFonts.montserrat(
-                  fontSize: 10,
-                  color: Colors.white,
+            if (priority != null)
+              Container(
+                margin: const EdgeInsets.only(left: 4.00),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: getPriorityColor(priority),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  priority,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
+            if (assignedby != null && assignedby == "HQ")
+              Container(
+                margin: const EdgeInsets.only(left: 4.00),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.concolor,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  assignedby,
+                  style: GoogleFonts.montserrat(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
           ],
         ),
+
         const SizedBox(height: 3), // Optional, adjust spacing as needed
 
         // Calendar Icon, From and To Dates, Time Icon, From and To Times
@@ -445,4 +493,182 @@ void onMenuItemSelected(String value, BuildContext context) {
   }
 
 
+}
+
+Widget buildTaskDetailBoxforhome(
+    String title,
+    String description,
+    Color color,
+    String priority,
+    String status,
+    DateTime date,
+    String location,
+    String event,
+    String assignedBy, // New parameter for the assigned by text
+    ) {
+  return Container(
+    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 10,
+          height: 120,
+          decoration: BoxDecoration(
+            color: getPriorityColor(priority ?? 'Medium'),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(10),
+              bottomLeft: Radius.circular(10),
+            ),
+          ),
+        ),
+        const SizedBox(width: 0),
+        Expanded(
+          child: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                height: 120,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 0,
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title, Priority, and Assigned By in one row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (priority != null)
+                          Container(
+                            margin: const EdgeInsets.only(left: 4.00),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: getPriorityColor(priority),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              priority,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        if (assignedBy != null && assignedBy == "HQ")
+                          Container(
+                            margin: const EdgeInsets.only(left: 4.00),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.concolor,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              assignedBy,
+                              style: GoogleFonts.montserrat(
+                                fontSize: 10,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            description,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8), // Add some space between the text and the icon
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          color: AppColors.concolor,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.calendar_today,
+                            size: 16, color: AppColors.concolor),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${date.toLocal()}'.split(' ')[0], // Format date as needed
+                          style: GoogleFonts.montserrat(
+                              fontSize: 10, color: Colors.black),
+                        ),
+                        const SizedBox(width: 16),
+                        const Icon(Icons.location_on,
+                            size: 16, color: AppColors.concolor),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            location,
+                            style: GoogleFonts.montserrat(
+                                fontSize: 10, color: Colors.black),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 1,
+                right: 15,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    "[$event]",
+                    style: GoogleFonts.montserrat(
+                        fontSize: 10, color: AppColors.concolor),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }

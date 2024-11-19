@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; // Make sure to import Google Fonts
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ttm/Comman_pages/Constant.dart';
 import '../Event_Detail_Pages/Event_Detail.dart';
 import '../Comman_pages/Widgets_page.dart';
@@ -16,6 +16,9 @@ class _HomePageState extends State<HomePage> {
   String _selectedButton = 'Today';
   HomePageData _homePageData = getDefaultHomePageData(); // Initial data
   String greetingMessage = '';
+  String searchQuery = '';
+  TextEditingController _searchController = TextEditingController();
+  String _viewFilter = 'All';
 
   @override
   void initState() {
@@ -27,27 +30,38 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       buttonText = (buttonText == "Check In") ? "Check Out" : "Check In";
     });
-
-    print("$buttonText button pressed");
   }
 
   Future<void> _refreshData() async {
-    // Simulate a network request or data fetch
     await Future.delayed(Duration(seconds: 1));
     setState(() {
-      // Refresh the data by re-fetching it
-      _homePageData = getDefaultHomePageData(); // Fetching default data again
+      buttonText = "Check In"; // Reset button text
+      _selectedButton = 'Today'; // Reset selected button
+      searchQuery = ''; // Clear search query
+      _searchController.clear(); // Clear the search box
+      _homePageData = getUpdatedHomePageData(); // Fetching updated data
+      _setGreetingMessage(); // Reset greeting message
     });
-    print("Data refreshed");
+  }
+
+  HomePageData getUpdatedHomePageData() {
+    // Replace this with actual data fetching logic
+    return getDefaultHomePageData(); // This is just a placeholder
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      searchQuery = query;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: RefreshIndicator(
-        color: AppColors.concolor, // Change the color of the refresh indicator
+        color: AppColors.concolor,
         backgroundColor: Colors.white,
-        onRefresh: _refreshData, // Call the refresh method
+        onRefresh: _refreshData,
         child: SingleChildScrollView(
           child: Column(
             children: [
@@ -66,7 +80,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 10.0, vertical: 15.0), // Set vertical padding
+                      horizontal: 10.0, vertical: 15.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -80,8 +94,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           PopupMenuTheme(
                             data: PopupMenuThemeData(
-                              color: Colors
-                                  .white, // Set the background color to white
+                              color: Colors.white,
                             ),
                             child: PopupMenuButton<String>(
                               icon: Icon(Icons.account_circle,
@@ -220,6 +233,8 @@ class _HomePageState extends State<HomePage> {
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: TextField(
+                                    controller: _searchController,
+                                    onChanged: _onSearchChanged,
                                     cursorColor: AppColors.concolor,
                                     decoration: InputDecoration(
                                       prefixIcon: Icon(Icons.search,
@@ -245,7 +260,6 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-
               Container(
                 color: Colors.white,
                 child: Padding(
@@ -254,13 +268,10 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: Color(0xFFEAEAEA),
+                          color: const Color(0xFFEAEAEA),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        padding: const EdgeInsets.only(
-                            left: 8.0,
-                            right:
-                                8.0), // Optional padding for background container
+                        padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 0.0, vertical: 6.0),
@@ -268,69 +279,114 @@ class _HomePageState extends State<HomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               SizedBox(
-                                height: 190,
+                                height: 220,
                                 child: ListView.builder(
                                   scrollDirection: Axis.horizontal,
-                                  // Filter tasks by status
-                                  itemCount: _homePageData.tasks
-                                      .where((task) =>
-                                          task.status == 'Not Started' ||
-                                          task.status == 'In Progress' ||
-                                              task.status == 'Overdue')
-                                      .length,
+                                  itemCount: _filterTasks().length +
+                                      _filterMeetings().length,
                                   itemBuilder: (context, index) {
-                                    // Get the filtered tasks
-                                    final filteredTasks = _homePageData.tasks
-                                        .where((task) =>
-                                            task.status == 'Not Started' ||
-                                            task.status == 'In Progress' ||
-                                                task.status == 'Overdue')
-                                        .toList();
-                                    final task = filteredTasks[index];
-
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                          right:
-                                              10.0), // Adds spacing between boxes
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  EventDetailPage(
-                                                title: task.title,
-                                                description: task.description,
-                                                priority: task.priority,
-                                                status: task.status,
-                                                date: task.date,
-                                                location: task.location,
-                                                pdfUrls: task.pdfUrls ?? [],
-                                                Event: task.Event,
-                                                Assignedby: task.Assignedby,
-                                                Attachmentpdfurl:
-                                                    task.Attachmentpdfurl,
-                                                fromDate: task.date,
-                                                toDate: task.date,
-                                                fromTime:
-                                                    "", // Set actual fromTime if available
-                                                toTime:
-                                                    "", // Set actual toTime if available
+                                    if (index < _filterTasks().length) {
+                                      final task = _filterTasks()[index];
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 10.0),
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    EventDetailPage(
+                                                  title: task.title,
+                                                  description: task.description,
+                                                  priority: task.priority,
+                                                  status: task.status,
+                                                  date: task.date,
+                                                  location: task.location,
+                                                  pdfUrls: task.pdfUrls ?? [],
+                                                  Event: task.Event,
+                                                  Assignedby: task.Assignedby,
+                                                  Attachmentpdfurl:
+                                                      task.Attachmentpdfurl,
+                                                  fromDate: task.date,
+                                                  toDate: task.date,
+                                                  fromTime: "",
+                                                  toTime: "",
+                                                ),
                                               ),
+                                            );
+                                          },
+                                          child: Container(
+                                            height:
+                                                120, // Set a fixed height for the container
+                                            child: buildTaskDetailBox(
+                                              task.title,
+                                              task.description,
+                                              Colors.white,
+                                              task.priority,
+                                              task.status,
+                                              task.date,
+                                              task.location,
+                                              task.Event,
+                                              task.Assignedby
                                             ),
-                                          );
-                                        },
-                                        child: buildTaskDetailBox(
-                                          task.title,
-                                          task.description,
-                                          Colors.white,
-                                          task.priority,
-                                          task.status,
-                                          task.date,
-                                          task.location,
+                                          ),
                                         ),
-                                      ),
-                                    );
+                                      );
+                                    } else {
+                                      final meetingIndex =
+                                          index - _filterTasks().length;
+                                      final meeting =
+                                          _filterMeetings()[meetingIndex];
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 10.0),
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    EventDetailPage(
+                                                  title: meeting.title,
+                                                  description:
+                                                      meeting.description,
+                                                  priority: meeting.priority,
+                                                  status: meeting.status,
+                                                  date: meeting.fromDate,
+                                                  location: meeting.location,
+                                                  pdfUrls: meeting.pdfUrls,
+                                                  Event: meeting.Event,
+                                                  Assignedby:
+                                                      meeting.Assignedby,
+                                                  Attachmentpdfurl:
+                                                      meeting.Attachmentpdfurl,
+                                                  fromDate: meeting.fromDate,
+                                                  toDate: meeting.toDate,
+                                                  fromTime: meeting.fromTime,
+                                                  toTime: meeting.toTime,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            height:
+                                                120, // Set a fixed height for the container
+                                            child: buildTaskDetailBox(
+                                              meeting.title,
+                                              meeting.description,
+                                              Colors.white,
+                                              meeting.priority,
+                                              meeting.status,
+                                              meeting.fromDate,
+                                              meeting.location,
+                                              meeting.Event,
+                                              meeting.Assignedby
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   },
                                 ),
                               ),
@@ -404,79 +460,306 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      const SizedBox(height: 5),
                       Padding(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 0.0, vertical: 10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                            horizontal: 10.0, vertical: 10.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            Text(
-                              'Meeting',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF505050),
-                              ),
+                            _buildFilterButton('All'),
+                            _buildFilterButton('Tasks'),
+                            _buildFilterButton('Meetings'),
+                          ],
+                        ),
+                      ),
+                      if (_viewFilter == 'Tasks') ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Tasks',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF505050),
                             ),
-                            const SizedBox(height: 5),
-                            Text(
-                              'You have ${_homePageData.meetings.length} Meetings Today',
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'You have ${_filterTasks().length} Tasks Today',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        if (_filterTasks().isEmpty)
+                          Center(
+                            child: Text(
+                              'No Tasks Today',
                               style: GoogleFonts.montserrat(
-                                fontSize: 14,
+                                fontSize: 16,
                                 color: Colors.grey,
                               ),
                             ),
-                            const SizedBox(height: 1),
-                            // Wrap the Column in a SingleChildScrollView if needed
-                            SingleChildScrollView(
+                          )
+                        else
+                          SizedBox(
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
                               child: Column(
-                                children: _homePageData.meetings.map((meeting) {
+                                children: _filterTasks().map((task) {
                                   return GestureDetector(
                                     onTap: () {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => EventDetailPage(
-                                            title: meeting.title,
-                                            description: meeting.description,
-                                            priority: meeting.priority,
-                                            status: meeting.status,
-                                            date: meeting
-                                                .fromDate, // You can choose to send fromDate or toDate
-                                            location: meeting.location,
-                                            pdfUrls: meeting.pdfUrls,
-                                            Event: meeting.Event,
-                                            Assignedby: meeting.Assignedby,
-                                            Attachmentpdfurl:
-                                                meeting.Attachmentpdfurl,
-                                            fromDate: meeting.fromDate,
-                                            toDate: meeting.toDate,
-                                            fromTime: meeting.fromTime,
-                                            toTime: meeting.toTime,
+                                            title: task.title,
+                                            description: task.description,
+                                            priority: task.priority,
+                                            status: task.status,
+                                            date: task.date,
+                                            location: task.location,
+                                            pdfUrls: task.pdfUrls ?? [],
+                                            Event: task.Event,
+                                            Assignedby: task.Assignedby,
+                                            Attachmentpdfurl: task.Attachmentpdfurl,
+                                            fromDate: task.date,
+                                            toDate: task.date,
+                                            fromTime: "",
+                                            toTime: "",
                                           ),
                                         ),
                                       );
                                     },
-                                    child: buildMeetingDetailBox(
-                                      meeting.title,
-                                      meeting.description,
-                                      Colors.white,
-                                      meeting.priority,
-                                      meeting.status,
-                                      meeting.fromDate,
-                                      meeting.toDate,
-                                      meeting.fromTime,
-                                      meeting.toTime,
-                                      meeting.location,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: 10.0),
+                                      child: buildTaskDetailBoxforhome(
+                                        task.title,
+                                        task.description,
+                                        Colors.white,
+                                        task.priority,
+                                        task.status,
+                                        task.date,
+                                        task.location,
+                                        task.Event,
+                                        task.Assignedby,
+                                      ),
                                     ),
                                   );
                                 }).toList(),
                               ),
                             ),
-                          ],
+                          ),
+                      ],
+
+
+
+                      if (_viewFilter == 'Meetings') ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 0.0, vertical: 10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Meeting',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF505050),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                'You have ${_filterMeetings().length} Meetings Today',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              SingleChildScrollView(
+                                child: Column(
+                                  children: _filterMeetings().map((meeting) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                EventDetailPage(
+                                              title: meeting.title,
+                                              description: meeting.description,
+                                              priority: meeting.priority,
+                                              status: meeting.status,
+                                              date: meeting.fromDate,
+                                              location: meeting.location,
+                                              pdfUrls: meeting.pdfUrls,
+                                              Event: meeting.Event,
+                                              Assignedby: meeting.Assignedby,
+                                              Attachmentpdfurl:
+                                                  meeting.Attachmentpdfurl,
+                                              fromDate: meeting.fromDate,
+                                              toDate: meeting.toDate,
+                                              fromTime: meeting.fromTime,
+                                              toTime: meeting.toTime,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: buildMeetingDetailBox(
+                                          meeting.title,
+                                          meeting.description,
+                                          Colors.white,
+                                          meeting.priority,
+                                          meeting.status,
+                                          meeting.fromDate,
+                                          meeting.toDate,
+                                          meeting.fromTime,
+                                          meeting.toTime,
+                                          meeting.location,
+                                          meeting.Assignedby),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
+                      if (_viewFilter == 'All') ...[
+                        SizedBox(
+                          height: 220,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _filterTasks().length,
+                            itemBuilder: (context, index) {
+                              final task = _filterTasks()[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 10.0),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => EventDetailPage(
+                                          title: task.title,
+                                          description: task.description,
+                                          priority: task.priority,
+                                          status: task.status,
+                                          date: task.date,
+                                          location: task.location,
+                                          pdfUrls: task.pdfUrls ?? [],
+                                          Event: task.Event,
+                                          Assignedby: task.Assignedby,
+                                          Attachmentpdfurl:
+                                              task.Attachmentpdfurl,
+                                          fromDate: task.date,
+                                          toDate: task.date,
+                                          fromTime: "",
+                                          toTime: "",
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    height:
+                                        120, // Set a fixed height for the container
+                                    child: buildTaskDetailBox(
+                                      task.title,
+                                      task.description,
+                                      Colors.white,
+                                      task.priority,
+                                      task.status,
+                                      task.date,
+                                      task.location,
+                                      task.Event,
+                                      task.Assignedby
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 0.0, vertical: 10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Meeting',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF505050),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                'You have ${_filterMeetings().length} Meetings Today',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 1),
+                              SingleChildScrollView(
+                                child: Column(
+                                  children: _filterMeetings().map((meeting) {
+                                    return GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                EventDetailPage(
+                                              title: meeting.title,
+                                              description: meeting.description,
+                                              priority: meeting.priority,
+                                              status: meeting.status,
+                                              date: meeting.fromDate,
+                                              location: meeting.location,
+                                              pdfUrls: meeting.pdfUrls,
+                                              Event: meeting.Event,
+                                              Assignedby: meeting.Assignedby,
+                                              Attachmentpdfurl:
+                                                  meeting.Attachmentpdfurl,
+                                              fromDate: meeting.fromDate,
+                                              toDate: meeting.toDate,
+                                              fromTime: meeting.fromTime,
+                                              toTime: meeting.toTime,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: buildMeetingDetailBox(
+                                        meeting.title,
+                                        meeting.description,
+                                        Colors.white,
+                                        meeting.priority,
+                                        meeting.status,
+                                        meeting.fromDate,
+                                        meeting.toDate,
+                                        meeting.fromTime,
+                                        meeting.toTime,
+                                        meeting.location,
+                                        meeting.Assignedby,
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -499,4 +782,63 @@ class _HomePageState extends State<HomePage> {
       greetingMessage = 'Good Evening, John Harry M';
     }
   }
+  List<Task> _filterTasks() {
+    if (searchQuery.isEmpty) return _homePageData.tasks;
+
+    return _homePageData.tasks.where((task) {
+      return [
+        task.title.toLowerCase(),
+        task.description.toLowerCase(),
+        task.priority.toString().toLowerCase(), // Ensure it's a String
+        task.status.toString().toLowerCase(),   // Ensure it's a String
+        task.date.toString().toLowerCase(),     // Ensure it's a String
+        task.location.toLowerCase(),
+        task.Event.toString().toLowerCase(),    // Ensure it's a String
+        task.Assignedby.toLowerCase(),
+      ].any((field) => field.contains(searchQuery.toLowerCase()));
+    }).toList();
+  }
+
+  List<Meeting> _filterMeetings() {
+    if (searchQuery.isEmpty) return _homePageData.meetings;
+
+    return _homePageData.meetings.where((meeting) {
+      return [
+        meeting.title.toLowerCase(),
+        meeting.description.toLowerCase(),
+        meeting.priority.toString().toLowerCase(), // Ensure it's a String
+        meeting.status.toString().toLowerCase(),   // Ensure it's a String
+        meeting.fromDate.toString().toLowerCase(), // Ensure it's a String
+        meeting.toDate.toString().toLowerCase(),   // Ensure it's a String
+        meeting.fromTime.toString().toLowerCase(), // Ensure it's a String
+        meeting.toTime.toString().toLowerCase(),   // Ensure it's a String
+        meeting.location.toLowerCase(),
+        meeting.Assignedby.toLowerCase(),
+      ].any((field) => field.contains(searchQuery.toLowerCase()));
+    }).toList();
+  }
+
+
+  Widget _buildFilterButton(String label) {
+    return ElevatedButton(
+      onPressed: () {
+        setState(() {
+          _viewFilter =
+              label; // Update the view filter based on the button pressed
+        });
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor:
+            _viewFilter == label ? AppColors.concolor : Colors.grey,
+      ),
+      child: Text(
+        label,
+        style: TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+
+
+
 }

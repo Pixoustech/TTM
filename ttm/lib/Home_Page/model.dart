@@ -71,11 +71,11 @@ HomePageData getDefaultHomePageData() {
     tasks: [
       Task(
         title: 'App Design',
-        description: 'The current website design needs a refresh to improve user experience and enhance visual appeal.',
+        description: 'hello',
         priority: 'Low',
         status: 'In Progress',
         date: DateTime.now(),
-        location: 'Podanur, Coimbatore 641-023',
+        location: 'Coimbatore',
         pdfUrls: [
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
@@ -85,12 +85,12 @@ HomePageData getDefaultHomePageData() {
         Attachmentpdfurl: [],
       ),
       Task(
-        title: 'App Development',
+        title: 'App',
         description: 'The current website design needs a refresh to improve user experience and enhance visual appeal.......',
         priority: 'Medium',
         status: 'Not Started',
         date: DateTime.now().add(Duration(days: -2)),
-        location: 'San Francisco',
+        location: 'Coimbatore',
         pdfUrls: [
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
@@ -105,7 +105,7 @@ HomePageData getDefaultHomePageData() {
         priority: 'Low',
         status: 'Overdue',
         date: DateTime.now().add(Duration(days: -5)),
-        location: 'Los Angeles',
+        location: 'Coimbatore',
         pdfUrls: [
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
@@ -125,7 +125,7 @@ HomePageData getDefaultHomePageData() {
         toDate: DateTime(2024, 10, 19),
         fromTime: '10:00 AM',
         toTime: '12:00 PM',
-        location: 'New York',
+        location: 'Coimbatore',
         pdfUrls: [
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
@@ -142,7 +142,7 @@ HomePageData getDefaultHomePageData() {
         toDate: DateTime(2024, 10, 02),
         fromTime: '2:00 PM',
         toTime: '3:00 PM',
-        location: 'Zoom',
+        location: 'Coimbatore',
         pdfUrls: [
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
         ], // List of PDF URLs
@@ -158,7 +158,7 @@ HomePageData getDefaultHomePageData() {
         toDate: DateTime(2024, 10 , 12),
         fromTime: '10:00 AM',
         toTime: '12:00 PM',
-        location: 'New York',
+        location: 'Coimbatore',
         pdfUrls: [
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
           'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
