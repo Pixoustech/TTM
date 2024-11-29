@@ -19,6 +19,7 @@ class _HomePageState extends State<HomePage> {
   String searchQuery = '';
   TextEditingController _searchController = TextEditingController();
   String _viewFilter = 'All';
+  List<String> _suggestions = [];
 
   @override
   void initState() {
@@ -49,11 +50,7 @@ class _HomePageState extends State<HomePage> {
     return getDefaultHomePageData(); // This is just a placeholder
   }
 
-  void _onSearchChanged(String query) {
-    setState(() {
-      searchQuery = query;
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -200,57 +197,93 @@ class _HomePageState extends State<HomePage> {
                             ),
                             const SizedBox(height: 16),
                             // Search Box
+                            // Search Box
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 0.0),
-                              child: Container(
-                                height: 45,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Color(0xFFBE898A),
-                                      Color(0xFFFFE8E8),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey.withOpacity(0.2),
-                                      spreadRadius: 2,
-                                      blurRadius: 2,
-                                      offset: const Offset(0, 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 0.0),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    height: 45,
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFFBE898A),
+                                          Color(0xFFFFE8E8),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.2),
+                                          spreadRadius: 2,
+                                          blurRadius: 2,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: Container(
-                                  height: 45,
-                                  width: double.infinity,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: TextField(
-                                    controller: _searchController,
-                                    onChanged: _onSearchChanged,
-                                    cursorColor: AppColors.concolor,
-                                    decoration: InputDecoration(
-                                      prefixIcon: Icon(Icons.search,
-                                          color: AppColors.concolor),
-                                      hintText: 'Search',
-                                      hintStyle: GoogleFonts.montserrat(
-                                          color: Colors.grey),
-                                      filled: true,
-                                      fillColor: Colors.white,
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide.none,
+                                    child: Container(
+                                      height: 45,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      child: TextField(
+                                        controller: _searchController,
+                                        onChanged: _onSearchChanged,
+                                        cursorColor: AppColors.concolor,
+                                        decoration: InputDecoration(
+                                          prefixIcon: Icon(Icons.search, color: AppColors.concolor),
+                                          hintText: 'Search',
+                                          hintStyle: GoogleFonts.montserrat(color: Colors.grey),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(12),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                  // Display suggestions
+                                  if (_suggestions.isNotEmpty)
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(6),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.grey.withOpacity(0.2),
+                                            spreadRadius: 2,
+                                            blurRadius: 2,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                      ),
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        physics: NeverScrollableScrollPhysics(),
+                                        itemCount: _suggestions.length,
+                                        itemBuilder: (context, index) {
+                                          return ListTile(
+                                            title: Text(_suggestions[index]),
+                                            onTap: () {
+                                              // Handle suggestion tap
+                                              setState(() {
+                                                searchQuery = _suggestions[index];
+                                                _searchController.text = searchQuery;
+                                                _suggestions.clear(); // Clear suggestions after selection
+                                              });
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ],
@@ -561,152 +594,30 @@ class _HomePageState extends State<HomePage> {
 
                       if (_viewFilter == 'Meetings') ...[
                         Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 0.0, vertical: 10.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Meeting',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF505050),
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Text(
-                                'You have ${_filterMeetings().length} Meetings Today',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 1),
-                              SingleChildScrollView(
-                                child: Column(
-                                  children: _filterMeetings().map((meeting) {
-                                    return GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                EventDetailPage(
-                                              title: meeting.title,
-                                              description: meeting.description,
-                                              priority: meeting.priority,
-                                              status: meeting.status,
-                                              date: meeting.fromDate,
-                                              location: meeting.location,
-                                              pdfUrls: meeting.pdfUrls,
-                                              Event: meeting.Event,
-                                              Assignedby: meeting.Assignedby,
-                                              Attachmentpdfurl:
-                                                  meeting.Attachmentpdfurl,
-                                              fromDate: meeting.fromDate,
-                                              toDate: meeting.toDate,
-                                              fromTime: meeting.fromTime,
-                                              toTime: meeting.toTime,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      child: buildMeetingDetailBox(
-                                          meeting.title,
-                                          meeting.description,
-                                          Colors.white,
-                                          meeting.priority,
-                                          meeting.status,
-                                          meeting.fromDate,
-                                          meeting.toDate,
-                                          meeting.fromTime,
-                                          meeting.toTime,
-                                          meeting.location,
-                                          meeting.Assignedby),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      if (_viewFilter == 'All') ...[
-                        SizedBox(
-                          height: 220,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _filterTasks().length,
-                            itemBuilder: (context, index) {
-                              final task = _filterTasks()[index];
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 10.0),
-                                child: GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => EventDetailPage(
-                                          title: task.title,
-                                          description: task.description,
-                                          priority: task.priority,
-                                          status: task.status,
-                                          date: task.date,
-                                          location: task.location,
-                                          pdfUrls: task.pdfUrls ?? [],
-                                          Event: task.Event,
-                                          Assignedby: task.Assignedby,
-                                          Attachmentpdfurl:
-                                              task.Attachmentpdfurl,
-                                          fromDate: task.date,
-                                          toDate: task.date,
-                                          fromTime: "",
-                                          toTime: "",
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: Container(
-                                    height:
-                                        120, // Set a fixed height for the container
-                                    child: buildTaskDetailBox(
-                                      task.title,
-                                      task.description,
-                                      Colors.white,
-                                      task.priority,
-                                      task.status,
-                                      task.date,
-                                      task.location,
-                                      task.Event,
-                                      task.Assignedby
-                                    ),
+                              Align(
+                                alignment: Alignment.centerLeft, // Align to the left
+                                child: Text(
+                                  'Meeting',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF505050),
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 0.0, vertical: 10.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Meeting',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF505050),
-                                ),
                               ),
                               const SizedBox(height: 5),
-                              Text(
-                                'You have ${_filterMeetings().length} Meetings Today',
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 14,
-                                  color: Colors.grey,
+                              Align(
+                                alignment: Alignment.centerLeft, // Align to the left
+                                child: Text(
+                                  'You have ${_filterMeetings().length} Meetings Today',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 1),
@@ -718,8 +629,7 @@ class _HomePageState extends State<HomePage> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) =>
-                                                EventDetailPage(
+                                            builder: (context) => EventDetailPage(
                                               title: meeting.title,
                                               description: meeting.description,
                                               priority: meeting.priority,
@@ -729,8 +639,7 @@ class _HomePageState extends State<HomePage> {
                                               pdfUrls: meeting.pdfUrls,
                                               Event: meeting.Event,
                                               Assignedby: meeting.Assignedby,
-                                              Attachmentpdfurl:
-                                                  meeting.Attachmentpdfurl,
+                                              Attachmentpdfurl: meeting.Attachmentpdfurl,
                                               fromDate: meeting.fromDate,
                                               toDate: meeting.toDate,
                                               fromTime: meeting.fromTime,
@@ -759,6 +668,184 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                         ),
+                      ],
+
+                      if (_viewFilter == 'All') ...[
+                        // Tasks Section
+                        if (_filterTasks().isNotEmpty) ...[
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Tasks',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF505050),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'You have ${_filterTasks().length} Tasks Today',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SizedBox(
+                            height: 220,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _filterTasks().length,
+                              itemBuilder: (context, index) {
+                                final task = _filterTasks()[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 10.0),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => EventDetailPage(
+                                            title: task.title,
+                                            description: task.description,
+                                            priority: task.priority,
+                                            status: task.status,
+                                            date: task.date,
+                                            location: task.location,
+                                            pdfUrls: task.pdfUrls ?? [],
+                                            Event: task.Event,
+                                            Assignedby: task.Assignedby,
+                                            Attachmentpdfurl: task.Attachmentpdfurl,
+                                            fromDate: task.date,
+                                            toDate: task.date,
+                                            fromTime: "",
+                                            toTime: "",
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      height: 120,
+                                      child: buildTaskDetailBox(
+                                        task.title,
+                                        task.description,
+                                        Colors.white,
+                                        task.priority,
+                                        task.status,
+                                        task.date,
+                                        task.location,
+                                        task.Event,
+                                        task.Assignedby,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ] else ...[
+                          // Show message if no tasks are available
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10.0),
+                            child: Text(
+                              'No tasks available',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ],
+
+                        // Meetings Section
+                        if (_filterMeetings().isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Meetings',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF505050),
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  'You have ${_filterMeetings().length} Meetings Today',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(height: 1),
+                                SingleChildScrollView(
+                                  child: Column(
+                                    children: _filterMeetings().map((meeting) {
+                                      return GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => EventDetailPage(
+                                                title: meeting.title,
+                                                description: meeting.description,
+                                                priority: meeting.priority,
+                                                status: meeting.status,
+                                                date: meeting.fromDate,
+                                                location: meeting.location,
+                                                pdfUrls: meeting.pdfUrls,
+                                                Event: meeting.Event,
+                                                Assignedby: meeting.Assignedby,
+                                                Attachmentpdfurl: meeting.Attachmentpdfurl,
+                                                fromDate: meeting.fromDate,
+                                                toDate: meeting.toDate,
+                                                fromTime: meeting.fromTime,
+                                                toTime: meeting.toTime,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: buildMeetingDetailBox(
+                                          meeting.title,
+                                          meeting.description,
+                                          Colors.white,
+                                          meeting.priority,
+                                          meeting.status,
+                                          meeting.fromDate,
+                                          meeting.toDate,
+                                          meeting.fromTime,
+                                          meeting.toTime,
+                                          meeting.location,
+                                          meeting.Assignedby,
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else ...[
+                          // Show message if no meetings are available
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10.0),
+                            child: Text(
+                              'No meetings available',
+                              style: GoogleFonts.montserrat(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ],
                   ),
@@ -839,6 +926,40 @@ class _HomePageState extends State<HomePage> {
   }
 
 
+  void _onSearchChanged(String query) {
+    setState(() {
+      searchQuery = query;
+      _suggestions = _getSuggestions(query);
+    });
+  }
 
+  List<String> _getSuggestions(String query) {
+    if (query.isEmpty) return [];
+
+    // Use a Set to avoid duplicates
+    final combinedSet = <String>{};
+
+    // Add task titles, locations, Assignedby, priority, status, and date
+    for (var task in _homePageData.tasks) {
+      combinedSet.add(task.title);
+      combinedSet.add(task.location);
+      combinedSet.add(task.Assignedby);
+      combinedSet.add(task.priority.toString());
+      combinedSet.add(task.status.toString());
+      combinedSet.add(task.date.toString());
+    }
+
+    // Add meeting titles, locations, Assignedby, and priority
+    for (var meeting in _homePageData.meetings) {
+      combinedSet.add(meeting.title);
+      combinedSet.add(meeting.location);
+      combinedSet.add(meeting.Assignedby);
+      combinedSet.add(meeting.priority.toString());
+      combinedSet.add(meeting.status.toString());
+    }
+
+    // Convert the Set back to a List and filter suggestions based on the query
+    return combinedSet.where((item) => item.toLowerCase().contains(query.toLowerCase())).toList();
+  }
 
 }

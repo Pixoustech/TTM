@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import '../Comman_pages/Constant.dart';
 import '../Comman_pages/Navigation_page.dart';
+import '../Home_Page/Home_page_Widgets.dart';
+import '../Report_Taskbox_page.dart';
 import 'model.dart';
 
 class ReportPage extends StatefulWidget {
@@ -14,41 +16,14 @@ class ReportPage extends StatefulWidget {
 }
 
 class _ReportPageState extends State<ReportPage> {
-  // Sample report data for different time frames
-  final Map<String, ReportData> _reportData = {
-    'Last 6 months': ReportData(
-      [
-        MonthlyTaskData('Jan', 10, 20, 22,100),
-        MonthlyTaskData('Feb', 30, 23, 11,3),
-        MonthlyTaskData('Mar', 15, 25, 10,33),
-        MonthlyTaskData('Apr', 20, 15, 5,23),
-        MonthlyTaskData('May', 25, 30, 12,44),
-        MonthlyTaskData('Jun', 5, 10, 8,44),
-      ],
-      {
-        'Not Started': 5,
-        'In Progress': 3,
-        'Completed': 10,
-        'Overdue': 6,
-      },
-    ),
-    'Last 3 months': ReportData(
-      [
-        MonthlyTaskData('Jul', 12, 20, 18,6),
-        MonthlyTaskData('Aug', 18, 25, 15,9),
-        MonthlyTaskData('Sep', 20, 30, 12,8),
-      ],
-      {
-        'Not Started': 7,
-        'In Progress': 5,
-        'Completed': 15,
-        'Overdue': 8,
-      },
-    ),
-  };
+  // Use the sample report data for different time frames
+  final Report _reportData = sampleReportData;
 
   String _selectedTimeFrame = 'Last 6 months';
-  late ReportData _currentReportData;
+  late OverallCounts _currentOverallCounts;
+  late Map<String, MonthlyTaskCounts> _currentMonthlyTaskCounts;
+  late Attendance _currentAttendance;
+
 
   // Declare _selectedIndex here
   int _selectedIndex = -1;
@@ -56,13 +31,25 @@ class _ReportPageState extends State<ReportPage> {
   @override
   void initState() {
     super.initState();
-    _currentReportData = _reportData[_selectedTimeFrame]!;
+    _updateCurrentReportData();
+  }
+
+  void _updateCurrentReportData() {
+    if (_selectedTimeFrame == 'Last 6 months') {
+      _currentOverallCounts = _reportData.last6Months.overallCounts;
+      _currentMonthlyTaskCounts = _reportData.last6Months.monthlyTaskCounts;
+      _currentAttendance = _reportData.last6Months.attendance;
+    } else {
+      _currentOverallCounts = _reportData.last3Months.overallCounts;
+      _currentMonthlyTaskCounts = _reportData.last3Months.monthlyTaskCounts;
+      _currentAttendance = _reportData.last3Months.attendance;
+    }
   }
 
   void _updateReportData(String newTimeFrame) {
     setState(() {
       _selectedTimeFrame = newTimeFrame;
-      _currentReportData = _reportData[_selectedTimeFrame]!;
+      _updateCurrentReportData();
     });
   }
 
@@ -138,12 +125,12 @@ class _ReportPageState extends State<ReportPage> {
                 children: [
                   Expanded(
                     flex: 2,
-                    child: buildTaskBox('Not Started', Colors.grey, double.infinity, 90, _currentReportData.taskStatuses['Not Started'] ?? 0, Icons.pending),
+                    child: _buildTaskBox(context, 'Not Started', Colors.grey, double.infinity, 90, _currentOverallCounts.notStarted, Icons.pending),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     flex: 3,
-                    child: buildTaskBox('In Progress', Colors.orange, double.infinity, 90, _currentReportData.taskStatuses['In Progress'] ?? 0, Icons.rotate_left),
+                    child: _buildTaskBox(context, 'In Progress', Colors.orange, double.infinity, 90, _currentOverallCounts.inProgress, Icons.rotate_left),
                   ),
                 ],
               ),
@@ -155,12 +142,12 @@ class _ReportPageState extends State<ReportPage> {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: buildTaskBox('Completed', Colors.green, double.infinity, 90, _currentReportData.taskStatuses['Completed'] ?? 0, Icons.check_circle),
+                    child: _buildTaskBox(context, 'Completed', Colors.green, double.infinity, 90 , _currentOverallCounts.completed, Icons.check_circle),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     flex: 2,
-                    child: buildTaskBox('Overdue', Color(0xFFC52D28), double.infinity, 90, _currentReportData.taskStatuses['Overdue'] ?? 0, Icons.timer),
+                    child: _buildTaskBox(context, 'Overdue', Color(0xFFC52D28), double.infinity, 90, _currentOverallCounts.overdue, Icons.timer),
                   ),
                 ],
               ),
@@ -201,77 +188,32 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
-  Widget buildTaskBox(String title, Color color, double width, double height, int taskCount, IconData iconData) {
-    return Container(
-      width: width,
-      height: height,
-      margin: const EdgeInsets.only(left: 0.0),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6),
-        color: color,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.montserrat(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    '$taskCount',
-                    style: GoogleFonts.montserrat(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Icon(
-              iconData,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-
-
-
-
   Widget _buildChart() {
+    // Prepare monthly task data for the chart
+    List<MonthlyTaskData> monthlyData = _currentMonthlyTaskCounts.entries.map((entry) {
+      // Capitalize the month name if necessary
+      String month = entry.key[0].toUpperCase() + entry.key.substring(1); // Capitalize first letter
+      return MonthlyTaskData(
+        month,
+        entry.value.notStarted,
+        entry.value.inProgress,
+        entry.value.completed,
+        entry.value.overdue,
+      );
+    }).toList();
+
     // Calculate the maximum value based on the data
     double maxYValue = 0;
 
-    for (var data in _currentReportData.monthlyData) {
-      // Calculate the total for the current data instance
+    for (var data in monthlyData) {
       double totalTasks = data.notStarted.toDouble() +
           data.completed.toDouble() +
           data.inProgress.toDouble() +
           data.overdue.toDouble();
 
-      // Update maxYValue if totalTasks is greater
       maxYValue = max(maxYValue, totalTasks);
     }
 
-    // Ensure the maximum value is rounded up to the nearest 10 for better visualization
     maxYValue = (maxYValue / 10).ceil() * 10;
 
     return SfCartesianChart(
@@ -279,42 +221,41 @@ class _ReportPageState extends State<ReportPage> {
         isVisible: true,
         overflowMode: LegendItemOverflowMode.scroll,
       ),
-
       tooltipBehavior: TooltipBehavior(enable: true),
-      primaryXAxis: const CategoryAxis(
+      primaryXAxis: CategoryAxis(
         title: AxisTitle(text: 'Months'),
       ),
       primaryYAxis: NumericAxis(
         title: const AxisTitle(text: 'Task Count'),
         minimum: 0,
         maximum: maxYValue,
-        interval: 10, // You can adjust this interval as needed
+        interval: 10,
         labelFormat: '{value}',
       ),
       series: <CartesianSeries>[
         StackedColumnSeries<MonthlyTaskData, String>(
-          dataSource: _currentReportData.monthlyData,
+          dataSource: monthlyData,
           xValueMapper: (MonthlyTaskData data, _) => data.month,
           yValueMapper: (MonthlyTaskData data, _) => data.notStarted,
           name: 'Not Started',
           color: Colors.grey,
         ),
         StackedColumnSeries<MonthlyTaskData, String>(
-          dataSource: _currentReportData.monthlyData,
+          dataSource: monthlyData,
           xValueMapper: (MonthlyTaskData data, _) => data.month,
           yValueMapper: (MonthlyTaskData data, _) => data.inProgress,
           name: 'In Progress',
           color: Colors.orange,
         ),
         StackedColumnSeries<MonthlyTaskData, String>(
-          dataSource: _currentReportData.monthlyData,
+          dataSource: monthlyData,
           xValueMapper: (MonthlyTaskData data, _) => data.month,
           yValueMapper: (MonthlyTaskData data, _) => data.completed,
           name: 'Completed',
           color: Colors.green,
         ),
         StackedColumnSeries<MonthlyTaskData, String>(
-          dataSource: _currentReportData.monthlyData,
+          dataSource: monthlyData,
           xValueMapper: (MonthlyTaskData data, _) => data.month,
           yValueMapper: (MonthlyTaskData data, _) => data.overdue,
           name: 'Overdue',
@@ -325,22 +266,20 @@ class _ReportPageState extends State<ReportPage> {
   }
 
   Widget _buildAttendanceChart() {
-    // Sample attendance data
+    // Create a list of attendance data using the model data
     final List<AttendanceData> _attendanceData = [
-      AttendanceData('Present', 20, color: Colors.green),
-      AttendanceData('Absent', 100, color: Colors.red),
+      AttendanceData('Present', _currentAttendance.presentCount, color: Colors.green),
+      AttendanceData('Absent', _currentAttendance.absentCount, color: Colors.red),
     ];
 
     // Calculate total attendance
     double totalAttendance = _attendanceData.fold(0, (sum, item) => sum + item.value);
-
-    // Initialize attendance percentage text
     String attendancePercentageText = '';
 
-    // Display percentage if a segment is selected
+    // Determine the attendance percentage for the selected segment
     if (_selectedIndex != -1) {
       AttendanceData selectedData = _attendanceData[_selectedIndex];
-      double selectedCount = selectedData.value;
+      double selectedCount = selectedData.value.toDouble();
       double attendancePercentage = (selectedCount / totalAttendance) * 100;
       attendancePercentageText = '${attendancePercentage.toStringAsFixed(1)}%';
     }
@@ -351,7 +290,7 @@ class _ReportPageState extends State<ReportPage> {
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(height: 40,),
+            SizedBox(height: 40),
             Stack(
               alignment: Alignment.center,
               children: [
@@ -453,6 +392,73 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
+
+  Widget _buildTaskBox(BuildContext context, String title, Color color, double width, double height, int count, IconData icon) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskBoxPage(
+              taskStatus: title,
+              taskCount: count,
+              selectedTimeFrame: _selectedTimeFrame, // Pass the selected timeframe
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: width,
+        height: height,
+        margin: const EdgeInsets.only(left: 0.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(6),
+          color: color,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '$count',
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
   // Helper function to return color based on index
   Color _getColorForIndex(int index) {
     switch (index) {
@@ -465,3 +471,4 @@ class _ReportPageState extends State<ReportPage> {
     }
   }
 }
+

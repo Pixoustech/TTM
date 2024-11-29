@@ -25,43 +25,8 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime? _endDate; // Variable for the end date
   DateTime? _selectedDate; // Variable for the selected date
 
-  final List<LeaveStatus> _leaveStatuses = [
-    LeaveStatus(
-        fromDate: DateTime(2024, 10, 1),
-        toDate: DateTime(2024, 10, 1),
-        status: "Approved",
-        title: "Design",
-        description: 'Going to Hospital'),
-    LeaveStatus(
-        fromDate: DateTime(2024, 9, 15),
-        toDate: DateTime(2024, 9, 16),
-        status: "Rejected",
-        title: "App develop",
-        description: 'Going to Hospital'),
-    LeaveStatus(
-        fromDate: DateTime(2024, 12, 25),
-        toDate: DateTime(2024, 12, 30),
-        status: "Waiting",
-        title: "App develop",
-        description: 'Going to Hospital'), // Example with a range
-  ];
-
-  // Sample data for task statuses
-  final Map<String, int> _taskStatuses = {
-    'Not Started': 5,
-    'In Progress': 3,
-    'Completed': 10,
-    'Overdue': 6,
-  };
-
-  // Sample holiday data
-  final Map<DateTime, String> _holidays = {
-    DateTime(2024, 10, 1): "Labor Day - A day to honor workers.",
-    DateTime(2024, 9, 15):
-        "National Day - Celebrate the nation's independence.",
-    DateTime(2024, 12, 25): "Christmas - Celebrate with family and friends.",
-    // Add more holidays as needed
-  };
+  final List<LeaveStatus> _leaveStatuses = getSampleLeaveStatuses();
+  final Map<DateTime, String> _holidays = getSampleHolidays();
 
   String? _holidayDetail; // Variable to hold the selected holiday detail
 
@@ -827,7 +792,8 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Widget _buildSummary(
-      {DateTime? singleDate, DateTime? startDate, DateTime? endDate}) {
+      {DateTime? singleDate, DateTime? startDate, DateTime? endDate})
+  {
     // Retrieve the default home page data
     final homePageData = getDefaultHomePageData();
 
@@ -968,8 +934,11 @@ class _CalendarPageState extends State<CalendarPage> {
     String? priority,
     required String date,
     required String location,
-    required String cornerText, // New parameter for the corner text
-  }) {
+    required String cornerText,
+    // New parameter for the corner text
+
+  })
+  {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1109,6 +1078,8 @@ class _CalendarPageState extends State<CalendarPage> {
       ],
     );
   }
+
+
   Widget _clickableTitle(String title) {
     return GestureDetector(
       onTap: () {

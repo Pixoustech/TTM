@@ -70,7 +70,7 @@ HomePageData getDefaultHomePageData() {
   return HomePageData(
     tasks: [
       Task(
-        title: 'App Design',
+        title: 'App DesignApp DesignApp DesignApp Design',
         description: 'hello',
         priority: 'Low',
         status: 'In Progress',
@@ -85,7 +85,7 @@ HomePageData getDefaultHomePageData() {
         Attachmentpdfurl: [],
       ),
       Task(
-        title: 'App',
+        title: 'ApApp DesignApp DesignApp DesignApp DesignApp Designp',
         description: 'The current website design needs a refresh to improve user experience and enhance visual appeal.......',
         priority: 'Medium',
         status: 'Not Started',
@@ -117,7 +117,7 @@ HomePageData getDefaultHomePageData() {
     ],
     meetings: [
       Meeting(
-        title: 'App Design Meeting',
+        title: 'App DesignApp DesignApp DesignApp DesignApp Design',
         description: 'Discuss the new design for the application.',
         priority: 'Medium',
         status: 'In Progress',
@@ -150,7 +150,7 @@ HomePageData getDefaultHomePageData() {
           Assignedby: "Own"
       ),
       Meeting(
-        title: 'App Design Meeting',
+        title: 'App Design Meeting App DesignApp DesignApp DesignApp DesignApp DesignApp Design',
         description: 'Discuss the new design for the application.',
         priority: 'Low',
         status: 'In Progress',
