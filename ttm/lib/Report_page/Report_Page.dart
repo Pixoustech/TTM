@@ -401,7 +401,6 @@ class _ReportPageState extends State<ReportPage> {
           MaterialPageRoute(
             builder: (context) => TaskBoxPage(
               taskStatus: title,
-              taskCount: count,
               selectedTimeFrame: _selectedTimeFrame, // Pass the selected timeframe
             ),
           ),

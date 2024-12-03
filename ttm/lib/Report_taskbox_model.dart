@@ -105,3 +105,149 @@ class Meeting {
   }
 }
 
+final Map<String, dynamic> responseData = {
+  'Not Started': {
+    'Last 6 months': {
+      'tasks': [
+        {
+          'title': 'Complete Flutter Project',
+          'description': 'Finish the task box implementation.',
+          'priority': 'High',
+          'status': 'Not Started',
+          'date': '2023-10-05T10:00:00',
+          'location': 'Office',
+          'event': 'Task',
+          'assignedBy': 'HQ',
+          'pdfUrls': ['https://example.com/doc1.pdf'],
+          'attachmentPdfUrls': ['https://example.com/attachment1.pdf'],
+        },
+        {
+          'title': 'Prepare Presentation',
+          'description': 'Prepare slides for the upcoming meeting.',
+          'priority': 'Medium',
+          'status': 'Not Started',
+          'date': '2023-10-06T10:00:00',
+          'location': 'Office',
+          'event': 'Meeting',
+          'assignedBy': 'Manager',
+          'pdfUrls': [],
+          'attachmentPdfUrls': [],
+        },
+      ],
+      'meetings': [
+        {
+          'title': 'Team Standup',
+          'description': 'Daily team standup meeting.',
+          'priority': 'Low',
+          'status': 'Not Started',
+          'fromDate': '2023-10-05T09:00:00',
+          'toDate': '2023-10-05T09:30:00',
+          'location': 'Zoom',
+          'event': 'Meeting',
+          'assignedBy': 'Team Lead',
+        },
+      ],
+    },
+    'Last 3 months': {
+      'tasks': [
+        {
+          'title': 'Complete Flutter Project',
+          'description': 'Finish the task box implementation.',
+          'priority': 'High',
+          'status': 'Pending',
+          'date': '2023-10-05T10:00:00',
+          'location': 'Office',
+          'event': 'Task',
+          'assignedBy': 'HQ',
+          'pdfUrls': ['https://example.com/doc1.pdf'],
+          'attachmentPdfUrls': ['https://example.com/attachment1.pdf'],
+        },
+        {
+          'title': 'Prepare Presentation',
+          'description': 'Prepare slides for the upcoming meeting.',
+          'priority': 'Medium',
+          'status': 'Not Started',
+          'date': '2023-10-06T10:00:00',
+          'location': 'Office',
+          'event': 'Meeting',
+          'assignedBy': 'Manager',
+          'pdfUrls': [],
+          'attachmentPdfUrls': [],
+        },
+      ],
+      'meetings': [
+        {
+          'title': 'Team Standup',
+          'description': 'Daily team standup meeting.',
+          'priority': 'Low',
+          'status': 'Not Started',
+          'fromDate': '2023-10-05T09:00:00',
+          'toDate': '2023-10-05T09:30:00',
+          'location': 'Zoom',
+          'event': 'Meeting',
+          'assignedBy': 'Team Lead',
+        },
+      ],
+    },
+  },
+  'Completed': {
+    'Last 6 months': {
+      'tasks': [
+        {
+          'title': 'Submit Weekly Report',
+          'description': 'Submit the report by the end of the week.',
+          'priority': 'Medium',
+          'status': 'Completed',
+          'date': '2023-10-02T17:00:00',
+          'location': 'Remote',
+          'event': 'Reporting',
+          'assignedBy': 'Manager',
+          'pdfUrls': [],
+          'attachmentPdfUrls': [],
+        },
+      ],
+      'meetings': [
+        {
+          'title': 'Project Review',
+          'description': 'Review project progress with stakeholders.',
+          'priority': 'High',
+          'status': 'Completed',
+          'fromDate': '2023-10-01T14:00:00',
+          'toDate': '2023-10-01T15:00:00',
+          'location': 'Conference Room',
+          'event': 'Meeting',
+          'assignedBy': 'Project Manager',
+        },
+      ],
+    },
+    'Last 3 months': {
+      'tasks': [
+        {
+          'title': 'Submit Weekly Report',
+          'description': 'Submit the report by the end of the week.',
+          'priority': 'Medium',
+          'status': 'Completed',
+          'date': '2023-10-02T17:00:00',
+          'location': 'Remote',
+          'event': 'Task',
+          'assignedBy': 'Manager',
+          'pdfUrls': [],
+          'attachmentPdfUrls': [],
+        },
+      ],
+      'meetings': [
+        {
+          'title': 'Project Review',
+          'description': 'Review project progress with stakeholders.',
+          'priority': 'High',
+          'status': 'Completed',
+          'fromDate': '2023-10-01T14:00:00',
+          'toDate': '2023-10-01T15:00:00',
+          'location': 'Conference Room',
+          'event': 'Meeting',
+          'assignedBy': 'Project Manager',
+        },
+      ],
+    },
+  },
+};

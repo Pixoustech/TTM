@@ -4,170 +4,72 @@ import 'package:intl/intl.dart'; // For date formatting
 
 // Assuming AppColors is defined in your Constant.dart file
 import 'Comman_pages/Constant.dart';
+import 'Comman_pages/Widgets_page.dart';
 import 'Event_Detail_Pages/Event_Detail.dart';
 import 'Report_taskbox_model.dart'; // Ensure this file contains the necessary model definitions
 
-// Define your models (TaskModel, Task, Meeting) here as previously shown...
-
-class TaskBoxPage extends StatelessWidget {
+class TaskBoxPage extends StatefulWidget {
   final String taskStatus;
-  final int taskCount;
   final String selectedTimeFrame;
 
-  TaskBoxPage({Key? key, required this.taskStatus, required this.taskCount, required this.selectedTimeFrame}) : super(key: key);
+  TaskBoxPage({
+    Key? key,
+    required this.taskStatus,
+    required this.selectedTimeFrame,
+  }) : super(key: key);
 
-  // Sample response data
-  final Map<String, dynamic> responseData = {
-    'Not Started': {
-      'Last 6 months': {
-        'tasks': [
-          {
-            'title': 'Complete Flutter Project',
-            'description': 'Finish the task box implementation.',
-            'priority': 'High',
-            'status': 'Not Started',
-            'date': '2023-10-05T10:00:00',
-            'location': 'Office',
-            'event': 'Development',
-            'assignedBy': 'HQ',
-            'pdfUrls': ['https://example.com/doc1.pdf'],
-            'attachmentPdfUrls': ['https://example.com/attachment1.pdf'],
-          },
-          {
-            'title': 'Prepare Presentation',
-            'description': 'Prepare slides for the upcoming meeting.',
-            'priority': 'Medium',
-            'status': 'Not Started',
-            'date': '2023-10-06T10:00:00',
-            'location': 'Office',
-            'event': 'Meeting',
-            'assignedBy': 'Manager',
-            'pdfUrls': [],
-            'attachmentPdfUrls': [],
-          },
-        ],
-        'meetings': [
-          {
-            'title': 'Team Standup',
-            'description': 'Daily team standup meeting.',
-            'priority': 'Low',
-            'status': 'Not Started',
-            'fromDate': '2023-10-05T09:00:00',
-            'toDate': '2023-10-05T09:30:00',
-            'location': 'Zoom',
-            'event': 'Meeting',
-            'assignedBy': 'Team Lead',
-          },
-        ],
-      },
-      'Last 3 months': {
-        'tasks': [
-          {
-            'title': 'Complete Flutter Project',
-            'description': 'Finish the task box implementation.',
-            'priority': 'High',
-            'status': 'Pending',
-            'date': '2023-10-05T10:00:00',
-            'location': 'Office',
-            'event': 'Development',
-            'assignedBy': 'HQ',
-            'pdfUrls': ['https://example.com/doc1.pdf'],
-            'attachmentPdfUrls': ['https://example.com/attachment1.pdf'],
-          },
-          {
-            'title': 'Prepare Presentation',
-            'description': 'Prepare slides for the upcoming meeting.',
-            'priority': 'Medium',
-            'status': 'Not Started',
-            'date': '2023-10-06T10:00:00',
-            'location': 'Office',
-            'event': 'Meeting',
-            'assignedBy': 'Manager',
-            'pdfUrls': [],
-            'attachmentPdfUrls': [],
-          },
-        ],
-        'meetings': [
-          {
-            'title': 'Team Standup',
-            'description': 'Daily team standup meeting.',
-            'priority': 'Low',
-            'status': 'Not Started',
-            'fromDate': '2023-10-05T09:00:00',
-            'toDate': '2023-10-05T09:30:00',
-            'location': 'Zoom',
-            'event': 'Meeting',
-            'assignedBy': 'Team Lead',
-          },
-        ],
-      },
-    },
-    'Completed': {
-      'Last 6 months': {
-        'tasks': [
-          {
-            'title': 'Submit Weekly Report',
-            'description': 'Submit the report by the end of the week.',
-            'priority': 'Medium',
-            'status': 'Completed',
-            'date': '2023-10-02T17:00:00',
-            'location': 'Remote',
-            'event': 'Reporting',
-            'assignedBy': 'Manager',
-            'pdfUrls': [],
-            'attachmentPdfUrls': [],
-          },
-        ],
-        'meetings': [
-          {
-            'title': 'Project Review',
-            'description': 'Review project progress with stakeholders.',
-            'priority': 'High',
-            'status': 'Completed',
-            'fromDate': '2023-10-01T14:00:00',
-            'toDate': '2023-10-01T15:00:00',
-            'location': 'Conference Room',
-            'event': 'Meeting',
-            'assignedBy': 'Project Manager',
-          },
-        ],
-      },
-      'Last 3 months': {
-        'tasks': [
-          {
-            'title': 'Submit Weekly Report',
-            'description': 'Submit the report by the end of the week.',
-            'priority': 'Medium',
-            'status': 'Completed',
-            'date': '2023-10-02T17:00:00',
-            'location': 'Remote',
-            'event': 'Reporting',
-            'assignedBy': 'Manager',
-            'pdfUrls': [],
-            'attachmentPdfUrls': [],
-          },
-        ],
-        'meetings': [
-          {
-            'title': 'Project Review',
-            'description': 'Review project progress with stakeholders.',
-            'priority': 'High',
-            'status': 'Completed',
-            'fromDate': '2023-10-01T14:00:00',
-            'toDate': '2023-10-01T15:00:00',
-            'location': 'Conference Room',
-            'event': 'Meeting',
-            'assignedBy': 'Project Manager',
-          },
-        ],
-      },
-    },
-  };
+  @override
+  _TaskBoxPageState createState() => _TaskBoxPageState();
+}
+
+class _TaskBoxPageState extends State<TaskBoxPage> {
+  late TextEditingController _searchController;
+  List<Task> _filteredTasks = [];
+  List<Meeting> _filteredMeetings = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _filterTasks(); // Initialize filtered tasks
+    _searchController.addListener(_filterTasks);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterTasks() {
+    final searchQuery = _searchController.text.toLowerCase();
+
+    // Get the task data
+    final taskData = responseData[widget.taskStatus];
+    if (taskData != null) {
+      final selectedTaskData = taskData[widget.selectedTimeFrame];
+      TaskModel taskModel = TaskModel.fromJson(selectedTaskData);
+
+      // Filter tasks
+      _filteredTasks = taskModel.tasks.where((task) {
+        return task.title.toLowerCase().contains(searchQuery) ||
+            task.description.toLowerCase().contains(searchQuery);
+      }).toList();
+
+      // Filter meetings
+      _filteredMeetings = taskModel.meetings.where((meeting) {
+        return meeting.title.toLowerCase().contains(searchQuery) ||
+            meeting.description.toLowerCase().contains(searchQuery);
+      }).toList();
+    }
+
+    setState(() {}); // Update the UI
+  }
 
   @override
   Widget build(BuildContext context) {
     // Check if the taskStatus exists in the responseData
-    final taskData = responseData[taskStatus];
+    final taskData = responseData[widget.taskStatus];
 
     // If taskData is null, return an empty container or a message
     if (taskData == null) {
@@ -184,7 +86,7 @@ class TaskBoxPage extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '$taskStatus',
+                  '${widget.taskStatus}',
                   style: GoogleFonts.montserrat(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -198,7 +100,7 @@ class TaskBoxPage extends StatelessWidget {
         ),
         body: Center(
           child: Text(
-            'No data available for $taskStatus',
+            'No data available for ${widget.taskStatus}',
             style: TextStyle(fontSize: 18),
           ),
         ),
@@ -206,10 +108,11 @@ class TaskBoxPage extends StatelessWidget {
     }
 
     // If taskData is not null, parse it
-    final selectedTaskData = taskData[selectedTimeFrame]; // Get data for the selected timeframe
+    final selectedTaskData = taskData[widget.selectedTimeFrame]; // Get data for the selected timeframe
     TaskModel taskModel = TaskModel.fromJson(selectedTaskData);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: AppColors.concolor,
         leading: IconButton(
@@ -222,7 +125,7 @@ class TaskBoxPage extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '$taskStatus ',
+                '${widget.taskStatus} ',
                 style: GoogleFonts.montserrat(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -234,88 +137,149 @@ class TaskBoxPage extends StatelessWidget {
         ),
         centerTitle: false,
       ),
-      body: ListView(
-        children: [
-          ...taskModel.tasks.map((task) => GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EventDetailPage(
-                    title: task.title,
-                    description: task.description,
-                    priority: task.priority,
-                    status: task.status,
-                    date: task.date,
-                    location: task.location,
-                    pdfUrls: task.pdfUrls ?? [],
-                    Event: task.event,
-                    Assignedby: task.assignedBy,
-                    Attachmentpdfurl: task.attachmentPdfUrls ?? [],
-                    fromDate: task.date,
-                    toDate: task.date,
-                    fromTime: "",
-                    toTime: "",
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 15.0), // Added padding here
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(7.0),
+              child: Container(
+                height: 60,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  cursorColor: AppColors.concolor,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.search, color: AppColors.concolor),
+                    hintText: 'Search',
+                    hintStyle: GoogleFonts.montserrat(color: Colors.grey),
+                    filled: true,
+                    fillColor: const Color(0xFFE6E6E6),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              );
-            },
-            child: _buildTaskDetailBoxforhome(
-              task.title,
-              task.description,
-              getPriorityColor(task.priority),
-              task.priority,
-              task.status,
-              DateTime.parse(task.date.toString()),
-              task.location,
-              task.event,
-              task.assignedBy,
+              ),
             ),
-          )),
-          Divider(),
-          ...taskModel.meetings.map((meeting) => GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EventDetailPage(
-                    title: meeting.title,
-                    description: meeting.description,
-                    priority: meeting.priority,
-                    status: meeting.status,
-                    date: meeting.fromDate, // Assuming you want to show the start date
-                    location: meeting.location,
-                    pdfUrls: [], // Assuming no PDFs for meetings
-                    Event: meeting.event,
-                    Assignedby: meeting.assignedBy,
-                    Attachmentpdfurl: [], // Assuming no attachments for meetings
-                    fromDate: meeting.fromDate,
-                    toDate: meeting.toDate,
-                    fromTime: meeting.fromTime,
-                    toTime: meeting.toTime,
+            // New Row for Event text and task status count
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 15.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  Text(
+                    "Event: ",
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              );
-            },
-            child : _buildTaskDetailBoxforhome(
-              meeting.title,
-              meeting.description,
-              getPriorityColor(meeting.priority),
-              meeting.priority,
-              meeting.status,
-              DateTime.parse(meeting.fromDate.toString()), // Assuming you want to show the start date
-              meeting.location,
-              meeting.event,
-              meeting.assignedBy,
+                  Text(
+                    "${widget.taskStatus} (${_filteredTasks.length + _filteredMeetings.length})", // Dynamic count
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      color: AppColors.concolor,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          )),
-        ],
+            Expanded(
+              child: ListView(
+                children: [
+                  ..._filteredTasks.map((task) => GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EventDetailPage(
+                            title: task.title,
+                            description: task.description,
+                            priority: task.priority,
+                            status: task.status,
+                            date: task.date,
+                            location: task.location,
+                            pdfUrls: task.pdfUrls ?? [],
+                            Event: task.event,
+                            Assignedby: task.assignedBy,
+                            Attachmentpdfurl: task.attachmentPdfUrls ?? [],
+                            fromDate: task.date,
+                            toDate: task.date,
+                            fromTime: "",
+                            toTime: "",
+                          ),
+                        ),
+                      );
+                    },
+                    child: buildTaskDetailBox(
+                      title: task.title,
+                      description: task.description,
+                      priority: task.priority,
+                      date: task.date.toLocal().toString().split(' ')[0], // Format date
+                      location: task.location,
+                      event: task.event,
+                      assignedBy: task.assignedBy,
+                    ),
+                  )),
+                  Divider(),
+                  ..._filteredMeetings.map((meeting) => GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EventDetailPage(
+                            title: meeting.title,
+                            description: meeting.description,
+                            priority: meeting.priority,
+                            status: meeting.status,
+                            date: meeting.fromDate, // Assuming you want to show the start date
+                            location: meeting.location,
+                            pdfUrls: [], // Assuming no PDFs for meetings
+                            Event: meeting.event,
+                            Assignedby: meeting.assignedBy,
+                            Attachmentpdfurl: [], // Assuming no attachments for meetings
+                            fromDate: meeting.fromDate,
+                            toDate: meeting.toDate,
+                            fromTime: meeting.fromTime,
+                            toTime: meeting.toTime,
+                          ),
+                        ),
+                      );
+                    },
+                    child: buildMeetingDetailBox(
+                      title: meeting.title,
+                      description: meeting.description,
+                      priority: meeting.priority,
+                      status: meeting.status,
+                      fromDate: meeting.fromDate,
+                      toDate: meeting.toDate,
+                      fromTime: meeting.fromTime,
+                      toTime: meeting.toTime,
+                      location: meeting.location,
+                      event: meeting.event,
+                      assignedby: meeting.assignedBy,
+                    ),
+                  )),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-Widget _buildTaskDetailBoxforhome(
+
+
+
+/*Widget _buildTaskDetailBoxforhome(
     String title,
     String description,
     Color color,
@@ -491,4 +455,4 @@ Widget _buildTaskDetailBoxforhome(
       ],
     ),
   );
-}
+}*/
