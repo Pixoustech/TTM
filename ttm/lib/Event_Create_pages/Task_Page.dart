@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../Comman_pages/Constant.dart';
 import '../Comman_pages/Navigation_page.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
-import '../MapScreen.dart';
+import 'Model.dart';
+import 'Service.dart';
+
 
 class Createevent extends StatefulWidget {
   const Createevent({super.key});
@@ -20,7 +21,7 @@ class Createevent extends StatefulWidget {
 }
 
 class _CreateEventState extends State<Createevent> {
-  String _currentView = 'event';
+  String _currentView = 'task';
   final TextEditingController _taskNameController = TextEditingController();
   final TextEditingController _dueDateController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
@@ -38,7 +39,7 @@ class _CreateEventState extends State<Createevent> {
   String? _selectedPriority;
   List<String> _addressSuggestions = [];
   bool _isLoadingSuggestions = false; // To show loading indicator
-
+  bool _hasInteracted = false; // Track if the user has interacted with the form
   @override
   void initState() {
     super.initState();
@@ -48,79 +49,84 @@ class _CreateEventState extends State<Createevent> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.concolor,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.backwhite),
-          onPressed: () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const Navigation()),
-            );
-          },
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Create Event',
-                style: GoogleFonts.montserrat(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.backwhite,
+    return WillPopScope(
+      onWillPop: () async {
+        // Check if any fields are filled
+        if (_hasUnsavedChanges()) {
+          // Show confirmation dialog
+          return await _showDataLossDialog() ??
+              false; // Return the user's choice
+        }
+        return true; // Allow pop if no fields are filled
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: AppColors.concolor,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.backwhite),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const Navigation()),
+              );
+            },
+          ),
+          title: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Create Event',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.backwhite,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
+          centerTitle: false,
         ),
-        centerTitle: false,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _clickableTitle('Event'),
-                _clickableTitle('Meeting'),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _buildIndicators(),
-            const SizedBox(height: 16),
-            _buildInputFields(),
-            const SizedBox(height: 16),
-            _buildPrioritySelector(),
-            const SizedBox(height: 16),
-            _buildDescriptionField(),
-          ],
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _clickableTitle('Task'),
+                  _clickableTitle('Meeting'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _buildIndicators(),
+              const SizedBox(height: 16),
+              _buildInputFields(),
+              const SizedBox(height: 16),
+              _buildPrioritySelector(),
+              const SizedBox(height: 16),
+              _buildDescriptionField(),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _clickableTitle(String title) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentView = title.toLowerCase();
-        });
-      },
-      child: Text(
-        title,
-        style: GoogleFonts.montserrat(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: _currentView.toLowerCase() == title.toLowerCase()
-              ? AppColors.concolor
-              : Colors.black,
-        ),
-      ),
-    );
+  bool _hasUnsavedChanges() {
+    return _taskNameController.text.isNotEmpty ||
+        _meetingNameController.text.isNotEmpty ||
+        _dueDateController.text.isNotEmpty ||
+        _locationController.text.isNotEmpty ||
+        _descriptionController.text.isNotEmpty ||
+        _fromDateController.text.isNotEmpty ||
+        _fromTimeController.text.isNotEmpty ||
+        _toDateController.text.isNotEmpty ||
+        _toTimeController.text.isNotEmpty ||
+        _venueOrLinkController.text.isNotEmpty ||
+        _assignedToController.text.isNotEmpty;
   }
 
   Widget _buildIndicators() {
@@ -137,7 +143,7 @@ class _CreateEventState extends State<Createevent> {
           children: [
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
-              left: _currentView == 'event' ? 0 : 160,
+              left: _currentView == 'task' ? 0 : 160,
               child: Container(
                 height: 4,
                 width: 160,
@@ -153,53 +159,127 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
+  Widget _clickableTitle(String title) {
+    return GestureDetector(
+      onTap: () {
+        // Check if the user has interacted with the form
+        if (_hasUnsavedChanges() && _hasInteracted) {
+          // Show the dialog only if there are unsaved changes and the user has interacted
+          _showDataLossDialog().then((shouldLeave) {
+            if (shouldLeave == true) {
+              setState(() {
+                _currentView = title.toLowerCase();
+                _resetFields();
+              });
+            }
+          });
+        } else {
+          // If there are no unsaved changes or it's the first interaction, switch the view directly
+          setState(() {
+            _currentView = title.toLowerCase();
+            _resetFields();
+            _hasInteracted = true; // Mark that the user has interacted
+          });
+        }
+      },
+      child: Text(
+        title,
+        style: GoogleFonts.montserrat(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: _currentView.toLowerCase() == title.toLowerCase()
+              ? AppColors.concolor
+              : Colors.black,
+        ),
+      ),
+    );
+  }
+  Future<bool?> _showDataLossDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Unsaved Changes'),
+          content: Text('You have unsaved changes. Do you want to continue?'),
+          actions: [
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(false), // User chooses not to leave
+              child: Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                _resetFields(); // Reset fields if user chooses to leave
+                Navigator.of(context).pop(true); // User chooses to leave
+              },
+              child: Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _resetFields() {
+    _taskNameController.clear();
+    _meetingNameController.clear();
+    _dueDateController.clear();
+    _locationController.clear();
+    _descriptionController.clear();
+    _fromDateController.clear();
+    _fromTimeController.clear();
+    _toDateController.clear();
+    _toTimeController.clear();
+    _venueOrLinkController.clear();
+    _assignedToController.clear();
+    _selectedPriority = null;
+    _addressSuggestions.clear();
+  }
+
   Widget _buildInputFields() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_currentView == 'event') ...[
-          _buildTextField('Task Name', _taskNameController),
+        if (_currentView == 'task') ...[
+          _buildSimpleTextField('Task Name', _taskNameController),
           const SizedBox(height: 12),
           _buildTextFieldWithCalendar('Due Date', _dueDateController),
           const SizedBox(height: 12),
-          _buildTextField('Location', _locationController),
-        ] else
-          if (_currentView == 'meeting') ...[
-            _buildTextField('Meeting Name', _meetingNameController),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextFieldWithCalendar(
-                      'From Date', _fromDateController),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child:
-                  _buildTextFieldWithTime('From Time', _fromTimeController),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child:
-                  _buildTextFieldWithCalendar('To Date', _toDateController),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildTextFieldWithTime('To Time', _toTimeController),
-                ),
-              ],
-            ),
-            _buildTextField('Location', _locationController),
-          ],
+          _buildTextField('Location', _locationController, true), // Only for Event
+        ] else if (_currentView == 'meeting') ...[
+          _buildSimpleTextField('Meeting Name', _meetingNameController),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextFieldWithCalendar('From Date', _fromDateController),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildTextFieldWithTime('From Time', _fromTimeController),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextFieldWithCalendar('To Date', _toDateController),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildTextFieldWithTime('To Time', _toTimeController),
+              ),
+            ],
+          ),
+          // No location field for Meeting
+
+        ],
       ],
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller) {
+  Widget _buildSimpleTextField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -224,29 +304,62 @@ class _CreateEventState extends State<Createevent> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.blue, width: 2.0),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                  vertical: 4.0, horizontal: 12.0),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.location_on),
-                onPressed: () async {
-                  var status = await Permission.location.request();
-                  if (status.isGranted) {
-                    final LatLng? selectedLocation = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => MapWithStreetViewPage()),
-                    );
-                    if (selectedLocation != null) {
-                      controller.text =
-                      '${selectedLocation.latitude}, ${selectedLocation.longitude}';
-                    }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Location permission denied')),
-                    );
-                  }
-                },
+              contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+      String label, TextEditingController controller, bool hasIcon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TextField(
+            controller: controller,
+            style: GoogleFonts.montserrat(fontSize: 12),
+            cursorColor: Colors.blue,
+            decoration: InputDecoration(
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
               ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.blue, width: 2.0),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+              suffixIcon: hasIcon
+                  ? IconButton(
+                      icon: const Icon(Icons.location_on),
+                      onPressed: () async {
+                        var status = await Permission.location.request();
+                        if (status.isGranted) {
+                          final LatLng? selectedLocation = await EventUtils.selectLocation(context);
+                          if (selectedLocation != null) {
+                            controller.text =
+                                '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Location permission denied')),
+                          );
+                        }
+                      },
+                    )
+                  : null,
             ),
             onChanged: (value) {
               if (value.isNotEmpty) {
@@ -287,8 +400,9 @@ class _CreateEventState extends State<Createevent> {
       ),
     );
   }
-  Widget _buildTextFieldWithCalendar(String label,
-      TextEditingController controller) {
+
+  Widget _buildTextFieldWithCalendar(
+      String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -305,9 +419,7 @@ class _CreateEventState extends State<Createevent> {
           TextField(
             controller: controller,
             style: GoogleFonts.montserrat(fontSize: 14),
-            // Decrease font size
             cursorColor: AppColors.concolor,
-            // Set cursor color
             decoration: InputDecoration(
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -315,8 +427,8 @@ class _CreateEventState extends State<Createevent> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                  vertical: 4.0, horizontal: 12.0), // Adjust content padding
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.calendar_today),
                 onPressed: _selectDueDate,
@@ -330,8 +442,8 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
-  Widget _buildTextFieldWithTime(String label,
-      TextEditingController controller) {
+  Widget _buildTextFieldWithTime(
+      String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -347,8 +459,8 @@ class _CreateEventState extends State<Createevent> {
           const SizedBox(height: 4),
           TextField(
             controller: controller,
-            style: GoogleFonts.montserrat(fontSize: 14), // Decrease font size
-            cursorColor: AppColors.concolor, // Set cursor color
+            style: GoogleFonts.montserrat(fontSize: 14),
+            cursorColor: AppColors.concolor,
             decoration: InputDecoration(
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.grey, width: 1.0),
@@ -356,8 +468,8 @@ class _CreateEventState extends State<Createevent> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                  vertical: 4.0, horizontal: 12.0), // Adjust content padding
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.access_time),
                 onPressed: () {
@@ -372,14 +484,33 @@ class _CreateEventState extends State<Createevent> {
   }
 
   Future<void> _selectDueDate() async {
-    final DateTime? picked = await showDatePicker(
+    // Select the date
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (picked != null) {
-      _dueDateController.text = "${picked.toLocal()}".split(' ')[0];
+
+    if (pickedDate != null) {
+      // Set the time to a default value (e.g., midnight)
+      final DateTime combinedDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        0, // Set hour to 0 (midnight)
+        0, // Set minute to 0
+      );
+
+      // Format the combined DateTime to ISO 8601 format for internal use
+      String iso8601Date = combinedDateTime.toUtc().toIso8601String();
+
+      // Display the date in a user-friendly format (e.g., 'yyyy-MM-dd')
+      _dueDateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
+
+      // Optionally, you can store the ISO 8601 date in a separate variable if needed
+      // For example:
+      // _internalDueDate = iso8601Date; // Store it for later use
     }
   }
 
@@ -389,9 +520,13 @@ class _CreateEventState extends State<Createevent> {
       initialTime: TimeOfDay.now(),
     );
     if (picked != null) {
-      controller.text = "${picked.hour}:${picked.minute}";
+      // Format the time to 'HH:mm'
+      final now = DateTime.now();
+      final formattedTime = DateFormat('HH:mm').format(DateTime(now.year, now.month, now.day, picked.hour, picked.minute));
+      controller.text = formattedTime;
     }
   }
+
 
   Widget _buildPrioritySelector() {
     return Padding(
@@ -427,22 +562,19 @@ class _CreateEventState extends State<Createevent> {
   }
 
   Widget _buildPriorityBox(String label, Color color) {
-    bool isSelected =
-        _selectedPriority == label; // Check if this box is selected
+    bool isSelected = _selectedPriority == label;
 
     return GestureDetector(
       onTap: () {
         setState(() {
-          _selectedPriority = label; // Update the selected priority
+          _selectedPriority = label;
         });
       },
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: isSelected ? Colors.black : Colors.black45),
           borderRadius: BorderRadius.circular(8),
-          color: isSelected
-              ? color.withOpacity(0.2)
-              : Colors.transparent, // Change background color if selected
+          color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
         ),
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         child: Row(
@@ -457,12 +589,8 @@ class _CreateEventState extends State<Createevent> {
               label,
               style: GoogleFonts.montserrat(
                 fontSize: 12,
-                fontWeight: isSelected
-                    ? FontWeight.bold
-                    : FontWeight.normal, // Change text weight if selected
-                color: isSelected
-                    ? color
-                    : Colors.black, // Change text color if selected
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? color : Colors.black,
               ),
             ),
           ],
@@ -482,7 +610,8 @@ class _CreateEventState extends State<Createevent> {
                 onPressed: () {
                   setState(() {
                     _selectedMode = 'offline';
-                    _venueOrLinkController.text = 'Venue';
+                    _venueOrLinkController.text = ''; // Clear the text field
+                    _addressSuggestions.clear(); // Clear suggestions when switching modes
                   });
                 },
                 child: Text(
@@ -510,7 +639,8 @@ class _CreateEventState extends State<Createevent> {
                 onPressed: () {
                   setState(() {
                     _selectedMode = 'online';
-                    _venueOrLinkController.text = 'Link';
+                    _venueOrLinkController.text = ''; // Clear the text field
+                    _addressSuggestions.clear(); // Clear suggestions when switching modes
                   });
                 },
                 child: Text(
@@ -537,83 +667,86 @@ class _CreateEventState extends State<Createevent> {
         const SizedBox(height: 16),
         TextField(
           controller: _venueOrLinkController,
-          readOnly: true,
           cursorColor: AppColors.concolor,
           decoration: InputDecoration(
+            hintText: _selectedMode == 'online' ? 'Link' : 'Venue', // Set hint text based on mode
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: Colors.grey, width: 1.0),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
             ),
-            contentPadding:
-            const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+            contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+            suffixIcon: _selectedMode == 'online' // Show paste icon only in online mode
+                ? IconButton(
+              icon: const Icon(Icons.paste), // Use paste icon
+              onPressed: () async {
+                // Get the clipboard data
+                final data = await Clipboard.getData(Clipboard.kTextPlain);
+                if (data != null && data.text != null) {
+                  // Paste the text into the text field
+                  _venueOrLinkController.text = data.text!;
+                }
+              },
+            )
+                : _selectedMode == 'offline' // Show location icon only in offline mode
+                ? IconButton(
+              icon: const Icon(Icons.location_on),
+              onPressed: () async {
+                var status = await Permission.location.request();
+                if (status.isGranted) {
+                  final LatLng? selectedLocation = await EventUtils.selectLocation(context);
+                  if (selectedLocation != null) {
+                    _venueOrLinkController.text =
+                    '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Location permission denied')),
+                  );
+                }
+              },
+            )
+                : null, // No icon in other cases
           ),
+          onChanged: (value) {
+            if (_selectedMode == 'offline' && value.isNotEmpty) {
+              _fetchAddressSuggestions(value); // Fetch suggestions only in offline mode
+            } else if (_selectedMode == 'online') {
+              setState(() {
+                _addressSuggestions.clear(); // Clear suggestions in online mode
+              });
+            }
+          },
         ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Assigned to',
-                style: GoogleFonts.montserrat(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              TextField(
-                controller: _assignedToController,
-                cursorColor: AppColors.concolor,
-                decoration: InputDecoration(
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.grey, width: 1.0),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide:
-                    BorderSide(color: AppColors.concolor, width: 2.0),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      vertical: 4.0, horizontal: 12.0),
-                ),
-              ),
-            ],
+        if (_isLoadingSuggestions)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: CircularProgressIndicator(),
           ),
-        ),
+        if (_addressSuggestions.isNotEmpty)
+          Container(
+            color: Colors.white,
+            child: ListView.builder(
+              shrinkWrap: true,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: _addressSuggestions.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(_addressSuggestions[index]),
+                  onTap: () {
+                    _venueOrLinkController.text = _addressSuggestions[index];
+                    setState(() {
+                      _addressSuggestions.clear();
+                    });
+                  },
+                );
+              },
+            ),
+          ),
       ],
     );
   }
-
-  /* Widget _buildPriorityBox(String label, Color color) {
-    return GestureDetector(
-      onTap: () {
-        // Handle priority selection
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.black45),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        child : Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 6,
-              backgroundColor: color,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: GoogleFonts.montserrat(fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-    );
-  }*/
 
   Widget _buildDescriptionField() {
     return Padding(
@@ -635,7 +768,7 @@ class _CreateEventState extends State<Createevent> {
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               contentPadding:
-              const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
             ),
           ),
           const SizedBox(height: 16),
@@ -730,7 +863,7 @@ class _CreateEventState extends State<Createevent> {
               ),
               OutlinedButton(
                 onPressed: () {
-                  // Handle create action
+                   sendDataToApi();
                 },
                 child: Text(
                   'Create',
@@ -770,35 +903,15 @@ class _CreateEventState extends State<Createevent> {
       );
     }
   }
-
-  Future<List<String>> fetchAddressSuggestions(String input) async {
-    final String apiKey = googlemapkey.mapkey; // Replace with your API key
-    final String url =
-        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$input&key=$apiKey';
-
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      List<String> suggestions = [];
-      for (var prediction in data['predictions']) {
-        suggestions.add(prediction['description']);
-      }
-      return suggestions;
-    } else {
-      throw Exception('Failed to load suggestions');
-    }
-  }
-
-
   Future<void> _fetchAddressSuggestions(String input) async {
     setState(() {
       _isLoadingSuggestions = true; // Show loading indicator
     });
+
     try {
-      final suggestions = await fetchAddressSuggestions(input);
+      final suggestions = await EventUtils.fetchAddressSuggestions(input, googlemapkey.mapkey); // Use your API key
       setState(() {
-        _addressSuggestions = suggestions;
+        _addressSuggestions = suggestions; // Update suggestions
       });
     } catch (e) {
       print("Error fetching suggestions: $e");
@@ -808,4 +921,63 @@ class _CreateEventState extends State<Createevent> {
       });
     }
   }
+
+
+  Future<void> sendDataToApi() async {
+    try {
+
+      // Create the event model
+      EventModel event = EventModel(
+        id: '', // Generate or get the ID as needed
+        eventName: _taskNameController.text,
+        occurrenceType: _currentView, // or any other logic to determine this
+        startDate: _fromDateController.text, // Use formatted date
+        endDate: _toDateController.text, // Use formatted date
+        fromTime: _fromTimeController.text, // Already formatted
+        toTime: _toTimeController.text, // Already formatted
+        day: DateTime.now().weekday.toString(), // Example logic for day
+        dueDate: _dueDateController.text, // Use formatted date
+        eventType: 'YourEventType', // Set this based on your logic
+        eventMode: _selectedMode ?? 'offline',
+        venue: _venueOrLinkController.text,
+        location: _locationController.text,
+        priority: _selectedPriority ?? 'Medium',
+        description: _descriptionController.text,
+        statusId: '1', // Set this based on your logic
+        isActive: true,
+        isSelfEvent: true,
+        pincode: 'YourPincode', // Set this based on your logic
+        city: 'YourCity', // Set this based on your logic
+        state: 'YourState', // Set this based on your logic
+        country: 'YourCountry', // Set this based on your logic
+        lat: 'YourLatitude', // Set this based on your logic
+        lon: 'YourLongitude', // Set this based on your logic
+        savedBy: 'YourUser  Id', // Set this based on your logic
+        savedByUserName: 'YourUser  Name', // Set this based on your logic
+        savedDate: DateTime.now().toUtc().toIso8601String(), // Current date and time in UTC
+      );
+
+      // Call the event service to create the event
+      EventService eventService = EventService();
+      bool success = await eventService.createEvent(event);
+
+      if (success) {
+        // Handle success (e.g., show a success message, navigate to another page)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Event created successfully!')),
+        );
+      } else {
+        // Handle failure (e.g., show an error message)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create event. Please try again.')),
+        );
+      }
+    } catch (e) {
+      // Handle parsing error
+      ScaffoldMessenger .of(context).showSnackBar(
+        SnackBar(content: Text('Invalid date format: ${_dueDateController.text}')),
+      );
+    }
+  }
+
 }
