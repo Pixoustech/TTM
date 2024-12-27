@@ -35,7 +35,7 @@ class _CalendarPageState extends State<CalendarPage> {
   String? _holidayDetail; // Variable to hold the selected holiday detail
   final String userId = AppConstants.userId ?? '';
   Map<DateTime, String> _holidays = {};
-
+  Map<DateTime, Leave> _leaveDetails = {};
   final CalendarService _calendarService = CalendarService();
   DateTime normalizeDate(DateTime date) {
     return DateTime(date.year, date.month, date.day);
@@ -99,20 +99,29 @@ class _CalendarPageState extends State<CalendarPage> {
         _isLoading = true; // Show a loading indicator
       });
 
-      // Call the CalendarService to fetch leaves for the selected date
-      _leaveStatuses = await _calendarService.fetchLeaveData(userId);
+      // Call the CalendarService to fetch leaves for the user
+      final List<Leave> leaves = await _calendarService.fetchLeaveData(userId);
+
+      // Clear previous leave details
+      _leaveDetails.clear();
+
+      // Store the leave details in the Map
+      for (var leave in leaves) {
+        // Assuming leave.date is already a DateTime object
+        DateTime leaveDate = leave.date; // Use the DateTime object directly
+        _leaveDetails[leaveDate] = leave; // Store the leave object in the map
+      }
+
+      setState(() {
+        _isLoading = false; // Stop the loading indicator
+      });
     } catch (e) {
       print('Error fetching leave data: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load leave data.')),
       );
-    } finally {
-      setState(() {
-        _isLoading = false; // Stop the loading indicator
-      });
     }
   }
-
   Future<void> _fetchHolidayData() async {
     setState(() {
       _isLoading = true; // Start loading
@@ -264,75 +273,32 @@ class _CalendarPageState extends State<CalendarPage> {
                     holidayPredicate: (day) {
                       return _holidays.containsKey(normalizeDate(day)); // Check if the day is a holiday
                     },
-                  )
-                      : _currentView == 'events'
-                          ? // Inside the build method, where you have the TableCalendar for events
-                  TableCalendar(
-                    focusedDay: _focusedDay,
-                      onDaySelected: (selectedDay, focusedDay) {
-                        setState(() {
-                          _focusedDay = focusedDay;
-
-                          // Check if the selected day is already in the list
-                          if (_selectedDates.contains(selectedDay)) {
-                            // If it is, remove it from the list
-                            _selectedDates.remove(selectedDay);
-                          } else {
-                            // If it isn't, add it to the list
-                            _selectedDates.add(selectedDay);
-                          }
-
-                          // Clear previous data
-                          _calendarEventData = null; // Clear previous calendar data
-                          _startDate = null; // Clear start date
-                          _endDate = null; // Clear end date
-                          _holidayDetail = null; // Clear holiday detail
-                        });
-
-                        // Fetch data when a date is selected
-                        _fetchCalendarData(_selectedDates); // Pass the list of selected dates
-                      },
-                    onPageChanged: (focusedDay) {
-                      // This will be called when the user swipes to change the month
-                      setState(() {
-                        _focusedDay = focusedDay; // Update the focused day when swiping
-                      });
-                    },
-                    headerVisible: false,
-                    firstDay: DateTime.utc(2020, 1, 1),
-                    lastDay: DateTime.utc(2030, 12, 31),
-                    calendarFormat: CalendarFormat.month,
-                    calendarStyle: CalendarStyle(
-                      todayDecoration: BoxDecoration(
-                        color: Colors.blue,
-                        shape: BoxShape.circle,
-                      ),
-                      selectedDecoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    selectedDayPredicate: (day) {
-                      return _selectedDates.contains(day);
-                    },
-                  )
-                          : _currentView == 'leave'
-                              ? // In your TableCalendar widget for 'leave'
-                  TableCalendar(
+                  ):
+                  _currentView == 'events'
+                      ? TableCalendar(
                     focusedDay: _focusedDay,
                     onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
                         _focusedDay = focusedDay;
-                        _selectedDate = selectedDay; // Store the selected date
+
+                        if (_selectedDates.contains(selectedDay)) {
+                          _selectedDates.remove(selectedDay);
+                        } else {
+                          _selectedDates.add(selectedDay);
+                        }
+
+                        // Clear previous data
+                        _calendarEventData = null;
+                        _startDate = null;
+                        _endDate = null;
+                        _holidayDetail = null;
                       });
 
-                      // Fetch data when a date is selected
-                      _fetchLeaveData(selectedDay); // Fetch leave data for the selected day
+                      _fetchCalendarData(_selectedDates);
                     },
                     onPageChanged: (focusedDay) {
-                      // This will be called when the user swipes to change the month
                       setState(() {
-                        _focusedDay = focusedDay; // Update the focused day when swiping
+                        _focusedDay = focusedDay;
                       });
                     },
                     headerVisible: false,
@@ -349,66 +315,66 @@ class _CalendarPageState extends State<CalendarPage> {
                         shape: BoxShape.circle,
                       ),
                     ),
-                    calendarBuilders: CalendarBuilders(
-                      defaultBuilder: (context, day, focusedDay) {
-                        // Check if the day is a leave day
-                        if (_leaveStatuses.any((leave) => leave.date.isSameDay(day))) {
-                          return Container(
-                            width: 40, // Set a fixed width for the circle
-                            height: 40, // Set a fixed height for the circle
-                            decoration: BoxDecoration(
-                              color: Colors.pink[100], // Light pink color for leave dates
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                day.day.toString(),
-                                style: TextStyle(color: Colors.black), // Customize text color if needed
-                              ),
-                            ),
-                          );
-                        }
-                        return null; // Default behavior for other days
-                      },
-                      selectedBuilder: (context, day, focusedDay) {
-                        return Container(
-                          width: 40, // Set a fixed width for the circle
-                          height: 40, // Set a fixed height for the circle
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              day.day.toString(),
-                              style: TextStyle(color: Colors.white), // Customize text color for selected day
-                            ),
-                          ),
-                        );
-                      },
-                      todayBuilder: (context, day, focusedDay) {
-                        return Container(
-                          width: 40, // Set a fixed width for the circle
-                          height: 40, // Set a fixed height for the circle
-                          decoration: BoxDecoration(
-                            color: Colors.blue,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              day.day.toString(),
-                              style: TextStyle(color: Colors.white), // Customize text color for today
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                     selectedDayPredicate: (day) {
                       return _selectedDates.contains(day);
                     },
                   )
+                      : _currentView == 'leave'
+                      ? TableCalendar(
+                    focusedDay: _focusedDay,
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                        _selectedDate = selectedDay; // Store the selected date for the "Leave" view
 
-                    : Container(),
+                        // Fetch the leave details from the Map
+                        Leave? leaveDetails = _leaveDetails[selectedDay];
+                        if (leaveDetails != null) {
+                          // Display the leave details
+                          print('Leave details: ${leaveDetails.reason}');
+                        } else {
+                          print('No leave details found for this date.');
+                        }
+                      });
+                    },
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    headerVisible: false,
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    calendarFormat: CalendarFormat.month,
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      // Add this line to style leave dates
+                      holidayDecoration: BoxDecoration(
+                        color: Colors.pink[100], // Light pink color for leave dates
+                        shape: BoxShape.circle,
+                      ),
+                      holidayTextStyle: TextStyle(
+                        color: Colors.black, // Text color for leave dates
+                      ),
+                    ),
+                    // Use holidayPredicate to determine if a date is a leave date
+                    holidayPredicate: (day) {
+                      return _leaveDetails.containsKey(normalizeDate(day)); // Check if the day is a leave date
+                    },
+                    selectedDayPredicate: (day) {
+                      return _selectedDate != null && _selectedDate!.isSameDay(day); // Highlight the selected date
+                    },
+                  )
+                      : Container(),
+
+
                 ),
                 SizedBox(height: 16),
                 if (_isLoading) // Check if loading
