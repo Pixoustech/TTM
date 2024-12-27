@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:intl/intl.dart';
@@ -33,6 +34,13 @@ class _CreateEventState extends State<Createevent> {
   final TextEditingController _assignedToController = TextEditingController();
   final TextEditingController _toDateController = TextEditingController();
   final TextEditingController _toTimeController = TextEditingController();
+
+
+  String? selectedLatitude;
+  String? selectedLongitude;
+  String? selectedPincode;
+  String? selectedState;
+  String? selectedCity;
 
   String? _selectedFileName;
   String? _selectedMode;
@@ -194,6 +202,7 @@ class _CreateEventState extends State<Createevent> {
       ),
     );
   }
+
   Future<bool?> _showDataLossDialog() async {
     return await showDialog<bool>(
       context: context,
@@ -245,14 +254,14 @@ class _CreateEventState extends State<Createevent> {
           const SizedBox(height: 12),
           _buildTextFieldWithCalendar('Due Date', _dueDateController),
           const SizedBox(height: 12),
-          _buildTextField('Location', _locationController, true), // Only for Event
+          _buildTextField('Location', _locationController, true),
         ] else if (_currentView == 'meeting') ...[
           _buildSimpleTextField('Meeting Name', _meetingNameController),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: _buildTextFieldWithCalendar('From Date', _fromDateController),
+                child: _buildTextFieldWithCalendar('From Date', _fromDateController, isFromDate: true),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -264,7 +273,7 @@ class _CreateEventState extends State<Createevent> {
           Row(
             children: [
               Expanded(
-                child: _buildTextFieldWithCalendar('To Date', _toDateController),
+                child: _buildTextFieldWithCalendar('To Date', _toDateController, isToDate: true),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -272,13 +281,10 @@ class _CreateEventState extends State<Createevent> {
               ),
             ],
           ),
-          // No location field for Meeting
-
         ],
       ],
     );
   }
-
   Widget _buildSimpleTextField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -304,7 +310,8 @@ class _CreateEventState extends State<Createevent> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.blue, width: 2.0),
               ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+              contentPadding: const EdgeInsets.symmetric(
+                  vertical: 4.0, horizontal: 12.0),
             ),
           ),
         ],
@@ -312,8 +319,8 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
-  Widget _buildTextField(
-      String label, TextEditingController controller, bool hasIcon) {
+  Widget _buildTextField(String label, TextEditingController controller,
+      bool hasIcon) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -339,26 +346,21 @@ class _CreateEventState extends State<Createevent> {
                 borderSide: BorderSide(color: Colors.blue, width: 2.0),
               ),
               contentPadding:
-                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+              const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: hasIcon
                   ? IconButton(
-                      icon: const Icon(Icons.location_on),
-                      onPressed: () async {
-                        var status = await Permission.location.request();
-                        if (status.isGranted) {
-                          final LatLng? selectedLocation = await EventUtils.selectLocation(context);
-                          if (selectedLocation != null) {
-                            controller.text =
-                                '${selectedLocation.latitude}, ${selectedLocation.longitude}';
-                          }
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Location permission denied')),
-                          );
-                        }
-                      },
-                    )
+                icon: const Icon(Icons.location_on),
+                  onPressed: () async {
+                    var status = await Permission.location.request();
+                    if (status.isGranted) {
+                      final LatLng? selectedLocation = await EventUtils.selectLocation(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Location permission denied')),
+                      );
+                    }
+                  }
+              )
                   : null,
             ),
             onChanged: (value) {
@@ -401,8 +403,7 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
-  Widget _buildTextFieldWithCalendar(
-      String label, TextEditingController controller) {
+  Widget _buildTextFieldWithCalendar(String label, TextEditingController controller, {bool isFromDate = false, bool isToDate = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -427,23 +428,25 @@ class _CreateEventState extends State<Createevent> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+              contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.calendar_today),
-                onPressed: _selectDueDate,
+                onPressed: () {
+                  _selectDateAndTime(controller, isFromDate ? _fromTimeController : _toTimeController);
+                },
               ),
             ),
             readOnly: true,
-            onTap: _selectDueDate,
+            onTap: () {
+              _selectDateAndTime(controller, isFromDate ? _fromTimeController : _toTimeController);
+            },
           ),
         ],
       ),
     );
   }
-
-  Widget _buildTextFieldWithTime(
-      String label, TextEditingController controller) {
+  Widget _buildTextFieldWithTime(String label,
+      TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -469,7 +472,7 @@ class _CreateEventState extends State<Createevent> {
                 borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
               ),
               contentPadding:
-                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+              const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.access_time),
                 onPressed: () {
@@ -483,7 +486,7 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
-  Future<void> _selectDueDate() async {
+  Future<void> _selectDueDate(TextEditingController dateController, TextEditingController timeController) async {
     // Select the date
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -493,27 +496,13 @@ class _CreateEventState extends State<Createevent> {
     );
 
     if (pickedDate != null) {
-      // Set the time to a default value (e.g., midnight)
-      final DateTime combinedDateTime = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        0, // Set hour to 0 (midnight)
-        0, // Set minute to 0
-      );
+      // Set the date in the controller
+      dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
 
-      // Format the combined DateTime to ISO 8601 format for internal use
-      String iso8601Date = combinedDateTime.toUtc().toIso8601String();
-
-      // Display the date in a user-friendly format (e.g., 'yyyy-MM-dd')
-      _dueDateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-
-      // Optionally, you can store the ISO 8601 date in a separate variable if needed
-      // For example:
-      // _internalDueDate = iso8601Date; // Store it for later use
+      // Automatically open the time picker after selecting the date
+      await _selectTime(timeController);
     }
   }
-
   Future<void> _selectTime(TextEditingController controller) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -522,7 +511,8 @@ class _CreateEventState extends State<Createevent> {
     if (picked != null) {
       // Format the time to 'HH:mm'
       final now = DateTime.now();
-      final formattedTime = DateFormat('HH:mm').format(DateTime(now.year, now.month, now.day, picked.hour, picked.minute));
+      final formattedTime = DateFormat('HH:mm').format(
+          DateTime(now.year, now.month, now.day, picked.hour, picked.minute));
       controller.text = formattedTime;
     }
   }
@@ -611,7 +601,8 @@ class _CreateEventState extends State<Createevent> {
                   setState(() {
                     _selectedMode = 'offline';
                     _venueOrLinkController.text = ''; // Clear the text field
-                    _addressSuggestions.clear(); // Clear suggestions when switching modes
+                    _addressSuggestions
+                        .clear(); // Clear suggestions when switching modes
                   });
                 },
                 child: Text(
@@ -640,7 +631,8 @@ class _CreateEventState extends State<Createevent> {
                   setState(() {
                     _selectedMode = 'online';
                     _venueOrLinkController.text = ''; // Clear the text field
-                    _addressSuggestions.clear(); // Clear suggestions when switching modes
+                    _addressSuggestions
+                        .clear(); // Clear suggestions when switching modes
                   });
                 },
                 child: Text(
@@ -669,15 +661,18 @@ class _CreateEventState extends State<Createevent> {
           controller: _venueOrLinkController,
           cursorColor: AppColors.concolor,
           decoration: InputDecoration(
-            hintText: _selectedMode == 'online' ? 'Link' : 'Venue', // Set hint text based on mode
+            hintText: _selectedMode == 'online' ? 'Link' : 'Venue',
+            // Set hint text based on mode
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: Colors.grey, width: 1.0),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
             ),
-            contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-            suffixIcon: _selectedMode == 'online' // Show paste icon only in online mode
+            contentPadding: const EdgeInsets.symmetric(
+                vertical: 4.0, horizontal: 12.0),
+            suffixIcon: _selectedMode ==
+                'online' // Show paste icon only in online mode
                 ? IconButton(
               icon: const Icon(Icons.paste), // Use paste icon
               onPressed: () async {
@@ -689,16 +684,19 @@ class _CreateEventState extends State<Createevent> {
                 }
               },
             )
-                : _selectedMode == 'offline' // Show location icon only in offline mode
+                : _selectedMode ==
+                'offline' // Show location icon only in offline mode
                 ? IconButton(
               icon: const Icon(Icons.location_on),
               onPressed: () async {
                 var status = await Permission.location.request();
                 if (status.isGranted) {
-                  final LatLng? selectedLocation = await EventUtils.selectLocation(context);
+                  final LatLng? selectedLocation = await EventUtils
+                      .selectLocation(context);
                   if (selectedLocation != null) {
                     _venueOrLinkController.text =
-                    '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+                    '${selectedLocation.latitude}, ${selectedLocation
+                        .longitude}';
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -711,7 +709,8 @@ class _CreateEventState extends State<Createevent> {
           ),
           onChanged: (value) {
             if (_selectedMode == 'offline' && value.isNotEmpty) {
-              _fetchAddressSuggestions(value); // Fetch suggestions only in offline mode
+              _fetchAddressSuggestions(
+                  value); // Fetch suggestions only in offline mode
             } else if (_selectedMode == 'online') {
               setState(() {
                 _addressSuggestions.clear(); // Clear suggestions in online mode
@@ -768,7 +767,7 @@ class _CreateEventState extends State<Createevent> {
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               contentPadding:
-                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+              const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
             ),
           ),
           const SizedBox(height: 16),
@@ -863,7 +862,7 @@ class _CreateEventState extends State<Createevent> {
               ),
               OutlinedButton(
                 onPressed: () {
-                   sendDataToApi();
+                  sendDataToApi();
                 },
                 child: Text(
                   'Create',
@@ -903,6 +902,126 @@ class _CreateEventState extends State<Createevent> {
       );
     }
   }
+
+
+  Future<void> sendDataToApi() async {
+    try {
+      // Check if the location is provided
+      if (_locationController.text.isNotEmpty || _venueOrLinkController.text.isNotEmpty) {
+if(_locationController.text.isNotEmpty)
+        await _fetchCoordinatesFromAddress(_locationController.text );
+else{
+  await _fetchCoordinatesFromAddress(_venueOrLinkController.text );
+}
+      } else {
+        print('Please provide a valid address');
+        return; // Exit the function if no address is provided
+      }
+
+      EventService eventService = EventService(); // Initialize the event service
+
+      if (_currentView == 'task') {
+        // Create the TaskModel instance
+        TaskModel task = TaskModel(
+          id: '',
+          userId: AppConstants.userId ?? '',
+          eventName: _taskNameController.text,
+          dueDate: _dueDateController.text,
+          location: _locationController.text,
+          priority: _selectedPriority ?? 'Medium',
+          description: _descriptionController.text,
+          eventType: _currentView,
+          isActive: true,
+          isSelfEvent:true,
+          savedDate: DateTime.now().toUtc().toIso8601String(), // Current date and time in UTC
+          lat: selectedLatitude, // Add selected latitude
+          lon: selectedLongitude, // Add selected longitude
+          pincode: selectedPincode, // Add selected pincode
+          state: selectedState, // Add selected state
+          city: selectedCity, // Add selected city
+        );
+
+        // Call the event service to create the task
+        bool success = await eventService.createTask(task);
+
+        if (success) {
+          print('Task created successfully');
+        } else {
+          print('Failed to create task');
+        }
+      } else if (_currentView == 'meeting') {
+        // Create the MeetingModel instance
+        MeetingModel meeting = MeetingModel(
+          id: '',
+          userId: AppConstants.userId ?? '',
+          eventName: _meetingNameController.text,
+          eventType:_currentView,
+          startDate: _fromDateController.text, // Use formatted date
+          endDate: _toDateController.text, // Use formatted date
+          fromTime: _fromTimeController.text,
+          toTime: _toTimeController.text,
+          priority: _selectedPriority ?? 'Medium',
+          description: _descriptionController.text,
+          eventMode: _selectedMode ?? 'offline',
+          isActive: true,
+          venue: _venueOrLinkController.text,
+          savedDate: DateTime.now().toUtc().toIso8601String(), // Current date and time in UTC
+          lat: selectedLatitude, // Add selected latitude
+          lon: selectedLongitude, // Add selected longitude
+          pincode: selectedPincode, // Add selected pincode
+          state: selectedState, // Add selected state
+          city: selectedCity, // Add selected city
+        );
+
+        // Call the event service to create the meeting
+        bool success = await eventService.createMeeting(meeting);
+
+        if (success) {
+          print('Meeting created successfully');
+        } else {
+          print('Failed to create meeting');
+        }
+      }
+    } catch (e) {
+      // Handle any exceptions that occur during the API call
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> _fetchCoordinatesFromAddress(String address) async {
+    try {
+      // Get a list of locations from the provided address
+      List<Location> locations = await locationFromAddress(address);
+
+      if (locations.isNotEmpty) {
+        Location location = locations[0]; // Take the first result
+
+        // Get place details like pincode, state, city
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          location.latitude,
+          location.longitude,
+        );
+
+        if (placemarks.isNotEmpty) {
+          Placemark place = placemarks[0]; // Take the first result
+
+          // Update state variables with location details
+          setState(() {
+            selectedLatitude = location.latitude.toString();
+            selectedLongitude = location.longitude.toString();
+            selectedPincode = place.postalCode;
+            selectedState = place.administrativeArea;
+            selectedCity = place.locality;
+
+            // Update the location controller text
+            _locationController.text = address;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error fetching data for the address: $e');
+    }
+  }
   Future<void> _fetchAddressSuggestions(String input) async {
     setState(() {
       _isLoadingSuggestions = true; // Show loading indicator
@@ -921,63 +1040,21 @@ class _CreateEventState extends State<Createevent> {
       });
     }
   }
+  Future<void> _selectDateAndTime(TextEditingController dateController, TextEditingController timeController) async {
+    // Select the date
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
 
+    if (pickedDate != null) {
+      // Set the date in the controller
+      dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
 
-  Future<void> sendDataToApi() async {
-    try {
-
-      // Create the event model
-      EventModel event = EventModel(
-        id: '', // Generate or get the ID as needed
-        eventName: _taskNameController.text,
-        occurrenceType: _currentView, // or any other logic to determine this
-        startDate: _fromDateController.text, // Use formatted date
-        endDate: _toDateController.text, // Use formatted date
-        fromTime: _fromTimeController.text, // Already formatted
-        toTime: _toTimeController.text, // Already formatted
-        day: DateTime.now().weekday.toString(), // Example logic for day
-        dueDate: _dueDateController.text, // Use formatted date
-        eventType: 'YourEventType', // Set this based on your logic
-        eventMode: _selectedMode ?? 'offline',
-        venue: _venueOrLinkController.text,
-        location: _locationController.text,
-        priority: _selectedPriority ?? 'Medium',
-        description: _descriptionController.text,
-        statusId: '1', // Set this based on your logic
-        isActive: true,
-        isSelfEvent: true,
-        pincode: 'YourPincode', // Set this based on your logic
-        city: 'YourCity', // Set this based on your logic
-        state: 'YourState', // Set this based on your logic
-        country: 'YourCountry', // Set this based on your logic
-        lat: 'YourLatitude', // Set this based on your logic
-        lon: 'YourLongitude', // Set this based on your logic
-        savedBy: 'YourUser  Id', // Set this based on your logic
-        savedByUserName: 'YourUser  Name', // Set this based on your logic
-        savedDate: DateTime.now().toUtc().toIso8601String(), // Current date and time in UTC
-      );
-
-      // Call the event service to create the event
-      EventService eventService = EventService();
-      bool success = await eventService.createEvent(event);
-
-      if (success) {
-        // Handle success (e.g., show a success message, navigate to another page)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Event created successfully!')),
-        );
-      } else {
-        // Handle failure (e.g., show an error message)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create event. Please try again.')),
-        );
-      }
-    } catch (e) {
-      // Handle parsing error
-      ScaffoldMessenger .of(context).showSnackBar(
-        SnackBar(content: Text('Invalid date format: ${_dueDateController.text}')),
-      );
+      // Automatically open the time picker after selecting the date
+      await _selectTime(timeController);
     }
   }
-
 }

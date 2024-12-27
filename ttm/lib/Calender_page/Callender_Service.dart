@@ -1,53 +1,101 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
+
+import '../Comman_pages/Constant.dart';
 import 'model.dart';
 
+class CalendarService {
+  final Dio _dio = AppApi.dio;
 
-class LeaveService {
-  final String baseUrl = 'https://1e7e-2405-201-e02b-58e4-ad03-6224-7716-c5b5.ngrok-free.app/api/Ttm/Leave_Master_Get?UserId=';
+  Future<CalendarEventData?> fetchCalendarData(String userId, DateTime date) async {
+    String formattedDate = DateFormat('yyyy-MM-dd').format(date);
+    final String apiUrl = '/Event/Event_Master_Get';
 
-  // Update the function to accept userId and selectedDate
-  Future<List<Leave>> fetchLeaves(String userId, DateTime selectedDate) async {
-
-    // Ensure the URL is correct, and you are passing parameters
-    final response = await http.get(Uri.parse('$baseUrl?UserId=$userId'));
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonResponse = json.decode(response.body);
-      if (jsonResponse['status'] == 'SUCCESS') {
-        List<dynamic> data = jsonResponse['data'];
-        return data.map((leave) => Leave.fromJson(leave)).toList();
-      } else {
-        throw Exception('Failed to load leaves');
-      }
-    } else {
-      throw Exception('Failed to load leaves');
-    }
-  }
-}
-class HolidayService {
-  final String apiUrl = 'https://7a77-2405-201-e02b-58e4-ad03-6224-7716-c5b5.ngrok-free.app/api/Ttm/Holiday_Master/Get'; // Your holiday API URL
-
-  Future<List<Holiday>> fetchHolidays() async {
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final response = await _dio.get(apiUrl, queryParameters: {
+        'userId': userId,
+        'date': formattedDate,
+      });
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        final Map<String, dynamic> jsonResponse = response.data;
         if (jsonResponse['data'] != null) {
-          List<dynamic> holidaysJson = jsonResponse['data'];
-          return holidaysJson.map((holiday) => Holiday.fromJson(holiday)).toList();
+          return CalendarEventData.fromJson(jsonResponse['data']);
         } else {
-          return []; // Return an empty list if no data found
+          print('No data found for the selected date: $formattedDate');
+          return null;
         }
-      }
-      else {
-        throw Exception('Failed to load holidays');
+      } else {
+        throw Exception('Failed to load calendar data');
       }
     } catch (e) {
-      print('Error fetching holidays: $e');
-      return []; // Return an empty list on error
+      print('Error fetching calendar data: $e');
+      return null;
     }
+  }
+
+  Future<List<Leave>> fetchLeaveData(String userId) async {
+    final String apiUrl = '/Ttm/Leave_Master_Get';
+
+    try {
+      final response = await _dio.get(apiUrl, queryParameters: {
+        'User Id': userId,
+      });
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = response.data;
+        if (jsonResponse['data'] != null) {
+          List<dynamic> leaves = jsonResponse['data'];
+          return leaves.map((leave) => Leave.fromJson(leave)).toList();
+        } else {
+          print('No leave data found.');
+          return [];
+        }
+      } else {
+        throw Exception('Failed to load leave data');
+      }
+    } catch (e) {
+      print('Error fetching leave data: $e');
+      return [];
+    }
+  }
+
+  Future<Map<DateTime, String>> fetchHolidayData() async {
+    final String apiUrl = '/Ttm/Holiday_Master/Get';
+    Map<DateTime, String> holidays = {};
+
+    try {
+      final response = await _dio.get(apiUrl);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = response.data;
+        if (jsonResponse['data'] != null) {
+          List<dynamic> holidayList = jsonResponse['data'];
+          for (var holiday in holidayList) {
+            if (holiday != null && holiday['date'] != null) {
+              String holidayDateString = holiday['date'];
+              DateFormat format = DateFormat("MM/dd/yyyy HH:mm:ss");
+              DateTime holidayDate = format.parse(holidayDateString);
+              holidays[normalizeDate(holidayDate)] = holiday['holidayName'] ?? 'No holiday Name';
+            } else {
+              print('Holiday or date is null');
+            }
+          }
+        } else {
+          print('No holiday data found.');
+        }
+      } else {
+        throw Exception('Failed to load holiday data');
+      }
+    } catch (e) {
+      print('Error fetching holiday data: $e');
+    }
+
+    return holidays;
+  }
+
+  DateTime normalizeDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
   }
 }

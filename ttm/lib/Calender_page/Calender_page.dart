@@ -22,7 +22,6 @@ class CalendarPage extends StatefulWidget {
 
 class _CalendarPageState extends State<CalendarPage> {
   CalendarEventData? _calendarEventData;
-
   String _currentView = 'events'; // Default view is events
   DateTime _focusedDay = DateTime.now(); // Track the focused day
   DateTime? _startDate; // Variable for the start date
@@ -33,11 +32,11 @@ class _CalendarPageState extends State<CalendarPage> {
   List<DateTime> _selectedDates = []; // List to hold selected dates
   bool _isLoading = false; // Add this line
   List<Leave> _leaveStatuses = []; // Variable to hold the fetched leave statuses
-  final Map<DateTime, String> _holidays = {};
   String? _holidayDetail; // Variable to hold the selected holiday detail
-  final LeaveService _leaveService = LeaveService();
   final String userId = AppConstants.userId ?? '';
+  Map<DateTime, String> _holidays = {};
 
+  final CalendarService _calendarService = CalendarService();
   DateTime normalizeDate(DateTime date) {
     return DateTime(date.year, date.month, date.day);
   }
@@ -55,18 +54,6 @@ class _CalendarPageState extends State<CalendarPage> {
     _holidayDetail = null; // Reset holiday detail
     _fetchInitialCalendarData();
   }
-  Future<void> _fetchInitialCalendarData() async {
-    setState(() {
-      _isLoading = true; // Start loading
-    });
-
-    // Fetch data for today's date
-    await _fetchCalendarData([DateTime.now()]); // Fetch data for today
-
-    setState(() {
-      _isLoading = false; // Stop loading
-    });
-  }
   Future<void> _fetchCalendarData(List<DateTime> selectedDates) async {
     setState(() {
       _isLoading = true; // Start loading
@@ -76,34 +63,16 @@ class _CalendarPageState extends State<CalendarPage> {
     _calendarEventData = null;
 
     for (DateTime date in selectedDates) {
-      // Format the date to send in the API request
-      String formattedDate = DateFormat('yyyy-MM-dd').format(date);
-      String userId = AppConstants.userId ?? ''; // Replace with actual user ID if needed
-      final String apiUrl = 'https://7a77-2405-201-e02b-58e4-ad03-6224-7716-c5b5.ngrok-free.app/api/Event/Event_Master_Get?userId=$userId&date=$formattedDate';
-
-      try {
-        final response = await http.get(Uri.parse(apiUrl));
-
-        if (response.statusCode == 200) {
-          final Map<String, dynamic> jsonResponse = json.decode(response.body);
-
-          if (jsonResponse['data'] != null) {
-            setState(() {
-              if (_calendarEventData == null) {
-                _calendarEventData = CalendarEventData.fromJson(jsonResponse['data']);
-              } else {
-                _calendarEventData!.tasks.addAll(CalendarEventData.fromJson(jsonResponse['data']).tasks);
-                _calendarEventData!.meetings.addAll(CalendarEventData.fromJson(jsonResponse['data']).meetings);
-              }
-            });
-          } else {
-            print('No data found for the selected date: $formattedDate');
-          }
+      // Fetch calendar data for each selected date
+      CalendarEventData? data = await _calendarService.fetchCalendarData(userId, date);
+      if (data != null) {
+        // Merge data if needed
+        if (_calendarEventData == null) {
+          _calendarEventData = data;
         } else {
-          throw Exception('Failed to load calendar data');
+          _calendarEventData!.tasks.addAll(data.tasks);
+          _calendarEventData!.meetings.addAll(data.meetings);
         }
-      } catch (e) {
-        print('Error fetching calendar data: $e');
       }
     }
 
@@ -111,27 +80,27 @@ class _CalendarPageState extends State<CalendarPage> {
       _isLoading = false; // Stop loading
     });
   }
+  Future<void> _fetchInitialCalendarData() async {
+    setState(() {
+      _isLoading = true; // Start loading
+    });
+
+    // Fetch data for today's date
+    _calendarEventData = await _calendarService.fetchCalendarData(userId, DateTime.now());
+
+    setState(() {
+      _isLoading = false; // Stop loading
+    });
+  }
+
   Future<void> _fetchLeaveData(DateTime selectedDay) async {
     try {
       setState(() {
         _isLoading = true; // Show a loading indicator
       });
 
-      // Call the LeaveService to fetch leaves for the selected date
-      final String apiUrl = 'https://1e7e-2405-201-e02b-58e4-ad03-6224-7716-c5b5.ngrok-free.app/api/Ttm/Leave_Master_Get?UserId=$userId';
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonResponse = json.decode(response.body);
-        if (jsonResponse['data'] != null) {
-          List<dynamic> leaves = jsonResponse['data'];
-          _leaveStatuses = leaves.map((leave) => Leave.fromJson(leave)).toList(); // Assuming you have a Leave model with fromJson method
-        } else {
-          print('No leave data found.');
-        }
-      } else {
-        throw Exception('Failed to load leave data');
-      }
+      // Call the CalendarService to fetch leaves for the selected date
+      _leaveStatuses = await _calendarService.fetchLeaveData(userId);
     } catch (e) {
       print('Error fetching leave data: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -143,44 +112,19 @@ class _CalendarPageState extends State<CalendarPage> {
       });
     }
   }
+
   Future<void> _fetchHolidayData() async {
     setState(() {
       _isLoading = true; // Start loading
     });
 
-    final String apiUrl = 'https://1e7e-2405-201-e02b-58e4-ad03-6224-7716-c5b5.ngrok-free.app/api/Ttm/Holiday_Master/Get'; // Replace with your actual API URL
-
-    try {
-      final response = await http.get(Uri.parse(apiUrl));
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonResponse = json.decode(response.body);
-        if (jsonResponse['data'] != null) {
-          List<dynamic> holidays = jsonResponse['data'];
-          for (var holiday in holidays) {
-            if (holiday != null && holiday['date'] != null) {
-              String holidayDateString = holiday['date']; // Ensure this is not null
-              DateFormat format = DateFormat("MM/dd/yyyy HH:mm:ss"); // Define the format
-              DateTime holidayDate = format.parse(holidayDateString); // Parse the date string
-              _holidays[normalizeDate(holidayDate)] = holiday['holidayName'] ?? 'No holiday Name'; // Handle null description
-            } else {
-              print('Holiday or date is null');
-            }
-          }
-        } else {
-          print('No holiday data found.');
-        }
-      } else {
-        throw Exception('Failed to load holiday data');
-      }
-    } catch (e) {
-      print('Error fetching holiday data: $e');
-    }
+    _holidays = await _calendarService.fetchHolidayData();
 
     setState(() {
       _isLoading = false; // Stop loading
     });
   }
+
 
 
   @override
@@ -290,6 +234,12 @@ class _CalendarPageState extends State<CalendarPage> {
                         }
                       });
                     },
+                    onPageChanged: (focusedDay) {
+                      // This will be called when the user swipes to change the month
+                      setState(() {
+                        _focusedDay = focusedDay; // Update the focused day when swiping
+                      });
+                    },
                     headerVisible: false,
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
@@ -342,6 +292,12 @@ class _CalendarPageState extends State<CalendarPage> {
                         // Fetch data when a date is selected
                         _fetchCalendarData(_selectedDates); // Pass the list of selected dates
                       },
+                    onPageChanged: (focusedDay) {
+                      // This will be called when the user swipes to change the month
+                      setState(() {
+                        _focusedDay = focusedDay; // Update the focused day when swiping
+                      });
+                    },
                     headerVisible: false,
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
@@ -372,6 +328,12 @@ class _CalendarPageState extends State<CalendarPage> {
 
                       // Fetch data when a date is selected
                       _fetchLeaveData(selectedDay); // Fetch leave data for the selected day
+                    },
+                    onPageChanged: (focusedDay) {
+                      // This will be called when the user swipes to change the month
+                      setState(() {
+                        _focusedDay = focusedDay; // Update the focused day when swiping
+                      });
                     },
                     headerVisible: false,
                     firstDay: DateTime.utc(2020, 1, 1),
@@ -1231,11 +1193,16 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Leave? getLeaveStatusForDate(DateTime selectedDate) {
+    // Normalize the selected date to ignore time
+    DateTime normalizedSelectedDate = normalizeDate(selectedDate);
+
     for (var leave in _leaveStatuses) {
-      if (selectedDate
-              .isAfter(leave.date.subtract(Duration(days: 1))) &&
-          selectedDate.isBefore(leave.date.add(Duration(days: 1)))) {
-        return leave; // Return the leave data if the date is within range
+      // Normalize the leave date to ignore time
+      DateTime normalizedLeaveDate = normalizeDate(leave.date);
+
+      // Check if the normalized selected date matches the normalized leave date
+      if (normalizedSelectedDate.isSameDay(normalizedLeaveDate)) {
+        return leave; // Return the leave data if the date matches
       }
     }
     return null; // Return null if there's no leave on the selected date

@@ -22,7 +22,7 @@ class Task {
   final String description;
   final String priority;
   final String status;
-  final DateTime date;
+  final String date;
   final String location;
   final List<String> pdfUrls;
   final String event;
@@ -48,7 +48,7 @@ class Task {
       description: json['description'],
       priority: json['priority'],
       status: json['status'],
-      date: DateTime.parse(json['date']),
+      date: (json['date']),
       location: json['location'],
       pdfUrls: List<String>.from(json['pdfUrls']),
       event: json['event'],
@@ -63,8 +63,8 @@ class Meeting {
   final String description;
   final String priority;
   final String status;
-  final DateTime fromDate;
-  final DateTime toDate;
+  final String fromDate;
+  final String toDate;
   final String fromTime;
   final String toTime;
   final String location;
@@ -93,8 +93,8 @@ class Meeting {
       description: json['description'] ?? '', // Provide default empty string
       priority: json['priority'] ?? 'Normal', // Provide a default priority
       status: json['status'] ?? 'Scheduled', // Provide a default status
-      fromDate: DateTime.parse(json['fromDate'] ?? DateTime.now().toString()), // Default to now if null
-      toDate: DateTime.parse(json['toDate'] ?? DateTime.now().toString()), // Default to now if null
+      fromDate: (json['fromDate'] ), // Default to now if null
+      toDate: (json['toDate'] ), // Default to now if null
       fromTime: json['fromTime'] ?? '00:00', // Provide a default time
       toTime: json['toTime'] ?? '00:00', // Provide a default time
       location: json['location'] ?? 'Unknown', // Provide a default location
@@ -154,7 +154,7 @@ final Map<String, dynamic> responseData = {
           'title': 'Complete Flutter Project',
           'description': 'Finish the task box implementation.',
           'priority': 'High',
-          'status': 'Pending',
+          'status': 'In Progress',
           'date': '2023-10-05T10:00:00',
           'location': 'Office',
           'event': 'Task',
@@ -183,7 +183,7 @@ final Map<String, dynamic> responseData = {
           'status': 'Not Started',
           'fromDate': '2023-10-05T09:00:00',
           'toDate': '2023-10-05T09:30:00',
-          'location': 'Zoom',
+          'location': 'Z6oom',
           'event': 'Meeting',
           'assignedBy': 'Team Lead',
         },

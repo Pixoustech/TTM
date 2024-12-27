@@ -396,6 +396,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+
   // Method to handle logout
   Future<void> logout(BuildContext context) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -405,11 +406,12 @@ class _ProfilePageState extends State<ProfilePage> {
       await prefs.remove('userToken'); // Remove token to log the user out
       await secureStorage.delete(key: 'username'); // Clear username
       await secureStorage.delete(key: 'password'); // Clear password
+
     } else {
       await prefs.remove('userToken'); // Remove token to log the user out
       String? username = await secureStorage.read(key: 'username');
       String? password = await secureStorage.read(key: 'password');
-
+      await prefs.remove('userId'); // Remove token to log the user out
       if (username != null && password != null) {
         // Optionally handle auto-login
       }
@@ -522,6 +524,7 @@ class AuthService {
       await prefs.remove('userToken'); // Remove token to log the user out
       await secureStorage.delete(key: 'username'); // Clear username
       await secureStorage.delete(key: 'password'); // Clear password
+      await prefs.remove('userId'); // Remove token to log the user out
     } else {
       await prefs.remove('userToken'); // Remove token to log the user out
       String? username = await secureStorage.read(key: 'username');

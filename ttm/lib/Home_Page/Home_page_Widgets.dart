@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:ttm/Comman_pages/Constant.dart';
 import '../Profile_Pages/Profile_page.dart';
 import '../Comman_pages/Widgets_page.dart';
 
-
-Widget buildFilterButton(String text, String selectedButton, Function onPressed) {
+Widget buildFilterButton(
+    String text, String selectedButton, Function onPressed) {
   return SizedBox(
     width: 100,
     child: ElevatedButton(
@@ -14,7 +15,8 @@ Widget buildFilterButton(String text, String selectedButton, Function onPressed)
       },
       style: ElevatedButton.styleFrom(
         padding: EdgeInsets.zero, // Remove internal padding
-        backgroundColor: selectedButton == text ? AppColors.concolor : Colors.white,
+        backgroundColor:
+            selectedButton == text ? AppColors.concolor : Colors.white,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
@@ -32,7 +34,8 @@ Widget buildFilterButton(String text, String selectedButton, Function onPressed)
           style: GoogleFonts.montserrat(
             color: selectedButton == text ? Colors.white : AppColors.concolor,
             fontSize: 14, // Adjust the font size as needed
-            fontWeight: FontWeight.normal, // Change to bold for better visibility
+            fontWeight:
+                FontWeight.normal, // Change to bold for better visibility
           ),
         ),
       ),
@@ -40,13 +43,12 @@ Widget buildFilterButton(String text, String selectedButton, Function onPressed)
   );
 }
 
-
-
-Widget buildTaskBox(String title, Color color, double width, double height, int taskCount, IconData iconData) {
+Widget buildTaskBox(String title, Color color, double width, double height,
+    int taskCount, IconData iconData) {
   return Container(
     width: width,
     height: height,
-    margin: const EdgeInsets.only (left: 0.0),
+    margin: const EdgeInsets.only(left: 0.0),
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(6),
       color: color,
@@ -93,20 +95,27 @@ Widget buildTaskBox(String title, Color color, double width, double height, int 
   );
 }
 
-Widget buildTaskDetailBox(
+
+Widget buildTaskDetailBoxforall(
     String title,
     String description,
     Color color,
     String priority,
     String status,
-    DateTime date,
+    String date,
     String location,
     String event,
-    String assignedby)
-{
+    String assignedby,
+    String eventType, // New parameter for event type
+    {String? fromDate,
+    String? toDate,
+    String? fromTime,
+    String? toTime} // Optional parameters for meeting details
+    ) {
+  // Check if the status is either "Not Started" or "Overdue"
   return Container(
     width: 260,
-    height: 170, // Increased height to prevent overflow
+    height: 190, // Adjusted height for new content
     decoration: BoxDecoration(
       color: color,
       borderRadius: BorderRadius.circular(5),
@@ -183,19 +192,52 @@ Widget buildTaskDetailBox(
           overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            Icon(Icons.calendar_today, size: 16, color: AppColors.concolor),
-            const SizedBox(width: 4),
-            Text(
-              "${date.day}/${date.month}/${date.year}",
-              style: GoogleFonts.montserrat(
-                fontSize: 12,
-                color: Colors.black,
+
+        // Conditional rendering for event details
+        if (eventType.toLowerCase() == "meeting".toLowerCase()) ...[
+          Row(
+            children: [
+              Icon(Icons.date_range, size: 16, color: AppColors.concolor),
+              const SizedBox(width: 4),
+              Text(
+                "${formatDate(fromDate ?? '')} - ${formatDate(toDate ?? '')}",
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: Colors.black,
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(Icons.access_time, size: 16, color: AppColors.concolor),
+              const SizedBox(width: 4),
+              Text(
+                "$fromTime - $toTime",
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+        ] else ...[
+          Row(
+            children: [
+              Icon(Icons.calendar_today, size: 16, color: AppColors.concolor),
+              const SizedBox(width: 4),
+              Text(
+                "${formatDate(date)}",
+                style: GoogleFonts.montserrat(
+                  fontSize: 12,
+                  color: Colors.black,
+                ),
+              ),
+            ],
+          ),
+        ],
+
         const SizedBox(height: 10),
         Text(
           status,
@@ -205,13 +247,13 @@ Widget buildTaskDetailBox(
             fontWeight: FontWeight.normal,
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 3),
 
         // Progress rectangles
         Row(
           children: List.generate(3, (index) {
             Color rectangleColor;
-            if (status == "In Progress") {
+            if (status == "In-Progress") {
               rectangleColor = index < 2 ? Colors.orange : Colors.grey;
             } else if (status == "Overdue") {
               rectangleColor = index < 2 ? Colors.red : Colors.grey;
@@ -234,212 +276,42 @@ Widget buildTaskDetailBox(
             );
           }),
         ),
-
         const SizedBox(height: 10),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Icon(Icons.location_on, size: 16, color: AppColors.concolor),
-                const SizedBox(width: 4),
-                Text(
-                  location,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 12,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-            // Wrap the Row in a Container with a defined width
-            Container(
-              width: 70, // Set a width that fits your layout
+            Flexible(
               child: Row(
                 children: [
-
+                  Icon(Icons.location_on, size: 16, color: AppColors.concolor),
+                  const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                      "[$event]",
+                      location,
                       style: GoogleFonts.montserrat(
                         fontSize: 12,
-                        color: AppColors.concolor,
+                        color: Colors.black,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-// Function to build the meeting detail box
-Widget buildMeetingDetailBox(
-    String title,
-    String description,
-    Color color,
-    String priority,
-    String status,
-    DateTime fromDate,
-    DateTime toDate,
-    String fromTime,
-    String toTime,
-    String location,
-    String assignedby,
-    ) {
-  return Container(
-    width: 400,
-    height: 120,
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(5),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.grey.withOpacity(0.2),
-          spreadRadius: 2,
-          blurRadius: 6,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    ),
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title and Priority Row
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Flexible(
-              child: Text(
-                title,
-                style: GoogleFonts.montserrat(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (priority != null)
-              Container(
-                margin: const EdgeInsets.only(left: 4.00),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: getPriorityColor(priority),
-                  borderRadius: BorderRadius.circular(4),
-                ),
+            const SizedBox(width: 8),
+            Container(
+              width: 70,
+              child: Flexible(
                 child: Text(
-                  priority,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            if (assignedby != null && assignedby == "HQ")
-              Container(
-                margin: const EdgeInsets.only(left: 4.00),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.concolor,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  assignedby,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-          ],
-        ),
-
-        const SizedBox(height: 3), // Optional, adjust spacing as needed
-
-        // Calendar Icon, From and To Dates, Time Icon, From and To Times
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Calendar with From and To Date
-            Row(
-              children: [
-                Icon(Icons.calendar_today, size: 16, color: AppColors.concolor),
-                const SizedBox(width: 4),
-                Text(
-                  "${fromDate.day}/${fromDate.month}/${fromDate.year} - ${toDate.day}/${toDate.month}/${toDate.year}",
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-            // Time Icon with From and To Time
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 16, color: AppColors.concolor),
-                const SizedBox(width: 4),
-                Text(
-                  "$fromTime - $toTime",
-                  style: GoogleFonts.montserrat(
-                    fontSize: 10,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Dashed line separator
-        CustomPaint(
-          size: Size(double.infinity, 1), // Width and height of the dashed line
-          painter: DashedLinePainter(),
-        ),
-
-        const SizedBox(height: 8),
-
-        // Row for address on the left and status on the right
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Address on the left
-            Row(
-              children: [
-                Icon(Icons.location_on, size: 16, color: AppColors.concolor),
-                const SizedBox(width: 4),
-                Text(
-                  location,
+                  "[$event]",
                   style: GoogleFonts.montserrat(
                     fontSize: 12,
-                    color: Colors.black,
+                    color: AppColors.concolor,
                   ),
-                ),
-              ],
-            ),
-            // Status on the right
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-              decoration: BoxDecoration(
-                color: getStatusColor(status ), // Use the getStatusColor function
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                status,
-                style: GoogleFonts.montserrat(
-                  fontSize: 12,
-                  color: getStatusTextColor(status), // Use the getStatusTextColor function
-                  fontWeight: FontWeight.bold,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -452,7 +324,7 @@ Widget buildMeetingDetailBox(
 
 // Function to get the status text color
 Color getStatusTextColor(String status) {
-  if (status == "In Progress") {
+  if (status == "In-Progress") {
     return Colors.white;
   } else if (status == "Completed") {
     return Colors.white;
@@ -463,49 +335,47 @@ Color getStatusTextColor(String status) {
   }
 }
 
-
 // Method to handle menu item selection
 void onMenuItemSelected(String value, BuildContext context) {
   AuthService authService = AuthService();
   switch (value) {
     case 'profile':
-    // Navigate to profile page
+      // Navigate to profile page
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => ProfilePage()), // Navigate to ProfilePage
+        MaterialPageRoute(
+            builder: (context) => ProfilePage()), // Navigate to ProfilePage
       );
       break;
     case 'notification':
-    // Navigate to notification page
+      // Navigate to notification page
       print('Notification selected');
       break;
     case 'help':
-    // Navigate to help page
+      // Navigate to help page
       print('Help selected');
       break;
     case 'logout':
-    // Handle logout
+      // Handle logout
       authService.showLogoutConfirmationDialog(context);
       print('Logout selected');
       break;
     default:
       break;
   }
-
-
 }
 
 Widget buildTaskDetailBoxforhome(
-    String title,
-    String description,
-    Color color,
-    String priority,
-    String status,
-    DateTime date,
-    String location,
-    String event,
-    String assignedBy, // New parameter for the assigned by text
-    ) {
+  String title,
+  String description,
+  Color color,
+  String priority,
+  String status,
+  String date,
+  String location,
+  String event,
+  String assignedBy, // New parameter for the assigned by text
+) {
   return Container(
     margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
     child: Row(
@@ -565,7 +435,8 @@ Widget buildTaskDetailBoxforhome(
                         if (priority != null)
                           Container(
                             margin: const EdgeInsets.only(left: 4.00),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: getPriorityColor(priority),
                               borderRadius: BorderRadius.circular(4),
@@ -581,7 +452,8 @@ Widget buildTaskDetailBoxforhome(
                         if (assignedBy != null && assignedBy == "HQ")
                           Container(
                             margin: const EdgeInsets.only(left: 4.00),
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: AppColors.concolor,
                               borderRadius: BorderRadius.circular(4),
@@ -612,7 +484,9 @@ Widget buildTaskDetailBoxforhome(
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8), // Add some space between the text and the icon
+                        const SizedBox(
+                            width:
+                                8), // Add some space between the text and the icon
                         const Icon(
                           Icons.arrow_forward_ios,
                           color: AppColors.concolor,
@@ -629,7 +503,7 @@ Widget buildTaskDetailBoxforhome(
                             size: 16, color: AppColors.concolor),
                         const SizedBox(width: 4),
                         Text(
-                          '${date.toLocal()}'.split(' ')[0], // Format date as needed
+                          '$date', // Format date as needed
                           style: GoogleFonts.montserrat(
                               fontSize: 10, color: Colors.black),
                         ),
@@ -654,7 +528,8 @@ Widget buildTaskDetailBoxforhome(
                 top: 1,
                 right: 15,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                   ),

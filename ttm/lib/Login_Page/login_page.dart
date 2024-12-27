@@ -43,6 +43,7 @@ class _LoginPageState extends State<LoginPage> {
   void _checkAutoLogin() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool useFaceId = prefs.getBool('useFaceId') ?? false; // Check Face ID preference
+    String? userId = await secureStorage.read(key: 'userId');
 
     if (useFaceId) {
       // Attempt biometric authentication
@@ -54,12 +55,14 @@ class _LoginPageState extends State<LoginPage> {
         String? password = await secureStorage.read(key: 'password');
 
         if (username != null && password != null) {
-          _loginWithStoredCredentials(username, password);
+          // Call the login method with stored credentials
+          _usernameController.text = username; // Set the username in the controller
+          _passwordController.text = password; // Set the password in the controller
+          _login(); // Call the login method
         }
       }
     }
   }
-
   Future<bool> _authenticateWithBiometrics() async {
     try {
       // Check if biometrics can be checked
@@ -141,7 +144,8 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _saveUserData(UserModel user) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userToken', user.token);
+    await prefs.setString('userToken', user.accessToken);
+    await prefs.setString('userId', user.userId);
     await prefs.setBool('useFaceId', _useFaceId); // Save Face ID preference
     await secureStorage.write(key: 'username', value: _usernameController.text);
     await secureStorage.write(key: 'password', value: _passwordController.text);

@@ -64,7 +64,7 @@ class Leave {
       userId: json['userId'],
       groupId: json['groupId'],
       leaveTypeId: json['leaveTypeId'],
-      date: DateTime.parse(json['date']),
+      date: _parseDate(json['date']),
       noOfDays: json['noofDays'],
       reason: json['reason'],
       statusId: json['statusId'],
@@ -86,6 +86,17 @@ class Leave {
       createdByUserName: json['createdByUserName'],
       createdDate: DateTime.parse(json['createdDate']),
     );
+  }
+  // Method to parse date strings
+  static DateTime _parseDate(String dateString) {
+    try {
+      // Attempt to parse the date using the expected format
+      return DateFormat("MM/dd/yyyy HH:mm:ss").parse(dateString);
+    } catch (e) {
+      // If parsing fails, print the error and return the current date or handle as needed
+      print('Error parsing date: $e');
+      return DateTime.now(); // Fallback to current date or handle as needed
+    }
   }
 }
 

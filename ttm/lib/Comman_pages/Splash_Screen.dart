@@ -59,6 +59,8 @@ class _SplashPageState extends State<SplashScreen>
     bool? isFirstLaunch = prefs.getBool('isFirstLaunch');
     String? userToken = prefs.getString('userToken'); // Retrieve stored token
 
+    String? userid = prefs.getString('userId'); // Retrieve stored token
+
     // Delay for splash screen effect
     await Future.delayed(const Duration(seconds: 3));
 

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart'; // For date formatting
-
-// Assuming AppColors is defined in your Constant.dart file
 import 'Comman_pages/Constant.dart';
 import 'Comman_pages/Widgets_page.dart';
 import 'Event_Detail_Pages/Event_Detail.dart';
-import 'Report_taskbox_model.dart'; // Ensure this file contains the necessary model definitions
+import 'Report_taskbox_model.dart';
+
 
 class TaskBoxPage extends StatefulWidget {
   final String taskStatus;
@@ -24,27 +22,47 @@ class TaskBoxPage extends StatefulWidget {
 
 class _TaskBoxPageState extends State<TaskBoxPage> {
   late TextEditingController _searchController;
+  late FocusNode _searchFocusNode; // FocusNode to track focus state
   List<Task> _filteredTasks = [];
   List<Meeting> _filteredMeetings = [];
+  String searchQuery = '';
+  List<String> _suggestions = []; // Suggestions list
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
-    _filterTasks(); // Initialize filtered tasks
+    _searchFocusNode = FocusNode(); // Initialize the FocusNode
     _searchController.addListener(_filterTasks);
+
+    // Listen for focus changes
+    _searchFocusNode.addListener(() {
+      setState(() {
+        // Rebuild the widget when focus changes
+      });
+    });
+
+    // Initialize _filteredTasks and _filteredMeetings with all available data
+    final taskData = responseData[widget.taskStatus];
+    if (taskData != null) {
+      final selectedTaskData = taskData[widget.selectedTimeFrame];
+      TaskModel taskModel = TaskModel.fromJson(selectedTaskData);
+
+      _filteredTasks = taskModel.tasks;
+      _filteredMeetings = taskModel.meetings;
+    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose(); // Dispose the FocusNode
     super.dispose();
   }
 
   void _filterTasks() {
-    final searchQuery = _searchController.text.toLowerCase();
+    searchQuery = _searchController.text.toLowerCase();
 
-    // Get the task data
     final taskData = responseData[widget.taskStatus];
     if (taskData != null) {
       final selectedTaskData = taskData[widget.selectedTimeFrame];
@@ -53,22 +71,64 @@ class _TaskBoxPageState extends State<TaskBoxPage> {
       // Filter tasks
       _filteredTasks = taskModel.tasks.where((task) {
         return task.title.toLowerCase().contains(searchQuery) ||
-            task.description.toLowerCase().contains(searchQuery);
+            task.description.toLowerCase().contains(searchQuery) ||
+            task.assignedBy.toLowerCase().contains(searchQuery) ||
+            task.location.toLowerCase().contains(searchQuery);
       }).toList();
 
       // Filter meetings
       _filteredMeetings = taskModel.meetings.where((meeting) {
         return meeting.title.toLowerCase().contains(searchQuery) ||
-            meeting.description.toLowerCase().contains(searchQuery);
+            meeting.description.toLowerCase().contains(searchQuery) ||
+            meeting.assignedBy.toLowerCase().contains(searchQuery) ||
+            meeting.location.toLowerCase().contains(searchQuery);
       }).toList();
+
+      // Update suggestions
+      _updateSuggestions(taskModel);
     }
 
     setState(() {}); // Update the UI
   }
 
+  void _updateSuggestions(TaskModel taskModel) {
+    _suggestions.clear();
+
+    // Add unique suggestions from tasks
+    for (var task in taskModel.tasks) {
+      if (task.title.toLowerCase().contains(searchQuery) &&
+          !_suggestions.contains(task.title)) {
+        _suggestions.add(task.title);
+      }
+      if (task.location.toLowerCase().contains(searchQuery) &&
+          !_suggestions.contains(task.location)) {
+        _suggestions.add(task.location);
+      }
+      if (task.assignedBy.toLowerCase().contains(searchQuery) &&
+          !_suggestions.contains(task.assignedBy)) {
+        _suggestions.add(task.assignedBy);
+      }
+    }
+
+    // Add unique suggestions from meetings
+    for (var meeting in taskModel.meetings) {
+      if (meeting.title.toLowerCase().contains(searchQuery) &&
+          !_suggestions.contains(meeting.title)) {
+        _suggestions.add(meeting.title);
+      }
+      if (meeting.location.toLowerCase().contains(searchQuery) &&
+          !_suggestions.contains(meeting.location)) {
+        _suggestions.add(meeting.location);
+      }
+      if (meeting.assignedBy.toLowerCase().contains(searchQuery) &&
+          !_suggestions.contains(meeting.assignedBy)) {
+        _suggestions.add(meeting.assignedBy);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Check if the taskStatus exists in the responseData
     final taskData = responseData[widget.taskStatus];
 
     // If taskData is null, return an empty container or a message
@@ -107,12 +167,12 @@ class _TaskBoxPageState extends State<TaskBoxPage> {
       );
     }
 
-    // If taskData is not null, parse it
-    final selectedTaskData = taskData[widget.selectedTimeFrame]; // Get data for the selected timeframe
+    final selectedTaskData = taskData[widget.selectedTimeFrame];
     TaskModel taskModel = TaskModel.fromJson(selectedTaskData);
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: true, // Adjust for the keyboard
       appBar: AppBar(
         backgroundColor: AppColors.concolor,
         leading: IconButton(
@@ -137,61 +197,99 @@ class _TaskBoxPageState extends State<TaskBoxPage> {
         ),
         centerTitle: false,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 15.0), // Added padding here
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(7.0),
-              child: Container(
-                height: 60,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  cursorColor: AppColors.concolor,
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.search, color: AppColors.concolor),
-                    hintText: 'Search',
-                    hintStyle: GoogleFonts.montserrat(color: Colors.grey),
-                    filled: true,
-                    fillColor: const Color(0xFFE6E6E6),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 15.0),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(7.0),
+                child: Container(
+                  height: 60,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode, // Assign the FocusNode
+                    cursorColor: AppColors.concolor,
+                    decoration: InputDecoration(
+                      prefixIcon: Icon(Icons.search, color: AppColors.concolor),
+                      hintText: 'Search',
+                      hintStyle: GoogleFonts.montserrat(color: Colors.grey),
+                      filled: true,
+                      fillColor: const Color(0xFFE6E6E6),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            // New Row for Event text and task status count
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 15.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    "Event: ",
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+              // Show suggestions only when the search box is focused and has text
+              if (_searchFocusNode.hasFocus && searchQuery.isNotEmpty && _suggestions.isNotEmpty)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 2,
+                        blurRadius: 2,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
-                  Text(
-                    "${widget.taskStatus} (${_filteredTasks.length + _filteredMeetings.length})", // Dynamic count
-                    style: GoogleFonts.montserrat(
-                      fontSize: 16,
-                      color: AppColors.concolor,
-                    ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: _suggestions.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        title: Text(
+                          _suggestions[index],
+                          style: GoogleFonts.montserrat(fontSize: 14),
+                        ),
+                        onTap: () {
+                          setState(() {
+                            _searchController.text = _suggestions[index];
+                            _suggestions.clear();
+                            _filterTasks();
+                          });
+                        },
+                      );
+                    },
                   ),
-                ],
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 15.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Event: ",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "${widget.taskStatus} (${_filteredTasks.length + _filteredMeetings.length})",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        color: AppColors.concolor,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: ListView(
+              ListView(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
                 children: [
                   ..._filteredTasks.map((task) => GestureDetector(
                     onTap: () {
@@ -221,7 +319,7 @@ class _TaskBoxPageState extends State<TaskBoxPage> {
                       title: task.title,
                       description: task.description,
                       priority: task.priority,
-                      date: task.date.toLocal().toString().split(' ')[0], // Format date
+                      date: task.date,
                       location: task.location,
                       event: task.event,
                       assignedBy: task.assignedBy,
@@ -268,14 +366,13 @@ class _TaskBoxPageState extends State<TaskBoxPage> {
                   )),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
-
 
 
 

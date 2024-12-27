@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ttm/Comman_pages/Constant.dart';
-import 'package:intl/intl.dart'; // Import this for date formatting
+import 'package:intl/intl.dart';
+
+import 'Leaev_Apply_Model.dart';
+import 'Leave_Apply_Service.dart'; // Import this for date formatting
 
 class LeaveApplyPage extends StatefulWidget {
   @override
@@ -14,6 +17,7 @@ class _LeaveApplyPageState extends State<LeaveApplyPage> {
   final TextEditingController _toDateController = TextEditingController();
   final TextEditingController _noOfDaysController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
+  final LeaveApplicationService _leaveApplicationService = LeaveApplicationService();
 
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -179,10 +183,7 @@ class _LeaveApplyPageState extends State<LeaveApplyPage> {
                     child: SizedBox(
                       height: 50, // Set height for the buttons
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Handle apply action
-                          // Add your apply logic here
-                        },
+                        onPressed: _applyLeave,
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white, // Text color
                           backgroundColor: AppColors.concolor, // Background color
@@ -201,5 +202,44 @@ class _LeaveApplyPageState extends State<LeaveApplyPage> {
         ),
       ),
     );
+  }
+
+  void _applyLeave() async {
+    try {
+      LeaveApplication leaveApplication = LeaveApplication(
+        id: '', // Generate or fetch the ID as needed
+        userId: '', // Replace with actual user ID
+        groupId: '', // Replace with actual group ID
+        leaveTypeId: '', // Replace with actual leave type ID
+        date: DateTime.parse(_fromDateController.text), // Use the selected from date
+        noOfDays: int.parse(_noOfDaysController.text), // Parse number of days
+        reason: _reasonController.text,
+        statusId: 'your_status_id', // Replace with actual status ID
+        nextApprovalRoleId: 'your_next_approval_role_id', // Replace with actual approval role ID
+        isActive: true,
+        savedBy: 'your_savedBy', // Replace with actual saved by information
+        savedByUserName: 'your_saved_by_username', // Replace with actual saved by username
+        savedDate: DateTime.now(), // Use the current date for saved date
+      );
+
+      final response = await _leaveApplicationService.applyLeave(leaveApplication);
+      if (response['status'] == 'SUCCESS') {
+        // Handle success, e.g., show a success message or navigate back
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Leave applied successfully!')),
+        );
+        Navigator.pop(context); // Close the page
+      } else {
+        // Handle error response
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response['message']}')),
+        );
+      }
+    } catch (e) {
+      // Handle any exceptions
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to apply leave: $e')),
+      );
+    }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import 'Comman_pages/Constant.dart';
 import 'Comman_pages/Splash_Screen.dart';
 
 
@@ -8,7 +9,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await AppConstants.initialize(); // Initialize AppConstants
   // Initialize the notification settings
   const AndroidInitializationSettings initializationSettingsAndroid =
   AndroidInitializationSettings('@mipmap/ic_launcher'); // Your app icon

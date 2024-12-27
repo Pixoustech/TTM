@@ -1,171 +1,178 @@
-// lib/models/home_page_model.dart
 
-class Task {
-  final String title;
-  final String description;
-  final String priority;
+class EventResponsestatusbased {
   final String status;
-  final DateTime date;
-  final String location;
-  final List<String>? pdfUrls; // List of PDF URLs
-  final String Event;
-  final String Assignedby;
-  final List<String>? Attachmentpdfurl;
+  final EventData data;
+  final String message;
 
+  EventResponsestatusbased({required this.status, required this.data, required this.message});
 
-  Task({
-    required this.title,
-    required this.description,
-    required this.priority,
-    required this.status,
-    required this.date,
-    required this.location,
-    this.pdfUrls, // Add pdfUrls to the constructor
-    required this.Event,
-    required this.Assignedby,
-    this.Attachmentpdfurl,
-  });
+  factory EventResponsestatusbased.fromJson(Map<String, dynamic> json) {
+    return EventResponsestatusbased(
+      status: json['status'] ?? '',
+      data: EventData.fromJson(json['data'] ?? {}),
+      message: json['message'] ?? '',
+    );
+  }
 }
-
-class Meeting {
-  final String title;
-  final String description;
-  final String priority;
-  final String status;
-  final DateTime fromDate;
-  final DateTime toDate;
-  final String fromTime;
-  final String toTime;
-  final String location;
-  final List<String>? pdfUrls; // List of PDF URLs
-  final String Event;
-  final String Assignedby;
-  final List<String>? Attachmentpdfurl;
-
-  Meeting({
-    required this.title,
-    required this.description,
-    required this.priority,
-    required this.status,
-    required this.fromDate,
-    required this.toDate,
-    required this.fromTime,
-    required this.toTime,
-    required this.location,
-    this.pdfUrls, // Add pdfUrls to the constructor
-    required this.Event,
-    required this.Assignedby,
-    this.Attachmentpdfurl,
-  });
-}
-
-class HomePageData {
+class EventDatastatusbased {
   final List<Task> tasks;
   final List<Meeting> meetings;
 
-  HomePageData({required this.tasks, required this.meetings});
+  EventDatastatusbased({required this.tasks, required this.meetings});
+
+  factory EventDatastatusbased.fromJson(Map<String, dynamic> json) {
+    var tasksJson = json['tasks'] as List? ?? [];
+    var meetingsJson = json['meetings'] as List? ?? [];
+
+    List<Task> tasksList = tasksJson.map((task) => Task.fromJson(task)).toList();
+    List<Meeting> meetingsList = meetingsJson.map((meeting) => Meeting.fromJson(meeting)).toList();
+
+    return EventDatastatusbased(
+      tasks: tasksList,
+      meetings: meetingsList,
+    );
+  }
 }
 
-HomePageData getDefaultHomePageData() {
-  return HomePageData(
-    tasks: [
-      Task(
-        title: 'App DesignApp DesignApp DesignApp Design',
-        description: 'hello',
-        priority: 'Low',
-        status: 'In Progress',
-        date: DateTime.now(),
-        location: 'Coimbatore',
-        pdfUrls: [
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        ],
-        Event: "Task",
-        Assignedby: "Own",
-        Attachmentpdfurl: [],
-      ),
-      Task(
-        title: 'ApApp DesignApp DesignApp DesignApp DesignApp Designp',
-        description: 'The current website design needs a refresh to improve user experience and enhance visual appeal.......',
-        priority: 'Medium',
-        status: 'Not Started',
-        date: DateTime.now().add(Duration(days: -2)),
-        location: 'Coimbatore',
-        pdfUrls: [
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        ], // List of PDF URLs
-          Event: "Task",
-          Assignedby: "HQ",
-        Attachmentpdfurl: [],
-      ),
-      Task(
-        title: 'Testing',
-        description: 'The current website design needs a refresh to improve user experience and enhance visual appeal',
-        priority: 'Low',
-        status: 'Overdue',
-        date: DateTime.now().add(Duration(days: -5)),
-        location: 'Coimbatore',
-        pdfUrls: [
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        ], // List of PDF URLs
-          Event: "Task",
-          Assignedby: "Own",
-        Attachmentpdfurl: ['https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf'],
-      ),
-    ],
-    meetings: [
-      Meeting(
-        title: 'App DesignApp DesignApp DesignApp DesignApp Design',
-        description: 'Discuss the new design for the application.',
-        priority: 'Medium',
-        status: 'In Progress',
-        fromDate: DateTime(2024, 10, 25),
-        toDate: DateTime(2024, 10, 19),
-        fromTime: '10:00 AM',
-        toTime: '12:00 PM',
-        location: 'Coimbatore',
-        pdfUrls: [
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        ], // List of PDF URLs
-          Event: "Meeting",
-          Assignedby: "Own"
-      ),
-      Meeting(
-        title: 'Team Sync',
-        description: 'Weekly team sync to discuss project progress.',
-        priority: 'High',
-        status: 'Not Started',
-        fromDate: DateTime(2024, 10, 26),
-        toDate: DateTime(2024, 10, 02),
-        fromTime: '2:00 PM',
-        toTime: '3:00 PM',
-        location: 'Coimbatore',
-        pdfUrls: [
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        ], // List of PDF URLs
-          Event: "Meeting",
-          Assignedby: "Own"
-      ),
-      Meeting(
-        title: 'App Design Meeting App DesignApp DesignApp DesignApp DesignApp DesignApp Design',
-        description: 'Discuss the new design for the application.',
-        priority: 'Low',
-        status: 'In Progress',
-        fromDate: DateTime(2024, 10, 25),
-        toDate: DateTime(2024, 10 , 12),
-        fromTime: '10:00 AM',
-        toTime: '12:00 PM',
-        location: 'Coimbatore',
-        pdfUrls: [
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-          'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-        ], // List of PDF URLs
-          Event: "Meeting",
-          Assignedby: "HQ"
-      ),
-    ],
-  );
+class EventResponse {
+  final String status;
+  final EventData data;
+  final String message;
+
+  EventResponse({required this.status, required this.data, required this.message});
+
+  factory EventResponse.fromJson(Map<String, dynamic> json) {
+    return EventResponse(
+      status: json['status'] ?? '',
+      data: EventData.fromJson(json['data'] ?? {}),
+      message: json['message'] ?? '',
+    );
+  }
+}
+class EventData {
+  final List<Task> tasks;
+  final List<Meeting> meetings;
+
+  EventData({required this.tasks, required this.meetings});
+
+  factory EventData.fromJson(Map<String, dynamic> json) {
+    var tasksJson = json['tasks'] as List? ?? [];
+    var meetingsJson = json['meetings'] as List? ?? [];
+
+    List<Task> tasksList = tasksJson.map((task) => Task.fromJson(task)).toList();
+    List<Meeting> meetingsList = meetingsJson.map((meeting) => Meeting.fromJson(meeting)).toList();
+
+    return EventData(
+      tasks: tasksList,
+      meetings: meetingsList,
+    );
+  }
+}
+
+
+
+class Task {
+  final String id;
+  final String eventName;
+  final String eventType;
+  final String description;
+  final String priority;
+  final String statusId;
+  final String statusName;
+  final String dueDate;
+  final String location;
+  final List<String>? pdfUrls;
+  final List<String>? attachmentPdfUrls;
+  final bool isSelfEvent;
+
+  Task({
+    required this.id,
+    required this.eventName,
+    required this.eventType,
+    required this.description,
+    required this.priority,
+    required this.statusId,
+    required this.statusName,
+    required this.dueDate,
+    required this.location,
+    this.pdfUrls,
+    this.attachmentPdfUrls,
+    required this.isSelfEvent,
+  });
+
+  factory Task.fromJson(Map<String, dynamic> json) {
+    return Task(
+      id: json['id'] ?? '',
+      eventName: json['eventName'] ?? '',
+      eventType: json['eventType'] ?? '',
+      description: json['description'] ?? '',
+      priority: json['priority'] ?? '',
+      statusId: json['statusId'] ?? '',
+      statusName: json['statusName'] ?? '',
+      dueDate: json['dueDate'] ?? '',
+      location: json['location'] ?? '',
+      pdfUrls: json['pdfUrls'] != null ? List<String>.from(json['pdfUrls']) : null,
+      attachmentPdfUrls: json['attachmentPdfUrls'] != null ? List<String>.from(json['attachmentPdfUrls']) : null,
+      isSelfEvent: json['isSelfEvent'] ?? false,
+    );
+  }
+}
+
+class Meeting {
+  final String id;
+  final String eventName;
+  final String eventType;
+  final String eventMode;
+  final String description;
+  final String priority;
+  final String statusId;
+  final String statusName;
+  final String startDate;
+  final String endDate;
+  final String fromTime;
+  final String toTime;
+  final String venue;
+  final List<String>? pdfUrls;
+  final List<String>? attachmentPdfUrls;
+  final bool isSelfEvent;
+
+  Meeting({
+    required this.id,
+    required this.eventName,
+    required this.eventType,
+    required this.eventMode,
+    required this.description,
+    required this.priority,
+    required this.statusId,
+    required this.statusName,
+    required this.startDate,
+    required this.endDate,
+    required this.fromTime,
+    required this.toTime,
+    required this.venue,
+    required this.pdfUrls,
+    required this.attachmentPdfUrls,
+    required this.isSelfEvent,
+  });
+
+  factory Meeting.fromJson(Map<String, dynamic> json) {
+    return Meeting(
+      id: json['id'] ?? '',
+      eventName: json['eventName'] ?? '',
+      eventType: json['eventType'] ?? '',
+      eventMode: json['eventMode'] ?? '',
+      description: json['description'] ?? '',
+      priority: json['priority'] ?? '',
+      statusId: json['statusId'] ?? '',
+      statusName: json['statusName'] ?? '',
+      startDate: json['startDate'] ?? '',
+      endDate: json['endDate'] ?? '',
+      fromTime: json['fromTime'] ?? '',
+      toTime: json['toTime'] ?? '',
+      venue: json['venue'] ?? '',
+      pdfUrls: json['pdfUrls'] != null ? List<String>.from(json['pdfUrls']) : null,
+      attachmentPdfUrls: json['attachmentPdfUrls'] != null ? List<String>.from(json['attachmentPdfUrls']) : null,
+      isSelfEvent: json['isSelfEvent'] ?? false,
+    );
+  }
 }

@@ -130,7 +130,7 @@ class _ReportPageState extends State<ReportPage> {
                   const SizedBox(width: 10),
                   Expanded(
                     flex: 3,
-                    child: _buildTaskBox(context, 'In Progress', Colors.orange, double.infinity, 90, _currentOverallCounts.inProgress, Icons.rotate_left),
+                    child: _buildTaskBox(context, 'In-Progress', Colors.orange, double.infinity, 90, _currentOverallCounts.inProgress, Icons.rotate_left),
                   ),
                 ],
               ),
@@ -244,7 +244,7 @@ class _ReportPageState extends State<ReportPage> {
           dataSource: monthlyData,
           xValueMapper: (MonthlyTaskData data, _) => data.month,
           yValueMapper: (MonthlyTaskData data, _) => data.inProgress,
-          name: 'In Progress',
+          name: 'In-Progress',
           color: Colors.orange,
         ),
         StackedColumnSeries<MonthlyTaskData, String>(

@@ -16,14 +16,14 @@ class EventDetailPage extends StatefulWidget {
   final String description;
   final String priority;
   final String status;
-  final DateTime date;
+  final String date;
   final String location;
   final List<String>? pdfUrls;
   final String Event;
   final String Assignedby;
   final List<String>? Attachmentpdfurl;
-  final DateTime fromDate;
-  final DateTime toDate;
+  final String fromDate;
+  final String toDate;
   final String fromTime;
   final String toTime;
 
@@ -96,255 +96,58 @@ class _EventDetailPageState extends State<EventDetailPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
+        child: Stack(
           children: [
-            Text(
-              widget.title,
-              style: GoogleFonts.montserrat(
-                  fontSize: 24, fontWeight: FontWeight.normal),
-            ),
-            SizedBox(height: 10),
-            Text(
-              widget.description,
-              style: GoogleFonts.montserrat(
-                  fontSize: 12, color: Color(0xFF5F6368)),
-            ),
-            SizedBox(height: 10),
-            Text(
-              'Task Files',
-              style: GoogleFonts.montserrat(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 5),
-            Wrap(
-              spacing: 10.0,
-              runSpacing: 10.0,
-              children: List.generate(widget.pdfUrls?.length ?? 0, (index) {
-                String pdfName = widget.pdfUrls![index].split('/').last;
-                return GestureDetector(
-                  onTap: () => _openPdfViewer(context, widget.pdfUrls![index]),
-                  child: Container(
-                    width: screenWidth * 0.4, // Responsive width
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: AppColors.concolor),
-                      borderRadius: BorderRadius.circular(8),
-                      color: Colors.white,
+            ListView(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Title Text
+                    Text(
+                      widget.title,
+                      style: GoogleFonts.montserrat(
+                        fontSize: 24,
+                        fontWeight: FontWeight.normal,
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Image.asset(
-                              'Assets/Images/pdf.png',
-                              width: 24,
-                              height: 24,
-                            ),
-                            SizedBox(width: 5),
-                            Container(
-                              width: screenWidth * 0.15,
-                              child: Text(
-                                pdfName,
-                                style: GoogleFonts.montserrat(fontSize: 12),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        PopupMenuButton(
-                          icon: Icon(Icons.more_vert, color: Colors.black),
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'download',
-                              child: Text('Download'),
-                            ),
-                          ],
-                          onSelected: (value) {
-                            if (value == 'download') {
-                              _downloadPdf(widget.pdfUrls![index]);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ),
-            SizedBox(height: 20),
-            Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Color(0xFFE5E5E5)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDetailRow(context, Icons.adjust, 'Status:', widget.status),
-
-                  // Check if the event is a meeting
-                  if (widget.Event == "Meeting") ...[
-                    _buildDetailRow(
-                      context,
-                      Icons.calendar_today_rounded,
-                      'From Date:',
-                      widget.fromDate.toLocal().toString().split(' ')[0],
-                    ),
-                    _buildDetailRow(
-                      context,
-                      Icons.access_time, // You can use a clock icon for time
-                      'From Time:',
-                      widget.fromTime, // Extract time part
-                    ),
-                    _buildDetailRow(
-                      context,
-                      Icons.calendar_today_rounded,
-                      'To Date:',
-                      widget.toDate.toLocal().toString().split(' ')[0],
-                    ),
-                    _buildDetailRow(
-                      context,
-                      Icons.access_time, // You can use a clock icon for time
-                      'To Time:',
-                      widget.toTime, // Extract time part
-                    ),
-                  ] else ...[
-                    _buildDetailRow(
-                      context,
-                      Icons.calendar_today_rounded,
-                      'Due Date:',
-                      widget.date.toLocal().toString().split(' ')[0],
-                    ),
+                    // Spacer to push the button to the right
+                    Spacer(),
+                    // Conditional Button
+                    if (widget.status == 'Overdue' && widget.Assignedby == 'Own')
+                      ElevatedButton(
+                        onPressed: () {
+                          // Your button action here
+                          print('Button pressed');
+                        },
+                        child: Text('Action'),
+                      ),
                   ],
-
-                  _buildDetailRow(context, Icons.sell_outlined, 'Priority:', widget.priority),
-                  _buildDetailRow(context, Icons.task_outlined, 'Event:', widget.Event),
-                  _buildDetailRow(context, Icons.person_2_outlined, 'Assigned By:', widget.Assignedby),
-                  _buildDetailRow(context, Icons.location_on, 'Location:', widget.location),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Check if the status is "Not Started" or "In Progress"
-            if (widget.status != "Not Started") ...[
-              // New Notes Section
-              Text(
-                'Notes:',
-                style: GoogleFonts.montserrat(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
-              SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Color(0xFFE5E5E5)),
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
-                ),
-                child: TextField(
-                  maxLines: 5,
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    hintText: 'Enter your notes here...',
-                    contentPadding: EdgeInsets.all(10),
-                  ),
-                ),
-              ),
-    if (widget.status != "Completed") ...[
-              const SizedBox(height: 16),
-
-              Text(
-                'Task File',
-                style: GoogleFonts.montserrat(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              DottedBorder(
-                color: AppColors.concolor,
-                strokeWidth: 1,
-                dashPattern: [6, 3],
-                borderType: BorderType.RRect,
-                radius: Radius.circular(8),
-                child: InkWell(
-                  onTap: _pickFile,
-                  child: Container(
-                    height: 100,
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        GestureDetector(
-                          onTap: _pickFile,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.backwhite,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  spreadRadius: 2,
-                                  blurRadius: 5,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundColor: AppColors.backwhite,
-                              child: Icon(
-                                Icons.upload_file_rounded,
-                                size: 24,
-                                color: AppColors.concolor,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Drag and Drop files here or choose file',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 14,
-                            color: Colors.grey,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ],
-
-              // Display selected PDF files in a dotted box
-              if (widget.status == "Completed") ...[
+                SizedBox(height: 10),
                 Text(
-                  'Attachments (${widget.Attachmentpdfurl?.length ?? 0})',
+                  widget.description,
+                  style: GoogleFonts.montserrat(
+                      fontSize: 12, color: Color(0xFF5F6368)),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Task Files',
                   style: GoogleFonts.montserrat(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: 5),
                 Wrap(
                   spacing: 10.0,
                   runSpacing: 10.0,
-                  children: List.generate(widget.Attachmentpdfurl?.length ?? 0, (index) {
-                    String pdfName = widget.Attachmentpdfurl![index].split('/').last;
+                  children: List.generate(widget.pdfUrls?.length ?? 0, (index) {
+                    String pdfName = widget.pdfUrls![index].split('/').last;
                     return GestureDetector(
-                      onTap: () => _openPdfViewer(context, widget.Attachmentpdfurl![index]),
+                      onTap: () => _openPdfViewer(context, widget.pdfUrls![index]),
                       child: Container(
-                        width: screenWidth * 0.4,
+                        width: screenWidth * 0.4, // Responsive width
                         padding: EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           border: Border.all(color: AppColors.concolor),
@@ -352,7 +155,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                           color: Colors.white,
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
                               children: [
@@ -372,16 +175,18 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                 ),
                               ],
                             ),
-                            IconButton(
-                              icon: Icon(
-                                Icons.close_rounded,
-                                color: Colors.red,
-                                size: 18,
-                              ),
-                              onPressed: () {
-                                // If you want to remove the attachment from the list,
-                                // you need to handle it here. But since this is a widget property,
-                                // you might want to consider a different approach.
+                            PopupMenuButton(
+                              icon: Icon(Icons.more_vert, color: Colors.black),
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'download',
+                                  child: Text('Download'),
+                                ),
+                              ],
+                              onSelected: (value) {
+                                if (value == 'download') {
+                                  _downloadPdf(widget.pdfUrls![index]);
+                                }
                               },
                             ),
                           ],
@@ -390,65 +195,282 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     );
                   }),
                 ),
-              ],
-              // Show Submit button if status is "In Progress"
-              if (widget.status == "In Progress") ...[
-                const SizedBox(height: 20),
-                Center(
-                  child: Container(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: AppColors.concolor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
+                SizedBox(height: 20),
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Color(0xFFE5E5E5)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailRow(context, Icons.adjust, 'Status:', widget.status),
+
+                      // Check if the event is a meeting
+                      if (widget.Event.toLowerCase() == "meeting".toLowerCase()) ...[
+                        _buildDetailRow(
+                          context,
+                          Icons.calendar_today_rounded,
+                          'From Date:',
+                          formatDate(widget.fromDate),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
-                      ),
-                      onPressed: () {
-                        // Add your submit action here
-                      },
-                      child: Text(
-                        'Submit',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          color: Colors.white,
+                        _buildDetailRow(
+                          context,
+                          Icons.access_time, // You can use a clock icon for time
+                          'From Time:',
+                          widget.fromTime, // Extract time part
                         ),
+                        _buildDetailRow(
+                          context,
+                          Icons.calendar_today_rounded,
+                          'To Date:',
+                          formatDate(widget.toDate),
+                        ),
+                        _buildDetailRow(
+                          context,
+                          Icons.access_time, // You can use a clock icon for time
+                          'To Time:',
+                          widget.toTime, // Extract time part
+                        ),
+                      ] else ...[
+                        _buildDetailRow(
+                          context,
+                          Icons.calendar_today_rounded,
+                          'Due Date:',
+                          formatDate(widget.date),
+                        ),
+                      ],
+
+                      _buildDetailRow(context, Icons.sell_outlined, 'Priority:', widget.priority),
+                      _buildDetailRow(context, Icons.task_outlined, 'Event:', widget.Event),
+                      _buildDetailRow(context, Icons.person_2_outlined, 'Assigned By:', widget.Assignedby),
+                      _buildDetailRow(context, Icons.location_on, 'Location:', widget.location),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 20),
+
+                // Check if the status is "Not Started" or "In Progress"
+                if (widget.status != "Not Started") ...[
+                  // New Notes Section
+                  Text(
+                    'Notes:',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Color(0xFFE5E5E5)),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.white,
+                    ),
+                    child: TextField(
+                      maxLines: 5,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Enter your notes here...',
+                        contentPadding: EdgeInsets.all(10),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ]
-            else ...[
-              // If status is "Not Started", show the Start button
-              Center(
-                child: Container(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: Colors.white,
-                      backgroundColor: AppColors.concolor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      padding: EdgeInsets.symmetric(vertical: 16.0),
-                    ),
-                    onPressed: () {
-                      // Add your start action here
-                    },
-                    child: Text(
-                      'Start',
+                  if (widget.status != "Completed") ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Task File',
                       style: GoogleFonts.montserrat(
                         fontSize: 16,
-                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    DottedBorder(
+                      color: AppColors.concolor,
+                      strokeWidth: 1,
+                      dashPattern: [6, 3],
+                      borderType: BorderType.RRect,
+                      radius: Radius.circular(8),
+                      child: InkWell(
+                        onTap: _pickFile,
+                        child: Container(
+                          height: 100,
+                          width: double.infinity,
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              GestureDetector(
+                                onTap: _pickFile,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: AppColors.backwhite,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        spreadRadius: 2,
+                                        blurRadius: 5,
+                                        offset: Offset(0, 3),
+                                      ),
+                                    ],
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: AppColors.backwhite,
+                                    child: Icon(
+                                      Icons.upload_file_rounded,
+                                      size: 24,
+                                      color: AppColors.concolor,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                'Drag and Drop files here or choose file',
+                                style: GoogleFonts.montserrat(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                  // Display selected PDF files in a dotted box
+                  if (widget.status == "Completed") ...[
+                    Text(
+                      'Attachments (${widget.Attachmentpdfurl?.length ?? 0})',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 10.0,
+                      runSpacing: 10.0,
+                      children: List.generate(widget.Attachmentpdfurl?.length ?? 0, (index) {
+                        String pdfName = widget.Attachmentpdfurl![index].split('/').last;
+                        return GestureDetector(
+                          onTap: () => _openPdfViewer(context, widget.Attachmentpdfurl![index]),
+                          child: Container(
+                            width: screenWidth * 0.4,
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppColors.concolor),
+                              borderRadius: BorderRadius.circular(8),
+                              color: Colors.white,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Image.asset(
+                                      'Assets/Images/pdf.png',
+                                      width: 24,
+                                      height: 24,
+                                    ),
+                                    SizedBox(width: 5),
+                                    Container(
+                                      width: screenWidth * 0.15,
+                                      child: Text(
+                                        pdfName,
+                                        style: GoogleFonts.montserrat(fontSize: 12),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.close_rounded,
+                                    color: Colors.red,
+                                    size: 18,
+                                  ),
+                                  onPressed: () {
+                                    // If you want to remove the attachment from the list,
+                                    // you need to handle it here. But since this is a widget property,
+                                    // you might want to consider a different approach.
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ],
+                  // Show Submit button if status is "In Progress"
+                  if (widget.status == "In-Progress") ...[
+                    const SizedBox(height: 20),
+                    Center(
+                      child: Container(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: AppColors.concolor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: EdgeInsets.symmetric(vertical: 16.0),
+                          ),
+                          onPressed: () {
+                            // Add your submit action here
+                          },
+                          child: Text(
+                            'Submit',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                ] else ...[
+                  // If status is "Not Started", show the Start button
+                  Center(
+                    child: Container(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          backgroundColor: AppColors.concolor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 16.0),
+                        ),
+                        onPressed: () {
+                          // Add your start action here
+                        },
+                        child: Text(
+                          'Start',
+                          style: GoogleFonts.montserrat(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
-            ],
+                ],
+              ],
+            ),
+
           ],
         ),
       ),
@@ -492,11 +514,11 @@ class _EventDetailPageState extends State<EventDetailPage> {
                       // Status Container
                       Container(
                         padding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: getStatusColor(value),
                           borderRadius:
-                              BorderRadius.circular(4), // Rounded corners
+                          BorderRadius.circular(4), // Rounded corners
                         ),
                         child: Text(
                           value,
@@ -522,7 +544,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                           color: getPriorityColor(
                               value), // Get color based on priority
                           borderRadius:
-                              BorderRadius.circular(2), // Rounded corners
+                          BorderRadius.circular(2), // Rounded corners
                         ),
                       ),
                       SizedBox(width: 8), // Space between color box and value
