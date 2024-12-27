@@ -36,6 +36,7 @@ class _CalendarPageState extends State<CalendarPage> {
   final String userId = AppConstants.userId ?? '';
   Map<DateTime, String> _holidays = {};
   Map<DateTime, Leave> _leaveDetails = {};
+  String? _leaveDetail;
   final CalendarService _calendarService = CalendarService();
   DateTime normalizeDate(DateTime date) {
     return DateTime(date.year, date.month, date.day);
@@ -99,29 +100,32 @@ class _CalendarPageState extends State<CalendarPage> {
         _isLoading = true; // Show a loading indicator
       });
 
-      // Call the CalendarService to fetch leaves for the user
+      // Fetch leave data for the user
       final List<Leave> leaves = await _calendarService.fetchLeaveData(userId);
 
-      // Clear previous leave details
-      _leaveDetails.clear();
-
-      // Store the leave details in the Map
-      for (var leave in leaves) {
-        // Assuming leave.date is already a DateTime object
-        DateTime leaveDate = leave.date; // Use the DateTime object directly
-        _leaveDetails[leaveDate] = leave; // Store the leave object in the map
-      }
-
       setState(() {
-        _isLoading = false; // Stop the loading indicator
+        // Populate _leaveDetails
+        _leaveDetails = {
+          for (var leave in leaves) normalizeDate(leave.date): leave,
+        };
+
+        // Check if leave exists for selectedDay
+        Leave? leaveStatus = _leaveDetails[normalizeDate(selectedDay)];
+        _selectedDate = selectedDay; // Update selected date
+        _leaveDetail = leaveStatus?.reason; // Update reason if leave exists
       });
     } catch (e) {
       print('Error fetching leave data: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load leave data.')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false; // Stop the loading indicator
+      });
     }
   }
+
   Future<void> _fetchHolidayData() async {
     setState(() {
       _isLoading = true; // Start loading
@@ -319,25 +323,30 @@ class _CalendarPageState extends State<CalendarPage> {
                       return _selectedDates.contains(day);
                     },
                   )
-                      : _currentView == 'leave'
+                  :_currentView == 'leave'
                       ? TableCalendar(
                     focusedDay: _focusedDay,
-                    onDaySelected: (selectedDay, focusedDay) {
-                      setState(() {
-                        _focusedDay = focusedDay;
-                        _selectedDate = selectedDay; // Store the selected date for the "Leave" view
+                      onDaySelected: (selectedDay, focusedDay) {
+                        setState(() {
+                          _focusedDay = focusedDay;
+                          _selectedDate = normalizeDate(selectedDay); // Normalize selected date
+                        });
 
-                        // Fetch the leave details from the Map
-                        Leave? leaveDetails = _leaveDetails[selectedDay];
+
+                        Leave? leaveDetails = _leaveDetails[_selectedDate];
                         if (leaveDetails != null) {
-                          // Display the leave details
-                          print('Leave details: ${leaveDetails.reason}');
+                          print('Leave Details: ${leaveDetails.reason}');
+                          setState(() {
+                            _leaveDetail = leaveDetails.reason; // Update holiday detail
+                          });
                         } else {
                           print('No leave details found for this date.');
+                          setState(() {
+                            _leaveDetail = null; // Reset holiday detail
+                          });
                         }
-                      });
-                    },
-                    onPageChanged: (focusedDay) {
+                      },
+                      onPageChanged: (focusedDay) {
                       setState(() {
                         _focusedDay = focusedDay;
                       });
@@ -355,23 +364,19 @@ class _CalendarPageState extends State<CalendarPage> {
                         color: Colors.red,
                         shape: BoxShape.circle,
                       ),
-                      // Add this line to style leave dates
                       holidayDecoration: BoxDecoration(
                         color: Colors.pink[100], // Light pink color for leave dates
                         shape: BoxShape.circle,
                       ),
                       holidayTextStyle: TextStyle(
-                        color: Colors.black, // Text color for leave dates
+                        color: Colors.black,
                       ),
                     ),
-                    // Use holidayPredicate to determine if a date is a leave date
-                    holidayPredicate: (day) {
-                      return _leaveDetails.containsKey(normalizeDate(day)); // Check if the day is a leave date
-                    },
-                    selectedDayPredicate: (day) {
-                      return _selectedDate != null && _selectedDate!.isSameDay(day); // Highlight the selected date
-                    },
+                    holidayPredicate: (day) => _leaveDetails.containsKey(normalizeDate(day)),
+                    selectedDayPredicate: (day) =>
+                    _selectedDate != null && _selectedDate!.isSameDay(day),
                   )
+
                       : Container(),
 
 
@@ -420,7 +425,7 @@ class _CalendarPageState extends State<CalendarPage> {
     // Ensure _selectedDate is not null
     if (_selectedDate == null) return Container();
 
-    Leave? leaveStatus = getLeaveStatusForDate(_selectedDate!) ;
+    Leave? leaveStatus = _leaveDetails[_selectedDate];
 
     // Extract day, month, year for UI
     String day = DateFormat('d').format(_selectedDate!);
@@ -429,8 +434,8 @@ class _CalendarPageState extends State<CalendarPage> {
 
     // Define status and title variables
     String status = leaveStatus?.statusId ?? 'No Leave';
-    String title = leaveStatus?.leaveTypeId ?? '';
-    String description = leaveStatus?.reason ?? '';
+    String leaveTypeId = leaveStatus?.leaveTypeId ?? ''; // Changed from title to leaveTypeId
+    String reason = leaveStatus?.reason ?? ''; // Changed from description to reason
     DateTime fromDate = leaveStatus?.date ?? DateTime.now();
     DateTime toDate = leaveStatus?.date ?? DateTime.now();
 
@@ -519,9 +524,7 @@ class _CalendarPageState extends State<CalendarPage> {
             // Main container for leave details
             Container(
               height: 120,
-              margin: EdgeInsets.only(
-                  left:
-                      10), // Add margin to avoid overlap with the vertical line
+              margin: EdgeInsets.only(left: 10), // Add margin to avoid overlap with the vertical line
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(0),
@@ -539,16 +542,16 @@ class _CalendarPageState extends State<CalendarPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // If there is a leave status, display the title and dates
+                    // If there is a leave status, display the leave type and dates
                     if (leaveStatus != null) ...[
                       Text(
-                        '$title [${leaveStatus.date.difference(leaveStatus.date).inDays + 1} Days]',
+                        '$leaveTypeId', // Display leaveTypeId instead of title
                         style: GoogleFonts.montserrat(
                             fontSize: 16,
                             fontWeight: FontWeight.bold
                         ),
-                        overflow: TextOverflow.ellipsis, // Add this line to handle overflow with ellipsis
-                        maxLines: 1, // Optionally, limit it to a single line
+                        overflow: TextOverflow.ellipsis, // Handle overflow with ellipsis
+                        maxLines: 1, // Limit to a single line
                       ),
                       SizedBox(height: 8),
                       Row(
@@ -578,25 +581,22 @@ class _CalendarPageState extends State<CalendarPage> {
                       ),
                       Divider(),
                       Text(
-                        '$description ',
+                        '$reason', // Display reason instead of description
                         style: GoogleFonts.montserrat(
                             fontSize: 10, color: Colors.black45),
                       ),
                     ] else ...[
                       // If there is no leave status, display a "No Leaves" message
                       Container(
-                        width: double
-                            .infinity, // Make the container take the full width
-                        height: 100, // Set a specific height for the container
+                        width: double.infinity, // Full width
+                        height: 100, // Specific height
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(color: Colors.black54, width: 1),
                         ),
-                        padding: EdgeInsets.all(
-                            20), // Increase padding for more space around the text
+                        padding: EdgeInsets.all(20), // Padding for spacing
                         child: Center(
-                          // Center the text within the container
                           child: Text(
                             'No Leaves',
                             style: GoogleFonts.montserrat(
@@ -637,6 +637,7 @@ class _CalendarPageState extends State<CalendarPage> {
       ],
     );
   }
+
 
   Widget _buildHolidayDetail() {
     // Check if a date is selected
@@ -1158,21 +1159,7 @@ class _CalendarPageState extends State<CalendarPage> {
     );
   }
 
-  Leave? getLeaveStatusForDate(DateTime selectedDate) {
-    // Normalize the selected date to ignore time
-    DateTime normalizedSelectedDate = normalizeDate(selectedDate);
 
-    for (var leave in _leaveStatuses) {
-      // Normalize the leave date to ignore time
-      DateTime normalizedLeaveDate = normalizeDate(leave.date);
-
-      // Check if the normalized selected date matches the normalized leave date
-      if (normalizedSelectedDate.isSameDay(normalizedLeaveDate)) {
-        return leave; // Return the leave data if the date matches
-      }
-    }
-    return null; // Return null if there's no leave on the selected date
-  }
   Widget _buildShimmerLoading() {
     return Column(
       children: [
