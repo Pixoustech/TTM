@@ -1,11 +1,14 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ttm/Profile_Pages/Service.dart';
 import '../Comman_pages/Constant.dart';
 import 'Profile_model.dart';
+import 'package:http/http.dart' as http;
 
 class MyProfilePage extends StatefulWidget {
   @override
@@ -15,6 +18,7 @@ class MyProfilePage extends StatefulWidget {
 class _MyProfilePageState extends State<MyProfilePage> {
   bool isEditing = false;
   XFile? _imageFile; // Variable to hold the selected image
+  ProfileModel? profile; // Variable to hold the fetched profile data
 
   // Controllers for text fields
   final TextEditingController firstNameController = TextEditingController();
@@ -27,33 +31,38 @@ class _MyProfilePageState extends State<MyProfilePage> {
   final TextEditingController cityController = TextEditingController();
   final TextEditingController zipCodeController = TextEditingController();
 
-  // Sample data for a profile
-  final ProfileModel profile = ProfileModel(
-    firstName: "John",
-    lastName: "Doe",
-    dateOfBirth: "01/01/1990",
-    gender: "Male",
-    role: "User  ",
-    email: "john.doe@example.com",
-    phone: "+1234567890",
-    city: "New York",
-    zipCode: "10001",
-  );
-
-  _MyProfilePageState() {
-    firstNameController.text = profile.firstName;
-    lastNameController.text = profile.lastName;
-    dobController.text = profile.dateOfBirth;
-    genderController.text = profile.gender;
-    roleController.text = profile.role;
-    emailController.text = profile.email;
-    phoneController.text = profile.phone;
-    cityController.text = profile.city;
-    zipCodeController.text = profile.zipCode;
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile(); // Fetch user profile data on initialization
+  }
+  Future<void> _fetchUserProfile() async {
+    final userService = ApiService();
+    try {
+      final fetchedProfile = await userService.fetchUserProfile(AppConstants.userId ?? '');
+      if (fetchedProfile != null) {
+        setState(() {
+          firstNameController.text = fetchedProfile.firstName ?? '';
+          lastNameController.text = fetchedProfile.lastName ?? '';
+          dobController.text = fetchedProfile.dob ?? '';
+          emailController.text = fetchedProfile.email ?? '';
+          phoneController.text = fetchedProfile.mobile ?? '';
+          cityController.text = fetchedProfile.district ?? ''; // Assuming district = city
+          // Add other fields if needed
+        });
+      } else {
+        print('Profile is null');
+      }
+    } catch (e) {
+      print('Error in _fetchUserProfile: $e');
+    }
   }
 
   Future<void> _requestPermissions() async {
-    await Permission.storage.request();
+    final status = await Permission.storage.status;
+    if (!status.isGranted) {
+      await Permission.storage.request();
+    }
   }
 
   Future<void> _pickImage() async {
@@ -62,8 +71,25 @@ class _MyProfilePageState extends State<MyProfilePage> {
     XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
+      // If cropping is needed, uncomment the following lines
+      // final croppedFile = await ImageCropper().cropImage(
+      //   sourcePath: image.path,
+      //   aspectRatioPresets: [
+      //     CropAspectRatioPreset.square,
+      //   ],
+      //   uiSettings: [
+      //     AndroidUiSettings(
+      //       toolbarTitle: 'Crop Image',
+      //       toolbarColor: AppColors.concolor,
+      //       toolbarWidgetColor: Colors.white,
+      //       initAspectRatio: CropAspectRatioPreset.original,
+      //       lockAspectRatio: true,
+      //     ),
+      //   ],
+      // );
+
       setState(() {
-        _imageFile = image; // Set the selected image
+        _imageFile = image; // Use `croppedFile` if using cropper
       });
     }
   }
@@ -90,45 +116,36 @@ class _MyProfilePageState extends State<MyProfilePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end, // Align buttons to the right
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 1), // Increase padding
-                  decoration: BoxDecoration(
-                    color: Colors.white, // Background color of the button
-                    borderRadius: BorderRadius.circular(8), // Rounded corners
-                    border: Border.all(color: AppColors.concolor), // Border color
-                  ),
-                  child: TextButton(
-                    child: Text(
-                      'Cancel',
-                      style: GoogleFonts.montserrat(
-                        color: AppColors.concolor, // Set text color
-                      ),
+                TextButton(
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.montserrat(
+                      color: AppColors.concolor, // Set text color
                     ),
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Close the dialog
-                    },
                   ),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
                 ),
                 SizedBox(width: 8), // Add some space between the buttons
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 1), // Increase padding
-                  decoration: BoxDecoration(
-                    color: AppColors.concolor, // Background color of the button
-                    borderRadius: BorderRadius.circular(8), // Rounded corners
-                  ),
-                  child: TextButton(
-                    child: Text(
-                      'Confirm',
-                      style: GoogleFonts.montserrat(
-                        color: Colors.white, // White text color
-                      ),
+                TextButton(
+                  child: Text(
+                    'Confirm',
+                    style: GoogleFonts.montserrat(
+                      color: Colors.white, // White text color
                     ),
-                    onPressed: () {
-                      // Handle the update logic here
-                      _updateProfile();
-                      Navigator.of(context).pop(); // Close the dialog
-                    },
                   ),
+                  style: TextButton.styleFrom(
+                    backgroundColor: AppColors.concolor, // Background color of the button
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8), // Increase padding
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8), // Rounded corners
+                    ),
+                  ),
+                  onPressed: () {
+                    _updateProfile();
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
                 ),
               ],
             ),
@@ -138,21 +155,65 @@ class _MyProfilePageState extends State<MyProfilePage> {
     );
   }
 
-  void _updateProfile() {
-    // Here you can add your update logic
-    // For now, we'll just show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor:Colors.green,
-        content: const Text('Profile updated successfully!'),
-        duration: const Duration(seconds: 1), // Duration for the snackbar
-      ),
+  void _updateProfile() async {
+    // Gather data from text fields
+    final updatedProfileData = {
+      'userId': AppConstants.userId ?? '', // Use the user ID from your constants
+      'firstName': firstNameController.text,
+      'lastName': lastNameController.text,
+      'email': emailController.text,
+      'mobile': phoneController.text,
+      'isActive': true, // Assuming the user is active
+      'roleId': 'string', // Replace with actual role ID if available
+      'divisionId': 'string', // Replace with actual division ID if available
+      'branchId': 'string', // Replace with actual branch ID if available
+      'userGroup': 'string', // Replace with actual user group if available
+      'dob': dobController.text, // Ensure this is in the correct format
+      'districtId': 'string', // Replace with actual district ID if available
+      'genderId': 'string', // Replace with actual gender ID if available
+      'countryId': 'string', // Replace with actual country ID if available
+      'stateId': 'string', // Replace with actual state ID if available
+      'city': cityController.text, // Assuming city is the same as district
+      'pincode': zipCodeController.text, // Assuming zip code is the same as pincode
+      'address': 'string', // Replace with actual address if available
+      'password': '', // Replace with actual password if needed
+      'userName': '', // Replace with actual username if available
+    };
+
+    // Make the API call
+    final response = await http.post(
+      Uri.parse('https://9069-2405-201-e02b-58e4-b927-a704-a2ba-3b0b.ngrok-free.app/api/Settings/User_SaveUpdate'),
+      headers: {
+        'Content-Type': 'application/json',
+        // Add any other headers if needed, like authorization
+      },
+      body: json.encode(updatedProfileData),
     );
 
-    // Optionally, you can navigate back after a delay
-    Future.delayed(const Duration(seconds: 1), () {
-      Navigator.pop(context); // Pop the profile page
-    });
+    if (response.statusCode == 200) {
+      // If the update is successful, show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: const Text('Profile updated successfully!'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // Optionally, you can navigate back after a delay
+      Future.delayed(const Duration(seconds: 2), () {
+        Navigator.pop(context); // Pop the profile page
+      });
+    } else {
+      // If the update fails, show an error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: const Text('Failed to update profile. Please try again.'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   @override
@@ -172,7 +233,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
         backgroundColor: AppColors.concolor,
         iconTheme: IconThemeData(color: Colors.white),
       ),
-      body : SingleChildScrollView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Stack(
           children: [
@@ -280,7 +341,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
             // Pencil Icon
             if (!isEditing) // Show pencil icon only when not editing
               Positioned(
-                right: 2, // Distance from the right edge
+                right: 2 , // Distance from the right edge
                 top: 2, // Distance from the top edge
                 child: GestureDetector(
                   onTap: () {

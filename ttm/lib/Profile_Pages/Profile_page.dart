@@ -3,11 +3,13 @@ import 'package:flutter_switch/flutter_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:ttm/Profile_Pages/Service.dart';
 import '../Comman_pages/Constant.dart';
 import '../Login_Page/login_page.dart';
 import 'ChangePasswordPage.dart';
 import 'MyProfilePage.dart';
-import '../Comman_pages/Navigation_page.dart'; // Ensure you have this file
+import '../Comman_pages/Navigation_page.dart';
+import 'Profile_model.dart'; // Ensure you have this file
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -19,13 +21,24 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _locationEnabled = false; // Track Location toggle state
   bool _notificationsEnabled = false; // Track Notifications toggle state
   final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  ProfileModel? fetchedProfile; // Store the fetched profile
 
   @override
   void initState() {
     super.initState();
-    _loadPreferences(); // Load preferences when the profile page is initialized
+    _loadPreferences(); // Load preferences when the profile page is initialized// Fetch user profile data on initialization
+    _fetchUserProfile();
   }
+  Future<void> _fetchUserProfile() async {
+    final userService = ApiService(); // Create an instance of your API service
+    String userId = AppConstants.userId ?? ''; // Get the user ID from your constants
 
+    fetchedProfile = (await userService.fetchUserProfile(userId)) as ProfileModel?; // Fetch the profile
+
+    setState(() {
+      // Update the UI with the fetched profile data
+    });
+  }
   Future<void> _loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -138,14 +151,14 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         SizedBox(height: 10),
         Text(
-          'John Doe',
+          fetchedProfile?.firstName ?? '', // Display fetched first name or default
           style: GoogleFonts.montserrat(
             fontSize: 15,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
-          'john.doe@example.com',
+          fetchedProfile?.email ?? '', // Display fetched email or default
           style: GoogleFonts.montserrat(fontSize: 15, color: Colors.grey),
         ),
       ],
@@ -162,10 +175,10 @@ class _ProfilePageState extends State<ProfilePage> {
       child: _buildProfileBox(
         context,
         Icons.person,
-        'My Profile',
-      ),
-    );
-  }
+  'My Profile',
+  ),
+  );
+}
 
   Widget _buildChangePassBox(BuildContext context) {
     return GestureDetector(

@@ -403,217 +403,224 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(10.0),
                   child: Column(
                     children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEAEAEA),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                height: 220,
-                                child: _isLoadingoverall
-                                    ? Shimmer.fromColors(
-                                        baseColor: Colors.grey[300]!,
-                                        highlightColor: Colors.grey[100]!,
-                                        child: ListView.builder(
+                      if (_filterTasksstatusbasedbox().isNotEmpty ||
+                          _filterMeetingsstatusbasedbox().isNotEmpty)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEAEAEA),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: 220,
+                                  child: _isLoadingoverall
+                                      ? Shimmer.fromColors(
+                                          baseColor: Colors.grey[300]!,
+                                          highlightColor: Colors.grey[100]!,
+                                          child: ListView.builder(
+                                            scrollDirection: Axis.horizontal,
+                                            itemCount:
+                                                6, // Number of shimmer items
+                                            itemBuilder: (context, index) {
+                                              return Container(
+                                                width: 120,
+                                                margin: const EdgeInsets.only(
+                                                    right: 10),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        )
+                                      : ListView.builder(
                                           scrollDirection: Axis.horizontal,
-                                          itemCount:
-                                              6, // Number of shimmer items
+                                          itemCount: _filterTasksstatusbasedbox()
+                                                  .length +
+                                              _filterMeetingsstatusbasedbox()
+                                                  .length,
                                           itemBuilder: (context, index) {
-                                            return Container(
-                                              width: 120,
-                                              margin: const EdgeInsets.only(
-                                                  right: 10),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                            );
+                                            if (index <
+                                                _filterTasksstatusbasedbox()
+                                                    .length) {
+                                              final task =
+                                                  _filterTasksstatusbasedbox()[
+                                                      index];
+                                              if (task.statusName
+                                                          .toLowerCase() ==
+                                                      'overdue' ||
+                                                  task.statusName
+                                                          .toLowerCase() ==
+                                                      'in-progress') {
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 3.0),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              EventDetailPage(
+                                                            title:
+                                                                task.eventName,
+                                                            description: task
+                                                                .description,
+                                                            priority:
+                                                                task.priority,
+                                                            status:
+                                                                task.statusName,
+                                                            date: task.dueDate,
+                                                            location:
+                                                                task.location,
+                                                            pdfUrls:
+                                                                task.pdfUrls ??
+                                                                    [],
+                                                            Event:
+                                                                task.eventType,
+                                                            Assignedby:
+                                                                task.isSelfEvent
+                                                                    ? "Own"
+                                                                    : "HQ",
+                                                            Attachmentpdfurl: task
+                                                                .attachmentPdfUrls,
+                                                            fromDate:
+                                                                task.dueDate,
+                                                            toDate:
+                                                                task.dueDate,
+                                                            fromTime: "",
+                                                            toTime: "",
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: Container(
+                                                      height: 120,
+                                                      child:
+                                                          buildTaskDetailBoxforall(
+                                                        task.eventName,
+                                                        task.description,
+                                                        Colors.white,
+                                                        task.priority,
+                                                        task.statusName,
+                                                        task.dueDate,
+                                                        task.location,
+                                                        task.eventType,
+                                                        task.isSelfEvent
+                                                            ? ""
+                                                            : "HQ",
+                                                        task.eventType,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              } else {
+                                                return Container();
+                                              }
+                                            } else {
+                                              final meetingIndex = index -
+                                                  _filterTasksstatusbasedbox()
+                                                      .length;
+                                              final meeting =
+                                                  _filterMeetingsstatusbasedbox()[
+                                                      meetingIndex];
+                                              if (meeting.statusName
+                                                          .toLowerCase() ==
+                                                      'overdue' ||
+                                                  meeting.statusName
+                                                          .toLowerCase() ==
+                                                      'in-progress') {
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          right: 10.0),
+                                                  child: GestureDetector(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              EventDetailPage(
+                                                            title: meeting
+                                                                .eventName,
+                                                            description: meeting
+                                                                .description,
+                                                            priority: meeting
+                                                                .priority,
+                                                            status: meeting
+                                                                .statusName,
+                                                            date: meeting
+                                                                .startDate,
+                                                            location:
+                                                                meeting.venue,
+                                                            pdfUrls:
+                                                                meeting.pdfUrls,
+                                                            Event: meeting
+                                                                .eventType,
+                                                            Assignedby: meeting
+                                                                    .isSelfEvent
+                                                                ? "Own"
+                                                                : "HQ",
+                                                            Attachmentpdfurl:
+                                                                meeting
+                                                                    .attachmentPdfUrls,
+                                                            fromDate: meeting
+                                                                .startDate,
+                                                            toDate:
+                                                                meeting.endDate,
+                                                            fromTime: meeting
+                                                                .fromTime,
+                                                            toTime:
+                                                                meeting.toTime,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    child: Container(
+                                                      height: 120,
+                                                      child:
+                                                          buildTaskDetailBoxforall(
+                                                        meeting.eventName,
+                                                        meeting.description,
+                                                        Colors.white,
+                                                        meeting.priority,
+                                                        meeting.statusName,
+                                                        meeting.startDate,
+                                                        meeting.venue,
+                                                        meeting.eventType,
+                                                        meeting.isSelfEvent
+                                                            ? ""
+                                                            : "HQ",
+                                                        meeting.eventType,
+                                                        fromDate:
+                                                            meeting.startDate,
+                                                        toDate: meeting.endDate,
+                                                        fromTime:
+                                                            meeting.fromTime,
+                                                        toTime: meeting.toTime,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              } else {
+                                                return Container();
+                                              }
+                                            }
                                           },
                                         ),
-                                      )
-                                    : ListView.builder(
-                                        scrollDirection: Axis.horizontal,
-                                        itemCount: _filterTasksstatusbasedbox()
-                                                .length +
-                                            _filterMeetingsstatusbasedbox()
-                                                .length,
-                                        itemBuilder: (context, index) {
-                                          // Filter tasks based on status: "Overdue" and "In-Progress"
-                                          if (index <
-                                              _filterTasksstatusbasedbox()
-                                                  .length) {
-                                            final task =
-                                                _filterTasksstatusbasedbox()[
-                                                    index];
-                                            if (task.statusName.toLowerCase() ==
-                                                    'overdue' ||
-                                                task.statusName.toLowerCase() ==
-                                                    'in-progress') {
-                                              return Padding(
-                                                padding: const EdgeInsets.only(
-                                                    right: 3.0),
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            EventDetailPage(
-                                                          title: task.eventName,
-                                                          description:
-                                                              task.description,
-                                                          priority:
-                                                              task.priority,
-                                                          status:
-                                                              task.statusName,
-                                                          date: task.dueDate,
-                                                          location:
-                                                              task.location,
-                                                          pdfUrls:
-                                                              task.pdfUrls ??
-                                                                  [],
-                                                          Event: task.eventType,
-                                                          Assignedby:
-                                                              task.isSelfEvent
-                                                                  ? "Own"
-                                                                  : "HQ",
-                                                          Attachmentpdfurl: task
-                                                              .attachmentPdfUrls,
-                                                          fromDate:
-                                                              task.dueDate,
-                                                          toDate: task.dueDate,
-                                                          fromTime: "",
-                                                          toTime: "",
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: Container(
-                                                    height:
-                                                        120, // Set a fixed height for the container
-                                                    child:
-                                                        buildTaskDetailBoxforall(
-                                                      task.eventName,
-                                                      task.description,
-                                                      Colors.white,
-                                                      task.priority,
-                                                      task.statusName,
-                                                      task.dueDate,
-                                                      task.location,
-                                                      task.eventType,
-                                                      task.isSelfEvent
-                                                          ? ""
-                                                          : "HQ",
-                                                      task.eventType,
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            } else {
-                                              return Container(); // Skip tasks that don't match the filter
-                                            }
-                                          } else {
-                                            final meetingIndex = index -
-                                                _filterTasksstatusbasedbox()
-                                                    .length;
-                                            final meeting =
-                                                _filterMeetingsstatusbasedbox()[
-                                                    meetingIndex];
-                                            if (meeting.statusName
-                                                        .toLowerCase() ==
-                                                    'overdue' ||
-                                                meeting.statusName
-                                                        .toLowerCase() ==
-                                                    'in-progress') {
-                                              return Padding(
-                                                padding: const EdgeInsets.only(
-                                                    right: 10.0),
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            EventDetailPage(
-                                                          title:
-                                                              meeting.eventName,
-                                                          description: meeting
-                                                              .description,
-                                                          priority:
-                                                              meeting.priority,
-                                                          status: meeting
-                                                              .statusName,
-                                                          date:
-                                                              meeting.startDate,
-                                                          location:
-                                                              meeting.venue,
-                                                          pdfUrls:
-                                                              meeting.pdfUrls,
-                                                          Event:
-                                                              meeting.eventType,
-                                                          Assignedby: meeting
-                                                                  .isSelfEvent
-                                                              ? "Own"
-                                                              : "HQ",
-                                                          Attachmentpdfurl: meeting
-                                                              .attachmentPdfUrls,
-                                                          fromDate:
-                                                              meeting.startDate,
-                                                          toDate:
-                                                              meeting.endDate,
-                                                          fromTime:
-                                                              meeting.fromTime,
-                                                          toTime:
-                                                              meeting.toTime,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: Container(
-                                                    height:
-                                                        120, // Set a fixed height for the container
-                                                    child:
-                                                        buildTaskDetailBoxforall(
-                                                      meeting.eventName,
-                                                      meeting.description,
-                                                      Colors.white,
-                                                      meeting.priority,
-                                                      meeting.statusName,
-                                                      meeting.startDate,
-                                                      meeting.venue,
-                                                      meeting.eventType,
-                                                      meeting.isSelfEvent
-                                                          ? ""
-                                                          : "HQ",
-                                                      meeting.eventType,
-                                                      fromDate:
-                                                          meeting.startDate,
-                                                      toDate: meeting.endDate,
-                                                      fromTime:
-                                                          meeting.fromTime,
-                                                      toTime: meeting.toTime,
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                            } else {
-                                              return Container(); // Skip meetings that don't match the filter
-                                            }
-                                          }
-                                        },
-                                      ),
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisSize: MainAxisSize.max,

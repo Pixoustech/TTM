@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -97,7 +96,7 @@ class _CalendarPageState extends State<CalendarPage> {
   Future<void> _fetchLeaveData(DateTime selectedDay) async {
     try {
       setState(() {
-        _isLoading = true; // Show a loading indicator
+        _isLoading = true; // Show loading indicator
       });
 
       // Fetch leave data for the user
@@ -109,10 +108,19 @@ class _CalendarPageState extends State<CalendarPage> {
           for (var leave in leaves) normalizeDate(leave.date): leave,
         };
 
-        // Check if leave exists for selectedDay
-        Leave? leaveStatus = _leaveDetails[normalizeDate(selectedDay)];
-        _selectedDate = selectedDay; // Update selected date
-        _leaveDetail = leaveStatus?.reason; // Update reason if leave exists
+        // Update the selected date and focused day
+        _selectedDate = normalizeDate(selectedDay); // Normalize selected date
+        _focusedDay = selectedDay; // Update focused day to the selected day
+
+        // Check if leave exists for the selected date
+        Leave? leaveDetails = _leaveDetails[_selectedDate];
+        if (leaveDetails != null) {
+          print('Leave Details: ${leaveDetails.reason}');
+          _leaveDetail = leaveDetails.reason; // Update leave detail if it exists
+        } else {
+          print('No leave details found for this date.');
+          _leaveDetail = null; // Reset leave detail if none exists
+        }
       });
     } catch (e) {
       print('Error fetching leave data: $e');
@@ -121,7 +129,7 @@ class _CalendarPageState extends State<CalendarPage> {
       );
     } finally {
       setState(() {
-        _isLoading = false; // Stop the loading indicator
+        _isLoading = false; // Stop loading indicator
       });
     }
   }
@@ -282,6 +290,8 @@ class _CalendarPageState extends State<CalendarPage> {
                       ? TableCalendar(
                     focusedDay: _focusedDay,
                     onDaySelected: (selectedDay, focusedDay) {
+                      if (_isLoading) return; // Prevent selection if loading
+
                       setState(() {
                         _focusedDay = focusedDay;
 
@@ -316,6 +326,11 @@ class _CalendarPageState extends State<CalendarPage> {
                       ),
                       selectedDecoration: BoxDecoration(
                         color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      // Optionally, you can change the decoration for disabled dates
+                      disabledDecoration: BoxDecoration(
+                        color: Colors.grey[300], // Light grey for disabled dates
                         shape: BoxShape.circle,
                       ),
                     ),

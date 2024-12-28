@@ -16,7 +16,7 @@ class AppColors {
 }
 
 class AppApi {
-  static const String baseurl = "https://a5b5-2405-201-e02b-58e4-41e4-ac79-9eb1-b9b0.ngrok-free.app/api"; // Replace with your actual base URL
+  static const String baseurl = "https://9069-2405-201-e02b-58e4-b927-a704-a2ba-3b0b.ngrok-free.app/api"; // Replace with your actual base URL
 
   static final Dio dio = Dio(
     BaseOptions(
