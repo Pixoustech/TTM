@@ -8,12 +8,13 @@ class ApiService {
 
   Future<ProfileModel?> fetchUserProfile(String userId) async {
     try {
-      final response = await dio.get('/Settings/User_Get', queryParameters: {
-        'IsActive': true,
-        'UserId': userId,
-      });
-
-      print(response.data); // Debugging line to check the response data
+      final response = await AppApi.dio.get(
+        '/Settings/User_Get',
+        queryParameters: {
+          'IsActive': true,
+          'UserId': userId,
+        },
+      );
 
       if (response.statusCode == 200 && response.data['data'] != null) {
         return ProfileModel.fromJson(response.data['data'][0]);

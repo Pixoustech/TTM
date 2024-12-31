@@ -4,99 +4,31 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 // leave_model.dart
 class Leave {
-  final String id;
-  final String userId;
   final String groupId;
   final String leaveTypeId;
-  final DateTime date;
-  final int noOfDays;
+  final String leaveType;
+  final DateTime fromDate;
+  final DateTime toDate;
   final String reason;
-  final String statusId;
-  final String nextApprovalRoleId;
-  final bool isActive;
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String mobile;
-  final String userGroup;
-  final String branchId;
-  final String divisionId;
-  final String districtId;
-  final String groupIdValue;
-  final String leaveIdValue;
-  final String statusName;
-  final String statusCode;
-  final String createdBy;
-  final String createdByUserName;
-  final DateTime createdDate;
 
   Leave({
-    required this.id,
-    required this.userId,
     required this.groupId,
     required this.leaveTypeId,
-    required this.date,
-    required this.noOfDays,
+    required this.leaveType,
+    required this.fromDate,
+    required this.toDate,
     required this.reason,
-    required this.statusId,
-    required this.nextApprovalRoleId,
-    required this.isActive,
-    required this.firstName,
-    required this.lastName,
-    required this.email,
-    required this.mobile,
-    required this.userGroup,
-    required this.branchId,
-    required this.divisionId,
-    required this.districtId,
-    required this.groupIdValue,
-    required this.leaveIdValue,
-    required this.statusName,
-    required this.statusCode,
-    required this.createdBy,
-    required this.createdByUserName,
-    required this.createdDate,
   });
 
   factory Leave.fromJson(Map<String, dynamic> json) {
     return Leave(
-      id: json['id'],
-      userId: json['userId'],
       groupId: json['groupId'],
       leaveTypeId: json['leaveTypeId'],
-      date: _parseDate(json['date']),
-      noOfDays: json['noofDays'],
+      leaveType: json['leaveType'],
+      fromDate: DateTime.parse(json['fromDate']),
+      toDate: DateTime.parse(json['toDate']),
       reason: json['reason'],
-      statusId: json['statusId'],
-      nextApprovalRoleId: json['nextApprovalRoleId'],
-      isActive: json['isActive'],
-      firstName: json['firstName'],
-      lastName: json['lastName'],
-      email: json['email'],
-      mobile: json['mobile'],
-      userGroup: json['userGroup'],
-      branchId: json['branchId'],
-      divisionId: json['divisionId'],
-      districtId: json['districtId'],
-      groupIdValue: json['groupIdValue'],
-      leaveIdValue: json['leaveIdValue'],
-      statusName: json['statusName'],
-      statusCode: json['statusCode'],
-      createdBy: json['createdBy'],
-      createdByUserName: json['createdByUserName'],
-      createdDate: DateTime.parse(json['createdDate']),
     );
-  }
-  // Method to parse date strings
-  static DateTime _parseDate(String dateString) {
-    try {
-      // Attempt to parse the date using the expected format
-      return DateFormat("MM/dd/yyyy HH:mm:ss").parse(dateString);
-    } catch (e) {
-      // If parsing fails, print the error and return the current date or handle as needed
-      print('Error parsing date: $e');
-      return DateTime.now(); // Fallback to current date or handle as needed
-    }
   }
 }
 

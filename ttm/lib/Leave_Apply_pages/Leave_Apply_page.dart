@@ -18,7 +18,29 @@ class _LeaveApplyPageState extends State<LeaveApplyPage> {
   final TextEditingController _noOfDaysController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
   final LeaveApplicationService _leaveApplicationService = LeaveApplicationService();
+  final LeaveApplicationServiceDropdown _leaveApplicationServiceDropdown = LeaveApplicationServiceDropdown();
+  List<LeaveTypeModel> _leaveTypes = []; // List to store fetched leave types
+  LeaveTypeModel? _selectedLeaveType; // To store selected leave type
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchLeaveTypes(); // Fetch leave types when the page is initialized
+  }
+
+  Future<void> _fetchLeaveTypes() async {
+    try {
+      List<LeaveTypeModel> leaveTypes = await _leaveApplicationServiceDropdown.fetchLeaveTypes();
+      setState(() {
+        _leaveTypes = leaveTypes; // Update the leave types list
+      });
+    } catch (e) {
+      // Handle error if fetching leave types fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to fetch leave types: $e')),
+      );
+    }
+  }
   Future<void> _selectDate(BuildContext context, TextEditingController controller) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -54,17 +76,25 @@ class _LeaveApplyPageState extends State<LeaveApplyPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Leave Type
+              // Leave Type
               Text('Leave Type', style: GoogleFonts.montserrat(fontSize: 16)),
-              TextField(
-                controller: _leaveTypeController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Enter leave type',
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: AppColors.concolor), // Focused border color
-                  ),
-                ),
-                cursorColor: AppColors.concolor, // Cursor color
+              _leaveTypes.isEmpty
+                  ? CircularProgressIndicator() // Show loading indicator if leave types are not fetched yet
+                  : DropdownButton<LeaveTypeModel>(
+                hint: Text('Select Leave Type'),
+                value: _selectedLeaveType,
+                onChanged: (LeaveTypeModel? newValue) {
+                  setState(() {
+                    _selectedLeaveType = newValue;
+                  });
+                },
+                isExpanded: true,
+                items: _leaveTypes.map((LeaveTypeModel leaveType) {
+                  return DropdownMenuItem<LeaveTypeModel>(
+                    value: leaveType,
+                    child: Text(leaveType.leaveTypeName ?? ''),
+                  );
+                }).toList(),
               ),
               SizedBox(height: 16),
 

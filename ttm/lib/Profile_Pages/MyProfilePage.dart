@@ -179,15 +179,10 @@ class _MyProfilePageState extends State<MyProfilePage> {
       'password': '', // Replace with actual password if needed
       'userName': '', // Replace with actual username if available
     };
-
-    // Make the API call
-    final response = await http.post(
-      Uri.parse('https://9069-2405-201-e02b-58e4-b927-a704-a2ba-3b0b.ngrok-free.app/api/Settings/User_SaveUpdate'),
-      headers: {
-        'Content-Type': 'application/json',
-        // Add any other headers if needed, like authorization
-      },
-      body: json.encode(updatedProfileData),
+// Make the POST request using Dio
+    final response = await AppApi.dio.post(
+      '/Settings/User_SaveUpdate', // Relative path for the endpoint
+      data: updatedProfileData,
     );
 
     if (response.statusCode == 200) {

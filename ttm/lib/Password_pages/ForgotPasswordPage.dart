@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../Comman_pages/Constant.dart';
-import '../Login_Page/Verify_OTP_page.dart';
+import 'Verify_OTP_page.dart';
+import 'Otp_Service.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -24,33 +25,45 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
-  void _resetPassword() {
+  Future<void> _resetPassword() async {
+    final mobileNumber = _phoneController.text.trim();
+
+    if (mobileNumber.isEmpty || mobileNumber.length != 10) {
+      setState(() {
+        _errorMessage = "Please enter a valid 10-digit phone number";
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    // Simulate a network request or perform actual password reset logic here
-    Future.delayed(Duration(seconds: 2), () {
-      setState(() {
-        _isLoading = false;
-      });
+    try {
+      final otpService = OtpService();
+      final response = await otpService.sendOtp(mobileNumber);
 
-      // Mock successful response
-      if (_phoneController.text.isNotEmpty && _phoneController.text.length == 10) {
-        // Navigate to VerifyOtpPage if phone number is valid
-        Navigator.push(
-          context,
+      if (response.success) {
+        Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => VerifyOtpPage(), // Navigate to the OTP page
+            builder: (context) => VerifyOtpPage(mobileNumber: '9688888236'), // Pass the mobile number
           ),
         );
       } else {
         setState(() {
-          _errorMessage = "Please enter a valid 10-digit phone number";
+          _errorMessage = response.message ?? "Failed to send OTP";
         });
       }
-    });
+    } catch (e) {
+      setState(() {
+        _errorMessage = "An error occurred: $e";
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override

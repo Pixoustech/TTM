@@ -16,17 +16,22 @@ class AppColors {
 }
 
 class AppApi {
-  static const String baseurl = "https://9069-2405-201-e02b-58e4-b927-a704-a2ba-3b0b.ngrok-free.app/api"; // Replace with your actual base URL
+  static const String baseurl = "http://ttm.dev.pixous.info/api"; // Replace with your actual base URL
 
+  // Make authToken static
+  static String authToken = AppConstants.token ?? '';
+  // Dio instance with the Authorization header
   static final Dio dio = Dio(
     BaseOptions(
       baseUrl: baseurl,
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': '$authToken',
       },
     ),
   );
 }
+
 
 class googlemapkey {
   static const String mapkey = 'AIzaSyByh8kxXcO3Q2_aPOQ0wZU0rSncLaWSlBQ';
@@ -85,8 +90,36 @@ class AppConstants {
   static String? get userId {
     return _prefs?.getString('userId');
   }
+  static String? get token {
+    return _prefs?.getString('userToken');
+  }
 }
 
+
+class DialogUtils {
+  static void showSuccessDialog(BuildContext context, String message, {VoidCallback? onOk}) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Success'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                if (onOk != null) {
+                  onOk(); // Call the callback if provided
+                }
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
 Color getStatusColor(String status) {
   if (status == "In-Progress") {
     return Colors.orange;

@@ -66,3 +66,19 @@ class LeaveApplication {
     );
   }
 }
+
+class LeaveTypeModel {
+  final String leaveTypeName;  // The text field
+  final String leaveTypeId;    // The value field
+
+  LeaveTypeModel({required this.leaveTypeName, required this.leaveTypeId});
+
+  // Factory constructor to convert JSON data to LeaveTypeModel
+  factory LeaveTypeModel.fromJson(Map<String, dynamic> json) {
+    return LeaveTypeModel(
+      leaveTypeName: json['text'] as String,  // Use 'text' for the name
+      leaveTypeId: json['value'] as String,   // Use 'value' for the ID
+    );
+  }
+}
+

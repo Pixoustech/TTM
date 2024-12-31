@@ -102,26 +102,29 @@ class _CalendarPageState extends State<CalendarPage> {
       // Fetch leave data for the user
       final List<Leave> leaves = await _calendarService.fetchLeaveData(userId);
 
-      setState(() {
-        // Populate _leaveDetails
-        _leaveDetails = {
-          for (var leave in leaves) normalizeDate(leave.date): leave,
-        };
-
-        // Update the selected date and focused day
-        _selectedDate = normalizeDate(selectedDay); // Normalize selected date
-        _focusedDay = selectedDay; // Update focused day to the selected day
-
-        // Check if leave exists for the selected date
-        Leave? leaveDetails = _leaveDetails[_selectedDate];
-        if (leaveDetails != null) {
-          print('Leave Details: ${leaveDetails.reason}');
-          _leaveDetail = leaveDetails.reason; // Update leave detail if it exists
-        } else {
-          print('No leave details found for this date.');
-          _leaveDetail = null; // Reset leave detail if none exists
+      // Populate _leaveDetails with all leave dates
+      _leaveDetails = {};
+      for (var leave in leaves) {
+        DateTime fromDate = normalizeDate(leave.fromDate);
+        DateTime toDate = normalizeDate(leave.toDate);
+        for (DateTime date = fromDate; date.isBefore(toDate.add(Duration(days: 1))); date = date.add(Duration(days: 1))) {
+          _leaveDetails[date] = leave; // Store the leave details for each date in the range
         }
-      });
+      }
+
+      // Update the selected date and focused day
+      _selectedDate = normalizeDate(selectedDay); // Normalize selected date
+      _focusedDay = selectedDay; // Update focused day to the selected day
+
+      // Check if leave exists for the selected date
+      Leave? leaveDetails = _leaveDetails[_selectedDate];
+      if (leaveDetails != null) {
+        print('Leave Details: ${leaveDetails.reason}');
+        _leaveDetail = leaveDetails.reason; // Update leave detail if it exists
+      } else {
+        print('No leave details found for this date.');
+        _leaveDetail = null; // Reset leave detail if none exists
+      }
     } catch (e) {
       print('Error fetching leave data: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -241,10 +244,11 @@ class _CalendarPageState extends State<CalendarPage> {
                   child: _currentView == 'holidays'
                       ? TableCalendar(
                     focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => _selectedDate != null && _selectedDate!.isSameDay(day),
                     onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
                         _focusedDay = focusedDay;
-                        _selectedDate = selectedDay;
+                        _selectedDate = normalizeDate(selectedDay); // Normalize selected date
 
                         // Check if the selected date corresponds to any holiday
                         DateTime selectedDateAtMidnight = normalizeDate(selectedDay);
@@ -256,7 +260,6 @@ class _CalendarPageState extends State<CalendarPage> {
                       });
                     },
                     onPageChanged: (focusedDay) {
-                      // This will be called when the user swipes to change the month
                       setState(() {
                         _focusedDay = focusedDay; // Update the focused day when swiping
                       });
@@ -340,13 +343,12 @@ class _CalendarPageState extends State<CalendarPage> {
                   )
                   :_currentView == 'leave'
                       ? TableCalendar(
-                    focusedDay: _focusedDay,
+                      focusedDay: _focusedDay,
                       onDaySelected: (selectedDay, focusedDay) {
                         setState(() {
                           _focusedDay = focusedDay;
                           _selectedDate = normalizeDate(selectedDay); // Normalize selected date
                         });
-
 
                         Leave? leaveDetails = _leaveDetails[_selectedDate];
                         if (leaveDetails != null) {
@@ -362,35 +364,48 @@ class _CalendarPageState extends State<CalendarPage> {
                         }
                       },
                       onPageChanged: (focusedDay) {
-                      setState(() {
-                        _focusedDay = focusedDay;
+                        setState(() {
+                          _focusedDay = focusedDay;
+                        });
+                      },
+                      headerVisible: false,
+                      firstDay: DateTime.utc(2020, 1, 1),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  calendarFormat: CalendarFormat.month,
+                  calendarStyle: CalendarStyle(
+                    todayDecoration: BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                    ),
+                    selectedDecoration: BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    holidayDecoration: BoxDecoration(
+                      color: Colors.pink[100], // Light pink color for leave dates
+                      shape: BoxShape.circle,
+                    ),
+                    holidayTextStyle: TextStyle(
+                      color: Colors.black, // Text color for holidays
+                    ),
+                  ),
+                    holidayPredicate: (day) {
+                      // Normalize the day for comparison
+                      DateTime normalizedDay = normalizeDate(day);
+
+                      // Check if the day falls within any leave date range
+                      return _leaveDetails.values.any((leave) {
+                        DateTime leaveStart = normalizeDate(leave.fromDate);
+                        DateTime leaveEnd = normalizeDate(leave.toDate);
+
+                        // Check if the normalized day is between the leave start and end dates (inclusive)
+                        return normalizedDay.isAfter(leaveStart) && normalizedDay.isBefore(leaveEnd) ||
+                            normalizedDay.isAtSameMomentAs(leaveStart) ||
+                            normalizedDay.isAtSameMomentAs(leaveEnd);
                       });
                     },
-                    headerVisible: false,
-                    firstDay: DateTime.utc(2020, 1, 1),
-                    lastDay: DateTime.utc(2030, 12, 31),
-                    calendarFormat: CalendarFormat.month,
-                    calendarStyle: CalendarStyle(
-                      todayDecoration: BoxDecoration(
-                        color: Colors.blue,
-                        shape: BoxShape.circle,
-                      ),
-                      selectedDecoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      holidayDecoration: BoxDecoration(
-                        color: Colors.pink[100], // Light pink color for leave dates
-                        shape: BoxShape.circle,
-                      ),
-                      holidayTextStyle: TextStyle(
-                        color: Colors.black,
-                      ),
-                    ),
-                    holidayPredicate: (day) => _leaveDetails.containsKey(normalizeDate(day)),
-                    selectedDayPredicate: (day) =>
-                    _selectedDate != null && _selectedDate!.isSameDay(day),
-                  )
+                  selectedDayPredicate: (day) => _selectedDate != null && _selectedDate!.isSameDay(day),
+                )
 
                       : Container(),
 
@@ -448,11 +463,11 @@ class _CalendarPageState extends State<CalendarPage> {
     String year = DateFormat('y').format(_selectedDate!);
 
     // Define status and title variables
-    String status = leaveStatus?.statusId ?? 'No Leave';
-    String leaveTypeId = leaveStatus?.leaveTypeId ?? ''; // Changed from title to leaveTypeId
+    String status = leaveStatus?.groupId ?? 'No Leave';
+    String leaveTypeId = leaveStatus?.leaveType ?? ''; // Changed from title to leaveTypeId
     String reason = leaveStatus?.reason ?? ''; // Changed from description to reason
-    DateTime fromDate = leaveStatus?.date ?? DateTime.now();
-    DateTime toDate = leaveStatus?.date ?? DateTime.now();
+    DateTime fromDate = leaveStatus?.fromDate ?? DateTime.now();
+    DateTime toDate = leaveStatus?.toDate ?? DateTime.now();
 
     final Map<String, Color> statuses = {
       'Approved': Colors.green,
@@ -1142,7 +1157,14 @@ class _CalendarPageState extends State<CalendarPage> {
       ],
     );
   }
-
+  void _fetchHolidayDetailsForDate(DateTime date) {
+    DateTime normalizedDate = normalizeDate(date);
+    if (_holidays.containsKey(normalizedDate)) {
+      _holidayDetail = _holidays[normalizedDate]; // Get the holiday name
+    } else {
+      _holidayDetail = null; // Reset if no holiday
+    }
+  }
   Widget _clickableTitle(String title) {
     return GestureDetector(
       onTap: () {
@@ -1156,6 +1178,7 @@ class _CalendarPageState extends State<CalendarPage> {
         });
         if (_currentView == 'holidays') {
           _fetchHolidayData(); // Fetch leave data for today when switching to leave view
+          _fetchHolidayDetailsForDate(DateTime.now());
         }
         if (_currentView == 'leave') {
           _fetchLeaveData(DateTime.now()); // Fetch leave data for today when switching to leave view

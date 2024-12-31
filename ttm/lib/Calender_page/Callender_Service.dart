@@ -62,21 +62,25 @@ class CalendarService {
   }
 
   Future<Map<DateTime, String>> fetchHolidayData() async {
-    final String apiUrl = '/Ttm/Holiday_Master/Get';
+    final String apiUrl = '/Ttm/Holiday_Master_Get?IsActive=true';  // Corrected API URL
     Map<DateTime, String> holidays = {};
+    print('Token: ${AppConstants.token}');
 
     try {
-      final response = await _dio.get(apiUrl);
+      final response = await AppApi.dio.get(apiUrl);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = response.data;
         if (jsonResponse['data'] != null) {
           List<dynamic> holidayList = jsonResponse['data'];
           for (var holiday in holidayList) {
-            if (holiday != null && holiday['date'] != null) {
-              String holidayDateString = holiday['date'];
-              DateFormat format = DateFormat("MM/dd/yyyy HH:mm:ss");
-              DateTime holidayDate = format.parse(holidayDateString);
+            if (holiday != null && holiday['holidayDate'] != null) {
+              String holidayDateString = holiday['holidayDate'];
+
+              // Parse the ISO 8601 date string directly using DateTime.parse
+              DateTime holidayDate = DateTime.parse(holidayDateString);
+
+              // Normalize the date if needed (e.g., remove time or adjust for timezone)
               holidays[normalizeDate(holidayDate)] = holiday['holidayName'] ?? 'No holiday Name';
             } else {
               print('Holiday or date is null');
@@ -94,6 +98,8 @@ class CalendarService {
 
     return holidays;
   }
+
+
 
   DateTime normalizeDate(DateTime date) {
     return DateTime(date.year, date.month, date.day);

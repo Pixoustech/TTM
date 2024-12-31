@@ -22,3 +22,35 @@ class LeaveApplicationService {
     }
   }
 }
+
+class LeaveApplicationServiceDropdown {
+  final String apiUrl = '//Settings/ConfigurationSelectList_Get?ConfigurationId=&CategoryId=&ParentConfigurationId=&IsActive=true&CategoryCode=LEAVE_TYPE'; // Base URL should be handled by AppApi
+  final Dio dio = AppApi.dio; // Initialize Dio instance from AppApi
+
+  // Fetch the leave types from the API
+  Future<List<LeaveTypeModel>> fetchLeaveTypes() async {
+    try {
+      // Make a GET request to the API using Dio
+      final response = await dio.get(apiUrl);
+
+      if (response.statusCode == 200) {
+        // Check if the response is a map and contains the 'data' key
+        if (response.data is Map<String, dynamic> && response.data['data'] is List) {
+          // Extract the list of leave types
+          List<dynamic> data = response.data['data'];
+
+          // Map the data into a list of LeaveTypeModel
+          return data.map((e) => LeaveTypeModel.fromJson(e)).toList();
+        } else {
+          throw Exception('Invalid response format');
+        }
+      } else {
+        throw Exception('Failed to load leave types');
+      }
+    } catch (e) {
+      // Handle any errors that occur during the API request
+      throw Exception('Error: $e');
+    }
+  }
+
+}

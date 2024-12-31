@@ -12,7 +12,6 @@ class DataService {
 
     try {
       final response = await AppApi.dio.get(url);
-
       if (response.statusCode == 200) {
         final jsonData = response.data; // No need to decode, Dio does it for you
         final eventResponse = EventResponse.fromJson(jsonData);

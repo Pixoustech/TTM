@@ -3,13 +3,19 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../Comman_pages/Constant.dart';
-import '../Password_pages/NewPassword_page.dart';
+import 'Model.dart';
+import 'NewPassword_page.dart';
+import 'Otp_verification_service.dart';
 
 class VerifyOtpPage extends StatefulWidget {
-  const VerifyOtpPage({super.key});
+  final String mobileNumber; // Add a field to store the mobile number
+
+  // Modify the constructor to accept mobile number dynamically
+  const VerifyOtpPage({super.key, required this.mobileNumber});
 
   @override
   _VerifyOtpPageState createState() => _VerifyOtpPageState();
+
 }
 
 class _VerifyOtpPageState extends State<VerifyOtpPage> {
@@ -24,7 +30,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
   @override
   void initState() {
     super.initState();
-    _otpControllers = List.generate(4, (_) => TextEditingController());
+    _otpControllers = List.generate(6, (_) => TextEditingController());
     _clearOtpFields(); // Only clear OTP when the page is first initialized
   }
 
@@ -41,20 +47,49 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
       _errorMessage = null;
     });
 
-    await Future.delayed(Duration(seconds: 2)); // Simulate network request
-
-    setState(() {
-      _isLoading = false;
-    });
-
     String otp = _otpControllers.map((controller) => controller.text).join();
-    if (otp.length == 4) {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => CreateNewPasswordPage()),
+
+    if (otp.length == 6) {
+      // Use the mobile number passed dynamically
+      String mobileNumber = widget.mobileNumber; // Access the mobile number from the widget
+
+      // Prepare the request model
+      OtpVerificationRequest request = OtpVerificationRequest(
+        mobileNumber: mobileNumber,
+        otp: otp,
       );
+
+      OtpVerificationService service = OtpVerificationService();
+
+      try {
+        // Call the service to verify the OTP
+        OtpVerificationResponse response = await service.verifyOtp(request);
+
+        if (response.status == 'SUCCESS') {
+          setState(() {
+            _successMessage = 'OTP Verified Successfully';
+          });
+          // Navigate to the next page (e.g., CreateNewPasswordPage)
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => CreateNewPasswordPage()),
+          );
+        } else {
+          setState(() {
+            _errorMessage = 'Invalid OTP. Please try again.';
+          });
+        }
+      } catch (e) {
+        setState(() {
+          _errorMessage = "An error occurred: $e";
+        });
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     } else {
       setState(() {
-        _errorMessage = "Please enter a valid 4-digit OTP";
+        _errorMessage = "Please enter a valid 6-digit OTP";
       });
     }
   }
@@ -126,7 +161,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
             ),
             SizedBox(height: 10),
             Text(
-              'Please enter your 4 digit code sent to your phone number',
+              'Please enter your 6 digit code sent to your phone number',
               style: GoogleFonts.montserrat(
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
@@ -218,7 +253,7 @@ class _VerifyOtpPageState extends State<VerifyOtpPage> {
   Widget _buildOtpInputs(double screenWidth) {
     return Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: List.generate(4, (index) {
+        children: List.generate(6, (index) {
           return SizedBox(
             width: screenWidth * 0.15,
             child: TextField(

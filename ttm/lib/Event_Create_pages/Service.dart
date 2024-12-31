@@ -30,7 +30,7 @@ class EventService {
   Future<bool> createMeeting(MeetingModel meeting) async {
     try {
       final response = await _dio.post(
-        '/Event/Event_Master_SaveUpdate', // Specify the correct endpoint for meetings
+        '//Event/Event_Master_SaveUpdate', // Specify the correct endpoint for meetings
         data: jsonEncode(meeting.toJson()),
       );
 

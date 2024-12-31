@@ -509,13 +509,14 @@ class _CreateEventState extends State<Createevent> {
       initialTime: TimeOfDay.now(),
     );
     if (picked != null) {
-      // Format the time to 'HH:mm'
+      // Format the time to 'HH:mm:ss'
       final now = DateTime.now();
-      final formattedTime = DateFormat('HH:mm').format(
-          DateTime(now.year, now.month, now.day, picked.hour, picked.minute));
+      final formattedTime = DateFormat('HH:mm:ss').format(
+          DateTime(now.year, now.month, now.day, picked.hour, picked.minute, 0)); // Add 0 seconds
       controller.text = formattedTime;
     }
   }
+
 
 
   Widget _buildPrioritySelector() {
@@ -908,11 +909,11 @@ class _CreateEventState extends State<Createevent> {
     try {
       // Check if the location is provided
       if (_locationController.text.isNotEmpty || _venueOrLinkController.text.isNotEmpty) {
-if(_locationController.text.isNotEmpty)
-        await _fetchCoordinatesFromAddress(_locationController.text );
-else{
-  await _fetchCoordinatesFromAddress(_venueOrLinkController.text );
-}
+        if (_locationController.text.isNotEmpty)
+          await _fetchCoordinatesFromAddress(_locationController.text);
+        else {
+          await _fetchCoordinatesFromAddress(_venueOrLinkController.text);
+        }
       } else {
         print('Please provide a valid address');
         return; // Exit the function if no address is provided
@@ -932,7 +933,7 @@ else{
           description: _descriptionController.text,
           eventType: _currentView,
           isActive: true,
-          isSelfEvent:true,
+          isSelfEvent: true,
           savedDate: DateTime.now().toUtc().toIso8601String(), // Current date and time in UTC
           lat: selectedLatitude, // Add selected latitude
           lon: selectedLongitude, // Add selected longitude
@@ -946,6 +947,12 @@ else{
 
         if (success) {
           print('Task created successfully');
+          DialogUtils.showSuccessDialog(context, 'Task created successfully!', onOk: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Navigation()), // Navigate to the desired page
+            );
+          });
         } else {
           print('Failed to create task');
         }
@@ -955,7 +962,7 @@ else{
           id: '',
           userId: AppConstants.userId ?? '',
           eventName: _meetingNameController.text,
-          eventType:_currentView,
+          eventType: _currentView,
           startDate: _fromDateController.text, // Use formatted date
           endDate: _toDateController.text, // Use formatted date
           fromTime: _fromTimeController.text,
@@ -978,6 +985,12 @@ else{
 
         if (success) {
           print('Meeting created successfully');
+          DialogUtils .showSuccessDialog(context, 'Meeting created successfully!', onOk: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Navigation()), // Navigate to the desired page
+            );
+          });
         } else {
           print('Failed to create meeting');
         }
