@@ -16,11 +16,8 @@ class AppColors {
 }
 
 class AppApi {
-  static const String baseurl = "http://ttm.dev.pixous.info/api"; // Replace with your actual base URL
-
-  // Make authToken static
+  static const String baseurl = "http://ttm.dev.pixous.info/api";
   static String authToken = AppConstants.token ?? '';
-  // Dio instance with the Authorization header
   static final Dio dio = Dio(
     BaseOptions(
       baseUrl: baseurl,
@@ -30,8 +27,33 @@ class AppApi {
       },
     ),
   );
-}
 
+  // Method to store the token
+  static Future<void> storeToken(String token) async {
+    authToken = token; // Update the local variable
+    AppConstants._prefs?.setString('userToken', token); // Store in SharedPreferences
+    dio.options.headers['Authorization'] = '$authToken'; // Update Dio headers
+  }
+
+  // Method to refresh the token
+  static Future<void> refreshToken(String token) async {
+    authToken = token;
+    try {
+      final response = await dio.post('/auth/refresh', data: {
+        'refreshToken': authToken, // Assuming you have a refresh token
+      });
+
+      if (response.statusCode == 200) {
+        String newToken = response.data['accessToken'];
+        await storeToken(newToken); // Store the new token
+      } else {
+        print('Failed to refresh token: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error refreshing token: $e');
+    }
+  }
+}
 
 class googlemapkey {
   static const String mapkey = 'AIzaSyByh8kxXcO3Q2_aPOQ0wZU0rSncLaWSlBQ';
@@ -148,12 +170,18 @@ Color getPriorityColor(String priority) {
 }
 
 String formatDate(String dateString) {
-  // Create a DateFormat for the input format
-  DateFormat inputFormat = DateFormat("MM/dd/yyyy HH:mm:ss");
-  // Parse the date string
-  DateTime dateTime = inputFormat.parse(dateString);
-  // Format the date to a more readable format
-  DateFormat outputFormat = DateFormat("MM-dd-yyyy"); // Change to your desired output format
-  return outputFormat.format(dateTime);
+  try {
+    // Use the appropriate format for parsing
+    DateFormat inputFormat = DateFormat("yyyy-MM-dd");
+    DateTime dateTime = inputFormat.parse(dateString);
+
+    // Define the desired output format
+    DateFormat outputFormat = DateFormat("MM-dd-yyyy"); // Customize as needed
+    return outputFormat.format(dateTime);
+  } catch (e) {
+    print('Error parsing date: $dateString - $e');
+    return "Invalid Date";
+  }
 }
+
 

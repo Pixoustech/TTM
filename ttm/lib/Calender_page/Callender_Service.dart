@@ -8,7 +8,8 @@ import 'model.dart';
 class CalendarService {
   final Dio _dio = AppApi.dio;
 
-  Future<CalendarEventData?> fetchCalendarData(String userId, DateTime date) async {
+/*
+  Future<CalendarEventData?> fetchCalendarDatas(String userId, DateTime date) async {
     String formattedDate = DateFormat('yyyy-MM-dd').format(date);
     final String apiUrl = '/Event/Event_Master_Get';
 
@@ -34,6 +35,7 @@ class CalendarService {
       return null;
     }
   }
+*/
 
   Future<List<Leave>> fetchLeaveData(String userId) async {
     final String apiUrl = '/Ttm/Leave_Master_Get';
@@ -99,6 +101,30 @@ class CalendarService {
     return holidays;
   }
 
+  Future<CalendarEventResponse?> fetchCalendarData(int month, int year) async {
+    try {
+      // Construct the full URL using the base URL and query parameters
+      final String url = '/Event/User_Calender_Get?Month=$month&Year=$year';
+      final response = await _dio.get(url);
+
+      if (response.statusCode == 200) {
+        final jsonResponse = response.data;
+        if (jsonResponse['status'] == 'SUCCESS') {
+          // Use the CalendarEventResponse to parse the response
+          return CalendarEventResponse.fromJson(jsonResponse);
+        } else {
+          print('Error fetching data: ${jsonResponse['message']}');
+          return null;
+        }
+      } else {
+        print('Failed to load data: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error: $e');
+      return null;
+    }
+  }
 
 
   DateTime normalizeDate(DateTime date) {

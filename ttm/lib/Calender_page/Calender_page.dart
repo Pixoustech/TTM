@@ -35,7 +35,11 @@ class _CalendarPageState extends State<CalendarPage> {
   final String userId = AppConstants.userId ?? '';
   Map<DateTime, String> _holidays = {};
   Map<DateTime, Leave> _leaveDetails = {};
+  List<TaskCalender> _filteredTasks = []; // List to hold filtered tasks
+  List<MeetingCalender> _filteredMeetings = []; // List to hold filtered meetings
+  DateTime _selectedDay = DateTime.now();
   String? _leaveDetail;
+  Set<DateTime> _eventDates = {}; // Set to hold unique event dates
   final CalendarService _calendarService = CalendarService();
   DateTime normalizeDate(DateTime date) {
     return DateTime(date.year, date.month, date.day);
@@ -52,9 +56,12 @@ class _CalendarPageState extends State<CalendarPage> {
     _startDate = null; // Reset start date
     _endDate = null; // Reset end date
     _holidayDetail = null; // Reset holiday detail
-    _fetchInitialCalendarData();
+
+    _fetchCalendarDataForMonth(_focusedDay.month, _focusedDay.year); // Fetch initial data
   }
-  Future<void> _fetchCalendarData(List<DateTime> selectedDates) async {
+
+/*
+  Future<void> _fetchCalendarDatas(List<DateTime> selectedDates) async {
     setState(() {
       _isLoading = true; // Start loading
     });
@@ -64,7 +71,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
     for (DateTime date in selectedDates) {
       // Fetch calendar data for each selected date
-      CalendarEventData? data = await _calendarService.fetchCalendarData(userId, date);
+      CalendarEventData? data = await _calendarService.fetchCalendarDatas(userId, date);
       if (data != null) {
         // Merge data if needed
         if (_calendarEventData == null) {
@@ -80,18 +87,20 @@ class _CalendarPageState extends State<CalendarPage> {
       _isLoading = false; // Stop loading
     });
   }
-  Future<void> _fetchInitialCalendarData() async {
+*/
+
+/*  Future<void> _fetchInitialCalendarData() async {
     setState(() {
       _isLoading = true; // Start loading
     });
 
     // Fetch data for today's date
-    _calendarEventData = await _calendarService.fetchCalendarData(userId, DateTime.now());
+    _calendarEventData = await _calendarService.fetchCalendarDatas(userId, DateTime.now());
 
     setState(() {
       _isLoading = false; // Stop loading
     });
-  }
+  }*/
 
   Future<void> _fetchLeaveData(DateTime selectedDay) async {
     try {
@@ -149,7 +158,89 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
+  Future<void> _fetchCalendarDataForMonth(int month, int year) async {
+    setState(() {
+      _isLoading = true; // Start loading
+    });
 
+    // Clear previous data
+    _calendarEventData = null;
+    _eventDates.clear(); // Clear previous event dates
+
+    try {
+      // Fetch data from the service
+      final response = await _calendarService.fetchCalendarData(month, year);
+
+      if (response != null) {
+        setState(() {
+          // Parse response into CalendarEventResponse
+          CalendarEventResponse calendarEventResponse = response;
+
+          // Directly assign the data if it is already CalendarEventData
+          _calendarEventData = calendarEventResponse.data;
+
+          // Extract event dates from tasks and meetings
+          for (var task in _calendarEventData!.tasks) {
+            if (task.dueDate.isNotEmpty) {
+              try {
+                DateTime dueDate = DateTime.parse(task.dueDate);
+                _eventDates.add(dueDate);
+              } catch (e) {
+                print('Error parsing dueDate: ${task.dueDate} - $e');
+              }
+            }
+          }
+
+          for (var meeting in _calendarEventData!.meetings) {
+            if (meeting.startDate.isNotEmpty) {
+              try {
+                DateTime startDate = DateTime.parse(meeting.startDate);
+                _eventDates.add(startDate);
+              } catch (e) {
+                print('Error parsing startDate: ${meeting.startDate} - $e');
+              }
+            }
+          }
+        });
+      } else {
+        print('No data found for the selected month.');
+      }
+    } catch (e) {
+      print('Error fetching calendar data: $e');
+    }
+
+    setState(() {
+      _isLoading = false; // Stop loading
+    });
+  }
+
+  void _onDaySelected(DateTime selectedDay) {
+    setState(() {
+      _selectedDay = selectedDay; // Update the selected day
+    });
+
+    // Filter events for the selected day
+    _filterEventsForSelectedDay(selectedDay);
+  }
+
+  void _filterEventsForSelectedDay(DateTime selectedDay) {
+    if (_calendarEventData != null) {
+      // Filter tasks and meetings based on the selected day
+      List<TaskCalender> filteredTasks = _calendarEventData!.tasks
+          .where((task) => DateTime.parse(task.dueDate).isSameDay(selectedDay))
+          .toList();
+
+      List<MeetingCalender> filteredMeetings = _calendarEventData!.meetings
+          .where((meeting) => DateTime.parse(meeting.startDate).isSameDay(selectedDay))
+          .toList();
+
+      // Update the UI with the filtered events
+      setState(() {
+        _filteredTasks = filteredTasks;
+        _filteredMeetings = filteredMeetings;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -292,33 +383,6 @@ class _CalendarPageState extends State<CalendarPage> {
                   _currentView == 'events'
                       ? TableCalendar(
                     focusedDay: _focusedDay,
-                    onDaySelected: (selectedDay, focusedDay) {
-                      if (_isLoading) return; // Prevent selection if loading
-
-                      setState(() {
-                        _focusedDay = focusedDay;
-
-                        if (_selectedDates.contains(selectedDay)) {
-                          _selectedDates.remove(selectedDay);
-                        } else {
-                          _selectedDates.add(selectedDay);
-                        }
-
-                        // Clear previous data
-                        _calendarEventData = null;
-                        _startDate = null;
-                        _endDate = null;
-                        _holidayDetail = null;
-                      });
-
-                      _fetchCalendarData(_selectedDates);
-                    },
-                    onPageChanged: (focusedDay) {
-                      setState(() {
-                        _focusedDay = focusedDay;
-                      });
-                    },
-                    headerVisible: false,
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
                     calendarFormat: CalendarFormat.month,
@@ -331,15 +395,38 @@ class _CalendarPageState extends State<CalendarPage> {
                         color: Colors.red,
                         shape: BoxShape.circle,
                       ),
-                      // Optionally, you can change the decoration for disabled dates
-                      disabledDecoration: BoxDecoration(
-                        color: Colors.grey[300], // Light grey for disabled dates
-                        shape: BoxShape.circle,
-                      ),
                     ),
-                    selectedDayPredicate: (day) {
-                      return _selectedDates.contains(day);
+                    onDaySelected: (selectedDay, focusedDay) {
+                      _onDaySelected(selectedDay); // Handle day selection
+                      setState(() {
+                        _focusedDay = focusedDay; // Update the focused day
+                      });
                     },
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay; // Update the focused day when swiping
+                        _fetchCalendarDataForMonth(focusedDay.month, focusedDay.year); // Fetch data for the new month
+                      });
+                    },
+                    selectedDayPredicate: (day) {
+                      return _selectedDates.contains(day); // Highlight selected dates
+                    },
+                    calendarBuilders: CalendarBuilders(
+                      markerBuilder: (context, date, events) {
+                        if (_eventDates.contains(date)) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.pink, // Color for event dates
+                              shape: BoxShape.circle,
+                            ),
+                            width: 6.0,
+                            height: 6.0,
+                            margin: const EdgeInsets.symmetric(horizontal: 1.5),
+                          );
+                        }
+                        return null; // No marker for dates without events
+                      },
+                    ),
                   )
                   :_currentView == 'leave'
                       ? TableCalendar(

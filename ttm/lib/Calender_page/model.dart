@@ -75,7 +75,7 @@ Map<DateTime, String> getSampleHolidays() {
 
 class CalendarEventResponse {
   final String status;
-  final CalendarEventData data;
+  final CalendarEventData data; // Nested class for tasks and meetings
   final String message;
 
   CalendarEventResponse({
@@ -87,8 +87,78 @@ class CalendarEventResponse {
   factory CalendarEventResponse.fromJson(Map<String, dynamic> json) {
     return CalendarEventResponse(
       status: json['status'] ?? '',
-      data: CalendarEventData.fromJson(json['data'] ?? {}),
+      data: CalendarEventData.fromList((json['data'] as List<dynamic>)
+          .map((e) => EventData.fromJson(e))
+          .toList()),
       message: json['message'] ?? '',
+    );
+  }
+}
+
+class EventData {
+  final String userId;
+  final String eventId;
+  final String eventName;
+  final String eventDate; // Date without time
+  final String eventDateFromTime; // Date with time
+  final String eventDateToTime; // Date with time
+  final String fromTime;
+  final String toTime;
+  final String venue;
+  final String location;
+  final String priority;
+  final String description;
+  final String eventType;
+  final String eventMode;
+  final String statusId;
+  final bool isSelfEvent;
+  final String createdBy;
+  final String createdByUserName;
+  final String createdDate;
+
+  EventData({
+    required this.userId,
+    required this.eventId,
+    required this.eventName,
+    required this.eventDate,
+    required this.eventDateFromTime,
+    required this.eventDateToTime,
+    required this.fromTime,
+    required this.toTime,
+    required this.venue,
+    required this.location,
+    required this.priority,
+    required this.description,
+    required this.eventType,
+    required this.eventMode,
+    required this.statusId,
+    required this.isSelfEvent,
+    required this.createdBy,
+    required this.createdByUserName,
+    required this.createdDate,
+  });
+
+  factory EventData.fromJson(Map<String, dynamic> json) {
+    return EventData(
+      userId: json['userId'] ?? '',
+      eventId: json['eventId'] ?? '',
+      eventName: json['eventName'] ?? '',
+      eventDate: json['eventDate'] ?? '',
+      eventDateFromTime: json['eventDateFromTime'] ?? '',
+      eventDateToTime: json['eventDateToTime'] ?? '',
+      fromTime: json['fromTime'] ?? '',
+      toTime: json['toTime'] ?? '',
+      venue: json['venue'] ?? '',
+      location: json['location'] ?? '',
+      priority: json['priority'] ?? '',
+      description: json['description'] ?? '',
+      eventType: json['eventType'] ?? '',
+      eventMode: json['eventMode'] ?? '',
+      statusId: json['statusId'] ?? '',
+      isSelfEvent: json['isSelfEvent'] ?? false,
+      createdBy: json['createdBy'] ?? '',
+      createdByUserName: json['createdByUserName'] ?? '',
+      createdDate: json['createdDate'] ?? '',
     );
   }
 }
@@ -102,14 +172,17 @@ class CalendarEventData {
     required this.meetings,
   });
 
-  factory CalendarEventData.fromJson(Map<String, dynamic> json) {
-    var tasksJson = json['tasks'] as List? ?? [];
-    var meetingsJson = json['meetings'] as List? ?? [];
+  factory CalendarEventData.fromList(List<EventData> events) {
+    List<TaskCalender> tasksList = [];
+    List<MeetingCalender> meetingsList = [];
 
-    List<TaskCalender> tasksList =
-    tasksJson.map((task) => TaskCalender.fromJson(task)).toList();
-    List<MeetingCalender> meetingsList =
-    meetingsJson.map((meeting) => MeetingCalender.fromJson(meeting)).toList();
+    for (var event in events) {
+      if (event.eventType == 'Task') {
+        tasksList.add(TaskCalender.fromEventData(event));
+      } else if (event.eventType == 'Meeting') {
+        meetingsList.add(MeetingCalender.fromEventData(event));
+      }
+    }
 
     return CalendarEventData(
       tasks: tasksList,
@@ -119,107 +192,108 @@ class CalendarEventData {
 }
 
 class TaskCalender {
-  final String id;
+  final String eventId;
   final String eventName;
-  final String eventType;
+  final String dueDate; // Use eventDate for the due date
   final String description;
   final String priority;
   final String statusId;
   final String statusName;
-  final String dueDate;
+  final String eventType;
   final String location;
   final List<String>? pdfUrls;
   final List<String>? attachmentPdfUrls;
   final bool isSelfEvent;
 
   TaskCalender({
-    required this.id,
+    required this.eventId,
     required this.eventName,
-    required this.eventType,
+    required this.dueDate,
     required this.description,
     required this.priority,
     required this.statusId,
+    required this.eventType,
     required this.statusName,
-    required this.dueDate,
     required this.location,
     this.pdfUrls,
     this.attachmentPdfUrls,
     required this.isSelfEvent,
   });
 
-  factory TaskCalender.fromJson(Map<String, dynamic> json) {
+  factory TaskCalender.fromEventData(EventData event) {
     return TaskCalender(
-      id: json['id'] ?? '',
-      eventName: json['eventName'] ?? '',
-      eventType: json['eventType'] ?? '',
-      description: json['description'] ?? '',
-      priority: json['priority'] ?? '',
-      statusId: json['statusId'] ?? '',
-      statusName: json['statusName'] ?? '',
-      dueDate: json['dueDate'] ?? '',
-      location: json['location'] ?? '',
-      pdfUrls: json['pdfUrls'] != null ? List<String>.from(json['pdfUrls']) : null,
-      attachmentPdfUrls: json['attachmentPdfUrls'] != null ? List<String>.from(json['attachmentPdfUrls']) : null,
-      isSelfEvent: json['isSelfEvent'] ?? false,
+      eventId: event.eventId,
+      eventName: event.eventName,
+      dueDate: event.eventDate,
+      eventType: event.eventType,
+      description: event.description,
+      priority: event.priority,
+      statusId: event.statusId,
+      statusName: '', // Placeholder for future status name
+      location: event.location,
+      pdfUrls: null,
+      attachmentPdfUrls: null,
+      isSelfEvent: event.isSelfEvent,
     );
   }
 }
 
 class MeetingCalender {
-  final String id;
+  final String eventId;
   final String eventName;
-  final String eventType;
-  final String eventMode;
+  final String startDate; // Use eventDateFromTime for start date
+  final String endDate; // Use eventDateToTime for end date
+  final String fromTime;
+  final String toTime;
   final String description;
   final String priority;
   final String statusId;
   final String statusName;
-  final String startDate;
-  final String endDate;
-  final String fromTime;
-  final String toTime;
   final String venue;
+  final String eventType;
+  final String location;
   final List<String>? pdfUrls;
   final List<String>? attachmentPdfUrls;
   final bool isSelfEvent;
 
   MeetingCalender({
-    required this.id,
+    required this.eventId,
     required this.eventName,
     required this.eventType,
-    required this.eventMode,
-    required this.description,
-    required this.priority,
-    required this.statusId,
-    required this.statusName,
     required this.startDate,
     required this.endDate,
     required this.fromTime,
     required this.toTime,
+    required this.description,
+    required this.priority,
+    required this.statusId,
+    required this.statusName,
     required this.venue,
-    required this.pdfUrls,
-    required this.attachmentPdfUrls,
+    required this.location,
+    this.pdfUrls,
+    this.attachmentPdfUrls,
     required this.isSelfEvent,
   });
 
-  factory MeetingCalender.fromJson(Map<String, dynamic> json) {
+  factory MeetingCalender.fromEventData(EventData event) {
     return MeetingCalender(
-      id: json['id'] ?? '',
-      eventName: json['eventName'] ?? '',
-      eventType: json['eventType'] ?? '',
-      eventMode: json['eventMode'] ?? '',
-      description: json['description'] ?? '',
-      priority: json['priority'] ?? '',
-      statusId: json['statusId'] ?? '',
-      statusName: json['statusName'] ?? '',
-      startDate: json['startDate'] ?? '',
-      endDate: json['endDate'] ?? '',
-      fromTime: json['fromTime'] ?? '',
-      toTime: json['toTime'] ?? '',
-      venue: json['venue'] ?? '',
-      pdfUrls: json['pdfUrls'] != null ? List<String>.from(json['pdfUrls']) : null,
-      attachmentPdfUrls: json['attachmentPdfUrls'] != null ? List<String>.from(json['attachmentPdfUrls']) : null,
-      isSelfEvent: json['isSelfEvent'] ?? false,
+      eventId: event.eventId,
+      eventName: event.eventName,
+      eventType: event.eventType,
+      startDate: event.eventDateFromTime,
+      endDate: event.eventDateToTime,
+      fromTime: event.fromTime,
+      toTime: event.toTime,
+      description: event.description,
+      priority: event.priority,
+      statusId: event.statusId,
+      statusName: '', // Placeholder for future status name
+      venue: event.venue,
+      location: event.location,
+      pdfUrls: null,
+      attachmentPdfUrls: null,
+      isSelfEvent: event.isSelfEvent,
     );
   }
 }
+
