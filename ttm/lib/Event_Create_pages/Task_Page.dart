@@ -13,16 +13,18 @@ import 'package:file_picker/file_picker.dart';
 import 'Model.dart';
 import 'Service.dart';
 
+class CreateEvent extends StatefulWidget {
+  final TaskModel? task; // Optional task for editing
+  final MeetingModel? meeting; // Optional meeting for editing
 
-class Createevent extends StatefulWidget {
-  const Createevent({super.key});
+  const CreateEvent({Key? key, this.task, this.meeting}) : super(key: key);
 
   @override
   _CreateEventState createState() => _CreateEventState();
 }
 
-class _CreateEventState extends State<Createevent> {
-  String _currentView = 'task';
+class _CreateEventState extends State<CreateEvent> {
+  String _currentView = 'Task'; // Default view
   final TextEditingController _taskNameController = TextEditingController();
   final TextEditingController _dueDateController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
@@ -35,33 +37,54 @@ class _CreateEventState extends State<Createevent> {
   final TextEditingController _toDateController = TextEditingController();
   final TextEditingController _toTimeController = TextEditingController();
 
-
   String? selectedLatitude;
   String? selectedLongitude;
   String? selectedPincode;
   String? selectedState;
   String? selectedCity;
-
   String? _selectedFileName;
   String? _selectedMode;
   String? _selectedPriority;
   List<String> _addressSuggestions = [];
   bool _isLoadingSuggestions = false; // To show loading indicator
   bool _hasInteracted = false; // Track if the user has interacted with the form
+
   @override
   void initState() {
     super.initState();
     _selectedMode = 'offline';
     _venueOrLinkController.text = 'Venue';
+
+    // Initialize fields based on whether a task or meeting is being edited
+    if (widget.task != null) {
+      _currentView = 'Task'; // Set current view to Task
+      _taskNameController.text = widget.task!.eventName;
+      _dueDateController.text = widget.task!.dueDate;
+      _locationController.text = widget.task!.location;
+      _descriptionController.text = widget.task!.description;
+      _selectedPriority = widget.task!.priority;
+    } else if (widget.meeting != null) {
+      _currentView = 'Meeting'; // Set current view to Meeting
+      _meetingNameController.text = widget.meeting!.eventName;
+      _fromDateController.text = widget.meeting!.startDate;
+      _toDateController.text = widget.meeting!.endDate;
+      _fromTimeController.text = widget.meeting!.fromTime;
+      _toTimeController.text = widget.meeting!.toTime;
+      _locationController.text = widget.meeting!.venue;
+      _descriptionController.text = widget.meeting!.description;
+      _selectedPriority = widget.meeting!.priority; // Set the meeting priority
+      _selectedMode =
+          widget.meeting!.eventMode; // Set the event mode (online/offline)
+      _venueOrLinkController.text =
+          widget.meeting!.venue; // Set the venue or link
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // Check if any fields are filled
         if (_hasUnsavedChanges()) {
-          // Show confirmation dialog
           return await _showDataLossDialog() ??
               false; // Return the user's choice
         }
@@ -84,7 +107,9 @@ class _CreateEventState extends State<Createevent> {
             children: [
               Expanded(
                 child: Text(
-                  'Create Event',
+                  widget.task != null || widget.meeting != null
+                      ? (widget.task != null ? 'Update Task' : 'Update Meeting')
+                      : 'Create Event',
                   style: GoogleFonts.montserrat(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -101,21 +126,23 @@ class _CreateEventState extends State<Createevent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _clickableTitle('Task'),
-                  _clickableTitle('Meeting'),
-                ],
-              ),
-              const SizedBox(height: 8),
-              _buildIndicators(),
+              if (widget.task == null && widget.meeting == null) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _clickableTitle('Task'),
+                    _clickableTitle('Meeting'),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildIndicators(),
+              ],
               const SizedBox(height: 16),
               _buildInputFields(),
               const SizedBox(height: 16),
               _buildPrioritySelector(),
               const SizedBox(height: 16),
-              _buildDescriptionField(),
+              _buildDescriptionFieldAndButtons(),
             ],
           ),
         ),
@@ -151,7 +178,7 @@ class _CreateEventState extends State<Createevent> {
           children: [
             AnimatedPositioned(
               duration: const Duration(milliseconds: 300),
-              left: _currentView == 'task' ? 0 : 160,
+              left: _currentView == 'Task' ? 0 : 160,
               child: Container(
                 height: 4,
                 width: 160,
@@ -170,21 +197,18 @@ class _CreateEventState extends State<Createevent> {
   Widget _clickableTitle(String title) {
     return GestureDetector(
       onTap: () {
-        // Check if the user has interacted with the form
         if (_hasUnsavedChanges() && _hasInteracted) {
-          // Show the dialog only if there are unsaved changes and the user has interacted
           _showDataLossDialog().then((shouldLeave) {
             if (shouldLeave == true) {
               setState(() {
-                _currentView = title.toLowerCase();
+                _currentView = title;
                 _resetFields();
               });
             }
           });
         } else {
-          // If there are no unsaved changes or it's the first interaction, switch the view directly
           setState(() {
-            _currentView = title.toLowerCase();
+            _currentView = title;
             _resetFields();
             _hasInteracted = true; // Mark that the user has interacted
           });
@@ -195,9 +219,7 @@ class _CreateEventState extends State<Createevent> {
         style: GoogleFonts.montserrat(
           fontSize: 16,
           fontWeight: FontWeight.bold,
-          color: _currentView.toLowerCase() == title.toLowerCase()
-              ? AppColors.concolor
-              : Colors.black,
+          color: _currentView == title ? AppColors.concolor : Colors.black,
         ),
       ),
     );
@@ -212,14 +234,13 @@ class _CreateEventState extends State<Createevent> {
           content: Text('You have unsaved changes. Do you want to continue?'),
           actions: [
             TextButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(false), // User chooses not to leave
+              onPressed: () => Navigator.of(context).pop(false),
               child: Text('No'),
             ),
             TextButton(
               onPressed: () {
-                _resetFields(); // Reset fields if user chooses to leave
-                Navigator.of(context).pop(true); // User chooses to leave
+                _resetFields();
+                Navigator.of(context).pop(true);
               },
               child: Text('Yes'),
             ),
@@ -249,23 +270,26 @@ class _CreateEventState extends State<Createevent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_currentView == 'task') ...[
+        if (_currentView == 'Task') ...[
           _buildSimpleTextField('Task Name', _taskNameController),
           const SizedBox(height: 12),
           _buildTextFieldWithCalendar('Due Date', _dueDateController),
           const SizedBox(height: 12),
           _buildTextField('Location', _locationController, true),
-        ] else if (_currentView == 'meeting') ...[
+        ] else if (_currentView == 'Meeting') ...[
           _buildSimpleTextField('Meeting Name', _meetingNameController),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: _buildTextFieldWithCalendar('From Date', _fromDateController, isFromDate: true),
+                child: _buildTextFieldWithCalendar(
+                    'From Date', _fromDateController,
+                    isFromDate: true),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _buildTextFieldWithTime('From Time', _fromTimeController),
+                child:
+                    _buildTextFieldWithTime('From Time', _fromTimeController),
               ),
             ],
           ),
@@ -273,7 +297,8 @@ class _CreateEventState extends State<Createevent> {
           Row(
             children: [
               Expanded(
-                child: _buildTextFieldWithCalendar('To Date', _toDateController, isToDate: true),
+                child: _buildTextFieldWithCalendar('To Date', _toDateController,
+                    isToDate: true),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -285,6 +310,7 @@ class _CreateEventState extends State<Createevent> {
       ],
     );
   }
+
   Widget _buildSimpleTextField(String label, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -310,8 +336,8 @@ class _CreateEventState extends State<Createevent> {
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Colors.blue, width: 2.0),
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                  vertical: 4.0, horizontal: 12.0),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
             ),
           ),
         ],
@@ -319,8 +345,8 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      bool hasIcon) {
+  Widget _buildTextField(
+      String label, TextEditingController controller, bool hasIcon) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -346,21 +372,27 @@ class _CreateEventState extends State<Createevent> {
                 borderSide: BorderSide(color: Colors.blue, width: 2.0),
               ),
               contentPadding:
-              const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: hasIcon
                   ? IconButton(
-                icon: const Icon(Icons.location_on),
-                  onPressed: () async {
-                    var status = await Permission.location.request();
-                    if (status.isGranted) {
-                      final LatLng? selectedLocation = await EventUtils.selectLocation(context);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Location permission denied')),
-                      );
-                    }
-                  }
-              )
+                      icon: const Icon(Icons.location_on),
+                      onPressed: () async {
+                        var status = await Permission.location.request();
+                        if (status.isGranted) {
+                          final LatLng? selectedLocation =
+                              await EventUtils.selectLocation(context);
+                          if (selectedLocation != null) {
+                            _locationController.text =
+                                '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Location permission denied')),
+                          );
+                        }
+                      },
+                    )
                   : null,
             ),
             onChanged: (value) {
@@ -403,50 +435,9 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
-  Widget _buildTextFieldWithCalendar(String label, TextEditingController controller, {bool isFromDate = false, bool isToDate = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          TextField(
-            controller: controller,
-            style: GoogleFonts.montserrat(fontSize: 14),
-            cursorColor: AppColors.concolor,
-            decoration: InputDecoration(
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey, width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.calendar_today),
-                onPressed: () {
-                  _selectDateAndTime(controller, isFromDate ? _fromTimeController : _toTimeController);
-                },
-              ),
-            ),
-            readOnly: true,
-            onTap: () {
-              _selectDateAndTime(controller, isFromDate ? _fromTimeController : _toTimeController);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-  Widget _buildTextFieldWithTime(String label,
-      TextEditingController controller) {
+  Widget _buildTextFieldWithCalendar(
+      String label, TextEditingController controller,
+      {bool isFromDate = false, bool isToDate = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -472,7 +463,54 @@ class _CreateEventState extends State<Createevent> {
                 borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
               ),
               contentPadding:
-              const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.calendar_today),
+                onPressed: () {
+                  _selectDateAndTime(controller,
+                      isFromDate ? _fromTimeController : _toTimeController);
+                },
+              ),
+            ),
+            readOnly: true,
+            onTap: () {
+              _selectDateAndTime(controller,
+                  isFromDate ? _fromTimeController : _toTimeController);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextFieldWithTime(
+      String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          TextField(
+            controller: controller,
+            style: GoogleFonts.montserrat(fontSize: 14),
+            cursorColor: AppColors.concolor,
+            decoration: InputDecoration(
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey, width: 1.0),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.access_time),
                 onPressed: () {
@@ -486,7 +524,8 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
-  Future<void> _selectDueDate(TextEditingController dateController, TextEditingController timeController) async {
+  Future<void> _selectDateAndTime(TextEditingController dateController,
+      TextEditingController timeController) async {
     // Select the date
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -503,6 +542,7 @@ class _CreateEventState extends State<Createevent> {
       await _selectTime(timeController);
     }
   }
+
   Future<void> _selectTime(TextEditingController controller) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -511,13 +551,11 @@ class _CreateEventState extends State<Createevent> {
     if (picked != null) {
       // Format the time to 'HH:mm:ss'
       final now = DateTime.now();
-      final formattedTime = DateFormat('HH:mm:ss').format(
-          DateTime(now.year, now.month, now.day, picked.hour, picked.minute, 0)); // Add 0 seconds
+      final formattedTime = DateFormat('HH:mm:ss').format(DateTime(now.year,
+          now.month, now.day, picked.hour, picked.minute, 0)); // Add 0 seconds
       controller.text = formattedTime;
     }
   }
-
-
 
   Widget _buildPrioritySelector() {
     return Padding(
@@ -544,7 +582,7 @@ class _CreateEventState extends State<Createevent> {
             ],
           ),
           const SizedBox(height: 16),
-          if (_currentView == 'meeting') ...[
+          if (_currentView == 'Meeting') ...[
             _buildOnlineOfflineButtons(),
           ],
         ],
@@ -663,50 +701,46 @@ class _CreateEventState extends State<Createevent> {
           cursorColor: AppColors.concolor,
           decoration: InputDecoration(
             hintText: _selectedMode == 'online' ? 'Link' : 'Venue',
-            // Set hint text based on mode
             enabledBorder: OutlineInputBorder(
               borderSide: BorderSide(color: Colors.grey, width: 1.0),
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
             ),
-            contentPadding: const EdgeInsets.symmetric(
-                vertical: 4.0, horizontal: 12.0),
-            suffixIcon: _selectedMode ==
-                'online' // Show paste icon only in online mode
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+            suffixIcon: _selectedMode == 'online'
                 ? IconButton(
-              icon: const Icon(Icons.paste), // Use paste icon
-              onPressed: () async {
-                // Get the clipboard data
-                final data = await Clipboard.getData(Clipboard.kTextPlain);
-                if (data != null && data.text != null) {
-                  // Paste the text into the text field
-                  _venueOrLinkController.text = data.text!;
-                }
-              },
-            )
-                : _selectedMode ==
-                'offline' // Show location icon only in offline mode
-                ? IconButton(
-              icon: const Icon(Icons.location_on),
-              onPressed: () async {
-                var status = await Permission.location.request();
-                if (status.isGranted) {
-                  final LatLng? selectedLocation = await EventUtils
-                      .selectLocation(context);
-                  if (selectedLocation != null) {
-                    _venueOrLinkController.text =
-                    '${selectedLocation.latitude}, ${selectedLocation
-                        .longitude}';
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Location permission denied')),
-                  );
-                }
-              },
-            )
-                : null, // No icon in other cases
+                    icon: const Icon(Icons.paste),
+                    onPressed: () async {
+                      final data =
+                          await Clipboard.getData(Clipboard.kTextPlain);
+                      if (data != null && data.text != null) {
+                        _venueOrLinkController.text = data.text!;
+                      }
+                    },
+                  )
+                : _selectedMode == 'offline'
+                    ? IconButton(
+                        icon: const Icon(Icons.location_on),
+                        onPressed: () async {
+                          var status = await Permission.location.request();
+                          if (status.isGranted) {
+                            final LatLng? selectedLocation =
+                                await EventUtils.selectLocation(context);
+                            if (selectedLocation != null) {
+                              _venueOrLinkController.text =
+                                  '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text('Location permission denied')),
+                            );
+                          }
+                        },
+                      )
+                    : null,
           ),
           onChanged: (value) {
             if (_selectedMode == 'offline' && value.isNotEmpty) {
@@ -748,7 +782,7 @@ class _CreateEventState extends State<Createevent> {
     );
   }
 
-  Widget _buildDescriptionField() {
+  Widget _buildDescriptionFieldAndButtons() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -768,7 +802,7 @@ class _CreateEventState extends State<Createevent> {
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               contentPadding:
-              const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
             ),
           ),
           const SizedBox(height: 16),
@@ -837,51 +871,82 @@ class _CreateEventState extends State<Createevent> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              OutlinedButton(
-                onPressed: () {
-                  setState(() {
-                    _selectedFileName = null;
-                  });
-                },
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.montserrat(fontSize: 16),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.concolor,
-                  backgroundColor: Colors.white,
-                  side: BorderSide(color: AppColors.concolor, width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+          // Conditionally render buttons based on whether the widget is in edit mode
+          if (widget.task != null || widget.meeting != null) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      updateApi(); // Call the API to update the task or meeting
+                    },
+                    child: Text(
+                      'Update',
+                      style: GoogleFonts.montserrat(fontSize: 16),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: AppColors.concolor,
+                      side: BorderSide(color: Colors.white, width: 1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      minimumSize: Size(120, 50),
+                    ),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  minimumSize: Size(120, 50),
                 ),
-              ),
-              OutlinedButton(
-                onPressed: () {
-                  sendDataToApi();
-                },
-                child: Text(
-                  'Create',
-                  style: GoogleFonts.montserrat(fontSize: 16),
-                ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: AppColors.concolor,
-                  side: BorderSide(color: Colors.white, width: 1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              ],
+            ),
+          ] else ...[
+            // Show cancel and create buttons if not in edit mode
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedFileName = null;
+                    });
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.montserrat(fontSize: 16),
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  minimumSize: Size(120, 50),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.concolor,
+                    backgroundColor: Colors.white,
+                    side: BorderSide(color: AppColors.concolor, width: 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    minimumSize: Size(120, 50),
+                  ),
                 ),
-              ),
-            ],
-          ),
+                OutlinedButton(
+                  onPressed: () {
+                    sendDataToApi(); // Call the API to create the task or meeting
+                  },
+                  child: Text(
+                    'Create',
+                    style: GoogleFonts.montserrat(fontSize: 16),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.concolor,
+                    side: BorderSide(color: Colors.white, width: 1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    minimumSize: Size(120, 50),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -904,11 +969,11 @@ class _CreateEventState extends State<Createevent> {
     }
   }
 
-
   Future<void> sendDataToApi() async {
     try {
       // Check if the location is provided
-      if (_locationController.text.isNotEmpty || _venueOrLinkController.text.isNotEmpty) {
+      if (_locationController.text.isNotEmpty ||
+          _venueOrLinkController.text.isNotEmpty) {
         if (_locationController.text.isNotEmpty)
           await _fetchCoordinatesFromAddress(_locationController.text);
         else {
@@ -919,9 +984,10 @@ class _CreateEventState extends State<Createevent> {
         return; // Exit the function if no address is provided
       }
 
-      EventService eventService = EventService(); // Initialize the event service
+      EventService eventService =
+          EventService(); // Initialize the event service
 
-      if (_currentView == 'task') {
+      if (_currentView == 'Task') {
         // Create the TaskModel instance
         TaskModel task = TaskModel(
           id: '',
@@ -934,7 +1000,9 @@ class _CreateEventState extends State<Createevent> {
           eventType: _currentView,
           isActive: true,
           isSelfEvent: true,
-          savedDate: DateTime.now().toUtc().toIso8601String(), // Current date and time in UTC
+          savedDate: DateTime.now()
+              .toUtc()
+              .toIso8601String(), // Current date and time in UTC
           lat: selectedLatitude, // Add selected latitude
           lon: selectedLongitude, // Add selected longitude
           pincode: selectedPincode, // Add selected pincode
@@ -947,16 +1015,19 @@ class _CreateEventState extends State<Createevent> {
 
         if (success) {
           print('Task created successfully');
-          DialogUtils.showSuccessDialog(context, 'Task created successfully!', onOk: () {
+          DialogUtils.showSuccessDialog(context, 'Task created successfully!',
+              onOk: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const Navigation()), // Navigate to the desired page
+              MaterialPageRoute(
+                  builder: (context) =>
+                      const Navigation()), // Navigate to the desired page
             );
           });
         } else {
           print('Failed to create task');
         }
-      } else if (_currentView == 'meeting') {
+      } else if (_currentView == 'Meeting') {
         // Create the MeetingModel instance
         MeetingModel meeting = MeetingModel(
           id: '',
@@ -972,7 +1043,9 @@ class _CreateEventState extends State<Createevent> {
           eventMode: _selectedMode ?? 'offline',
           isActive: true,
           venue: _venueOrLinkController.text,
-          savedDate: DateTime.now().toUtc().toIso8601String(), // Current date and time in UTC
+          savedDate: DateTime.now()
+              .toUtc()
+              .toIso8601String(), // Current date and time in UTC
           lat: selectedLatitude, // Add selected latitude
           lon: selectedLongitude, // Add selected longitude
           pincode: selectedPincode, // Add selected pincode
@@ -985,14 +1058,126 @@ class _CreateEventState extends State<Createevent> {
 
         if (success) {
           print('Meeting created successfully');
-          DialogUtils .showSuccessDialog(context, 'Meeting created successfully!', onOk: () {
+          DialogUtils.showSuccessDialog(
+              context, 'Meeting created successfully!', onOk: () {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const Navigation()), // Navigate to the desired page
+              MaterialPageRoute(
+                  builder: (context) =>
+                      const Navigation()), // Navigate to the desired page
             );
           });
         } else {
           print('Failed to create meeting');
+        }
+      }
+    } catch (e) {
+      // Handle any exceptions that occur during the API call
+      print('Error occurred: $e');
+    }
+  }
+
+  Future<void> updateApi() async {
+    try {
+      // Check if the location is provided
+      if (_locationController.text.isNotEmpty ||
+          _venueOrLinkController.text.isNotEmpty) {
+        if (_locationController.text.isNotEmpty)
+          await _fetchCoordinatesFromAddress(_locationController.text);
+        else {
+          await _fetchCoordinatesFromAddress(_venueOrLinkController.text);
+        }
+      } else {
+        print('Please provide a valid address');
+        return; // Exit the function if no address is provided
+      }
+
+      EventService eventService =
+          EventService(); // Initialize the event service
+
+      if (_currentView == 'Task') {
+        // Create the TaskModel instance
+        TaskModel task = TaskModel(
+          id: widget.task?.id ?? '', // Use the existing task ID for updates
+          userId: AppConstants.userId ?? '',
+          eventName: _taskNameController.text,
+          dueDate: _dueDateController.text,
+          location: _locationController.text,
+          priority: _selectedPriority ?? 'Medium',
+          description: _descriptionController.text,
+          eventType: _currentView,
+          isActive: true,
+          isSelfEvent: true,
+          savedDate: DateTime.now()
+              .toUtc()
+              .toIso8601String(), // Current date and time in UTC
+          lat: selectedLatitude, // Add selected latitude
+          lon: selectedLongitude, // Add selected longitude
+          pincode: selectedPincode, // Add selected pincode
+          state: selectedState, // Add selected state
+          city: selectedCity, // Add selected city
+        );
+
+        // Call the event service to update the task
+        bool success = await eventService.createTask(task);
+
+        if (success) {
+          print('Task updated successfully');
+          DialogUtils.showSuccessDialog(context, 'Task updated successfully!',
+              onOk: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      const Navigation()), // Navigate to the desired page
+            );
+          });
+        } else {
+          print('Failed to update task');
+        }
+      } else if (_currentView == 'Meeting') {
+        // Create the MeetingModel instance
+        MeetingModel meeting = MeetingModel(
+          id: widget.meeting?.id ??
+              '', // Use the existing meeting ID for updates
+          userId: AppConstants.userId ?? '',
+          eventName: _meetingNameController.text,
+          eventType: _currentView,
+          startDate: _fromDateController.text, // Use formatted date
+          endDate: _toDateController.text, // Use formatted date
+          fromTime: _fromTimeController.text,
+          toTime: _toTimeController.text,
+          priority: _selectedPriority ?? 'Medium',
+          description: _descriptionController.text,
+          eventMode: _selectedMode ?? 'offline',
+          isActive: true,
+          venue: _venueOrLinkController.text,
+          savedDate: DateTime.now()
+              .toUtc()
+              .toIso8601String(), // Current date and time in UTC
+          lat: selectedLatitude, // Add selected latitude
+          lon: selectedLongitude, // Add selected longitude
+          pincode: selectedPincode, // Add selected pincode
+          state: selectedState, // Add selected state
+          city: selectedCity, // Add selected city
+        );
+
+        // Call the event service to update the meeting
+        bool success = await eventService.createMeeting(meeting);
+
+        if (success) {
+          print('Meeting updated successfully');
+          DialogUtils.showSuccessDialog(
+              context, 'Meeting updated successfully!', onOk: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      const Navigation()), // Navigate to the desired page
+            );
+          });
+        } else {
+          print('Failed to update meeting');
         }
       }
     } catch (e) {
@@ -1035,13 +1220,15 @@ class _CreateEventState extends State<Createevent> {
       print('Error fetching data for the address: $e');
     }
   }
+
   Future<void> _fetchAddressSuggestions(String input) async {
     setState(() {
       _isLoadingSuggestions = true; // Show loading indicator
     });
 
     try {
-      final suggestions = await EventUtils.fetchAddressSuggestions(input, googlemapkey.mapkey); // Use your API key
+      final suggestions = await EventUtils.fetchAddressSuggestions(
+          input, googlemapkey.mapkey); // Use your API key
       setState(() {
         _addressSuggestions = suggestions; // Update suggestions
       });
@@ -1051,23 +1238,6 @@ class _CreateEventState extends State<Createevent> {
       setState(() {
         _isLoadingSuggestions = false; // Hide loading indicator
       });
-    }
-  }
-  Future<void> _selectDateAndTime(TextEditingController dateController, TextEditingController timeController) async {
-    // Select the date
-    final DateTime? pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-
-    if (pickedDate != null) {
-      // Set the date in the controller
-      dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
-
-      // Automatically open the time picker after selecting the date
-      await _selectTime(timeController);
     }
   }
 }

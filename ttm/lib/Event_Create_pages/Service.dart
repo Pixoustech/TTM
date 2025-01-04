@@ -26,7 +26,7 @@ class EventService {
     }
   }
 
-  // Method to create a meeting
+
   Future<bool> createMeeting(MeetingModel meeting) async {
     try {
       final response = await _dio.post(
@@ -46,7 +46,7 @@ class EventService {
     }
   }
 
-  // Error handling method
+
   void _handleError(dynamic error) {
     if (error is DioError) {
       print('Dio error: ${error.response?.data ?? error.message}');

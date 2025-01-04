@@ -96,6 +96,7 @@ class CalendarEventResponse {
 }
 
 class EventData {
+  final String id;
   final String userId;
   final String eventId;
   final String eventName;
@@ -117,6 +118,7 @@ class EventData {
   final String createdDate;
 
   EventData({
+    required this.id,
     required this.userId,
     required this.eventId,
     required this.eventName,
@@ -158,7 +160,7 @@ class EventData {
       isSelfEvent: json['isSelfEvent'] ?? false,
       createdBy: json['createdBy'] ?? '',
       createdByUserName: json['createdByUserName'] ?? '',
-      createdDate: json['createdDate'] ?? '',
+      createdDate: json['createdDate'] ?? '', id: json['id'] ?? '',
     );
   }
 }
@@ -192,6 +194,7 @@ class CalendarEventData {
 }
 
 class TaskCalender {
+  final String id;
   final String eventId;
   final String eventName;
   final String dueDate; // Use eventDate for the due date
@@ -206,6 +209,7 @@ class TaskCalender {
   final bool isSelfEvent;
 
   TaskCalender({
+    required this.id,
     required this.eventId,
     required this.eventName,
     required this.dueDate,
@@ -222,6 +226,7 @@ class TaskCalender {
 
   factory TaskCalender.fromEventData(EventData event) {
     return TaskCalender(
+      id: event.id,
       eventId: event.eventId,
       eventName: event.eventName,
       dueDate: event.eventDate,
@@ -239,10 +244,12 @@ class TaskCalender {
 }
 
 class MeetingCalender {
+  final String id;
   final String eventId;
   final String eventName;
   final String startDate; // Use eventDateFromTime for start date
   final String endDate; // Use eventDateToTime for end date
+  String eventMode;
   final String fromTime;
   final String toTime;
   final String description;
@@ -257,10 +264,12 @@ class MeetingCalender {
   final bool isSelfEvent;
 
   MeetingCalender({
+    required this.id,
     required this.eventId,
     required this.eventName,
     required this.eventType,
     required this.startDate,
+    required this.eventMode,
     required this.endDate,
     required this.fromTime,
     required this.toTime,
@@ -277,7 +286,9 @@ class MeetingCalender {
 
   factory MeetingCalender.fromEventData(EventData event) {
     return MeetingCalender(
+      id: event.id,
       eventId: event.eventId,
+      eventMode: event.eventMode,
       eventName: event.eventName,
       eventType: event.eventType,
       startDate: event.eventDateFromTime,

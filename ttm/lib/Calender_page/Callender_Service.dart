@@ -42,7 +42,7 @@ class CalendarService {
 
     try {
       final response = await _dio.get(apiUrl, queryParameters: {
-        'User Id': userId,
+        'UserId': userId,
       });
 
       if (response.statusCode == 200) {

@@ -21,7 +21,7 @@ class _NavigationPageState extends State<Navigation> {
   final List<Widget> _pages = [
     HomePage(),        // Home Page
     CalendarPage(),    // Calendar Page
-    Createevent(),     // Add Task Page
+    CreateEvent(),     // Add Task Page
     MapPage(),         // Map Page
     ReportPage(),     // Profile Page
   ];

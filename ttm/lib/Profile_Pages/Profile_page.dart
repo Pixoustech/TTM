@@ -164,6 +164,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ],
     );
   }
+
   Widget _buildMyProfileBox(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -320,7 +321,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Logout Box
+
   Widget _buildLogoutBox(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -454,7 +455,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 }
 class AuthService {
-  final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
 
   Future<void> showLogoutConfirmationDialog(BuildContext context) async {
     return showDialog<void>(

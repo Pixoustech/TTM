@@ -8,10 +8,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import '../Comman_pages/Constant.dart';
+import '../Event_Create_pages/Model.dart';
+import '../Event_Create_pages/Task_Page.dart';
 import '../main.dart';
 import 'pdf.dart';
 
 class EventDetailPage extends StatefulWidget {
+  final String id; // Add this line
   final String title;
   final String description;
   final String priority;
@@ -26,11 +29,14 @@ class EventDetailPage extends StatefulWidget {
   final String toDate;
   final String fromTime;
   final String toTime;
+  final String eventmode;
+
 
 
 
 
   EventDetailPage({
+    required this.id,
     required this.title,
     required this.description,
     required this.priority,
@@ -45,6 +51,7 @@ class EventDetailPage extends StatefulWidget {
     required this.toDate,
     required this.fromTime,
     required this.toTime,
+    required this.eventmode,
   });
 
   @override
@@ -93,6 +100,73 @@ class _EventDetailPageState extends State<EventDetailPage> {
           ),
         ),
         iconTheme: IconThemeData(color: Colors.white),
+        actions: [
+          if (widget.Assignedby != "HQ")
+            IconButton(
+              icon: Icon(Icons.edit, color: Colors.white),
+              onPressed: () {
+                if (widget.Event.toLowerCase() == "task") {
+                  // Create a TaskModel instance
+                  TaskModel task = TaskModel(
+                    id: widget.id, // You can generate or fetch this ID if needed
+                    userId: AppConstants.userId ?? '', // Ensure you have the user ID
+                    eventName: widget.title,
+                    dueDate: widget.date,
+                    location: widget.location,
+                    priority: widget.priority,
+                    description: widget.description,
+                    isActive: true,
+                    isSelfEvent: true,
+                    savedDate: DateTime.now().toUtc().toIso8601String(),
+                    eventType: 'task', // Set the event type
+                    lat: null, // Set latitude if available
+                    lon: null, // Set longitude if available
+                    pincode: null, // Set pincode if available
+                    state: null, // Set state if available
+                    city: null, // Set city if available
+                  );
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CreateEvent(task: task), // Pass the task
+                    ),
+                  );
+                }
+                if (widget.Event.toLowerCase() == "meeting") {
+                  // Create a MeetingModel instance
+                  MeetingModel meeting = MeetingModel(
+                    id: widget.id, // Pass the ID of the meeting
+                    userId: AppConstants.userId ?? '',
+                    eventName: widget.title,
+                    startDate: widget.fromDate,
+                    endDate: widget.toDate,
+                    fromTime: widget.fromTime,
+                    toTime: widget.toTime,
+                    priority: widget.priority,
+                    venue: widget.location,
+                    description: widget.description,
+                    eventMode: 'offline', // Set the event mode as needed
+                    isActive: true,
+                    savedDate: DateTime.now().toUtc().toIso8601String(),
+                    eventType: 'meeting', // Set the event type
+                    lat: null, // Set latitude if available
+                    lon: null, // Set longitude if available
+                    pincode: null, // Set pincode if available
+                    state: null, // Set state if available
+                    city: null, // Set city if available
+                  );
+
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CreateEvent(meeting: meeting), // Pass the meeting
+                    ),
+                  );
+                }
+              },
+            ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

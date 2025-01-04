@@ -297,6 +297,7 @@ class _TaskBoxPageState extends State<TaskBoxPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => EventDetailPage(
+                            id:task.id,
                             title: task.title,
                             description: task.description,
                             priority: task.priority,
@@ -310,7 +311,7 @@ class _TaskBoxPageState extends State<TaskBoxPage> {
                             fromDate: task.date,
                             toDate: task.date,
                             fromTime: "",
-                            toTime: "",
+                            toTime: "", eventmode: '',
                           ),
                         ),
                       );
@@ -345,7 +346,7 @@ class _TaskBoxPageState extends State<TaskBoxPage> {
                             fromDate: meeting.fromDate,
                             toDate: meeting.toDate,
                             fromTime: meeting.fromTime,
-                            toTime: meeting.toTime,
+                            toTime: meeting.toTime, id:meeting.id, eventmode: '',
                           ),
                         ),
                       );

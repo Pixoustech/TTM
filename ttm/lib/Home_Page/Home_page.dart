@@ -400,6 +400,7 @@ class _HomePageState extends State<HomePage> {
               Container(
                 color: Colors.white,
                 child: Padding(
+
                   padding: const EdgeInsets.all(10.0),
                   child: Column(
                     children: [
@@ -470,6 +471,7 @@ class _HomePageState extends State<HomePage> {
                                                         MaterialPageRoute(
                                                           builder: (context) =>
                                                               EventDetailPage(
+
                                                             title:
                                                                 task.eventName,
                                                             description: task
@@ -497,7 +499,7 @@ class _HomePageState extends State<HomePage> {
                                                             toDate:
                                                                 task.dueDate,
                                                             fromTime: "",
-                                                            toTime: "",
+                                                            toTime: "", id:task.id,eventmode: '',
                                                           ),
                                                         ),
                                                       );
@@ -579,7 +581,7 @@ class _HomePageState extends State<HomePage> {
                                                             fromTime: meeting
                                                                 .fromTime,
                                                             toTime:
-                                                                meeting.toTime,
+                                                                meeting.toTime, id: meeting.id,eventmode: meeting.eventMode,
                                                           ),
                                                         ),
                                                       );
@@ -871,7 +873,7 @@ class _HomePageState extends State<HomePage> {
                                               fromDate: task.dueDate,
                                               toDate: task.dueDate,
                                               fromTime: "",
-                                              toTime: "",
+                                              toTime: "", id: task.id,eventmode: '',
                                             ),
                                           ),
                                         );
@@ -978,7 +980,7 @@ class _HomePageState extends State<HomePage> {
                                                 fromDate: meeting.startDate,
                                                 toDate: meeting.endDate,
                                                 fromTime: meeting.fromTime,
-                                                toTime: meeting.toTime,
+                                                toTime: meeting.toTime, id: meeting.id,eventmode: meeting.eventMode,
                                               ),
                                             ),
                                           );
@@ -1085,7 +1087,7 @@ class _HomePageState extends State<HomePage> {
                                             fromDate: task.dueDate,
                                             toDate: task.dueDate,
                                             fromTime: "",
-                                            toTime: "",
+                                            toTime: "", id: task.id,eventmode: '',
                                           ),
                                         ),
                                       );
@@ -1200,7 +1202,7 @@ class _HomePageState extends State<HomePage> {
                                                 fromDate: meeting.startDate,
                                                 toDate: meeting.endDate,
                                                 fromTime: meeting.fromTime,
-                                                toTime: meeting.toTime,
+                                                toTime: meeting.toTime, id: meeting.id, eventmode: meeting.eventMode,
                                               ),
                                             ),
                                           );

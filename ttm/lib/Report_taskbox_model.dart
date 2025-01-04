@@ -18,6 +18,7 @@ class TaskModel {
 }
 
 class Task {
+  final String id;
   final String title;
   final String description;
   final String priority;
@@ -30,6 +31,7 @@ class Task {
   final List<String> attachmentPdfUrls;
 
   Task({
+    required this.id,
     required this.title,
     required this.description,
     required this.priority,
@@ -53,12 +55,13 @@ class Task {
       pdfUrls: List<String>.from(json['pdfUrls']),
       event: json['event'],
       assignedBy: json['assignedBy'],
-      attachmentPdfUrls: List<String>.from(json['attachmentPdfUrls']),
+      attachmentPdfUrls: List<String>.from(json['attachmentPdfUrls']), id: json['id'],
     );
   }
 }
 
 class Meeting {
+  final String id;
   final String title;
   final String description;
   final String priority;
@@ -73,6 +76,7 @@ class Meeting {
   final String assignedBy;
 
   Meeting({
+    required this.id,
     required this.title,
     required this.description,
     required this.priority,
@@ -100,7 +104,7 @@ class Meeting {
       location: json['location'] ?? 'Unknown', // Provide a default location
       pdfUrls: List<String>.from(json['pdfUrls'] ?? []), // Default to empty list
       event: json['event'] ?? 'General', // Provide a default event
-      assignedBy: json['assignedBy'] ?? 'Unassigned', // Provide a default assigned by
+      assignedBy: json['assignedBy'] ?? 'Unassigned', id: json['id'] ?? '', // Provide a default assigned by
     );
   }
 }

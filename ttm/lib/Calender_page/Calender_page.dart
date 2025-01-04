@@ -28,7 +28,7 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime? _selectedDate; // Variable for the selected date
   List<TaskCalender> tasks = []; // Replace with your actual data source
   List<MeetingCalender> meetings = []; // Replace with your actual data source
-  List<DateTime> _selectedDates = []; // List to hold selected dates
+  List<DateTime> _selectedDates = [DateTime.now()]; // Initialize with today's date
   bool _isLoading = false; // Add this line
   List<Leave> _leaveStatuses = []; // Variable to hold the fetched leave statuses
   String? _holidayDetail; // Variable to hold the selected holiday detail
@@ -49,6 +49,7 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
 
+
     _focusedDay = DateTime.now();
     _selectedDate = DateTime.now();
     _focusedDay = DateTime.now();
@@ -56,7 +57,6 @@ class _CalendarPageState extends State<CalendarPage> {
     _startDate = null; // Reset start date
     _endDate = null; // Reset end date
     _holidayDetail = null; // Reset holiday detail
-
     _fetchCalendarDataForMonth(_focusedDay.month, _focusedDay.year); // Fetch initial data
   }
 
@@ -211,27 +211,45 @@ class _CalendarPageState extends State<CalendarPage> {
 
     setState(() {
       _isLoading = false; // Stop loading
+
+      // Automatically select the current date when the user enters the page
+      final currentDate = DateTime.now();
+      if (!_selectedDates.any((date) => isSameDay(date, currentDate))) {
+        _selectedDates.add(currentDate); // Add current date if not already selected
+      }
+      _selectedDate = currentDate; // Set the current date as selected
+      _filterEventsForSelectedDays(); // Filter events for the current date
     });
   }
 
   void _onDaySelected(DateTime selectedDay) {
     setState(() {
-      _selectedDay = selectedDay; // Update the selected day
+      // Check if the day is already selected
+      if (_selectedDates.any((date) => isSameDay(date, selectedDay))) {
+        // If the day is already in the list, remove it
+        _selectedDates.removeWhere((date) => isSameDay(date, selectedDay));
+        _selectedDate = null; // Reset selected date if it's removed
+      } else {
+        // Otherwise, add the selected day
+        _selectedDates.add(selectedDay);
+        _selectedDate = selectedDay; // Set the selected date
+      }
     });
 
-    // Filter events for the selected day
-    _filterEventsForSelectedDay(selectedDay);
+    // Filter events for the selected days
+    _filterEventsForSelectedDays();
   }
 
-  void _filterEventsForSelectedDay(DateTime selectedDay) {
+
+  void _filterEventsForSelectedDays() {
     if (_calendarEventData != null) {
-      // Filter tasks and meetings based on the selected day
+      // Filter tasks and meetings based on the selected days
       List<TaskCalender> filteredTasks = _calendarEventData!.tasks
-          .where((task) => DateTime.parse(task.dueDate).isSameDay(selectedDay))
+          .where((task) => _selectedDates.any((date) => DateTime.parse(task.dueDate).isSameDay(date)))
           .toList();
 
       List<MeetingCalender> filteredMeetings = _calendarEventData!.meetings
-          .where((meeting) => DateTime.parse(meeting.startDate).isSameDay(selectedDay))
+          .where((meeting) => _selectedDates.any((date) => DateTime.parse(meeting.startDate).isSameDay(date)))
           .toList();
 
       // Update the UI with the filtered events
@@ -292,7 +310,7 @@ class _CalendarPageState extends State<CalendarPage> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => Createevent()),
+                  MaterialPageRoute(builder: (context) => CreateEvent()),
                 );
               },
             ),
@@ -380,6 +398,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       return _holidays.containsKey(normalizeDate(day)); // Check if the day is a holiday
                     },
                   ):
+
                   _currentView == 'events'
                       ? TableCalendar(
                     focusedDay: _focusedDay,
@@ -397,11 +416,13 @@ class _CalendarPageState extends State<CalendarPage> {
                       ),
                     ),
                     onDaySelected: (selectedDay, focusedDay) {
+                      print('Day selected: $selectedDay');  // Debugging line
                       _onDaySelected(selectedDay); // Handle day selection
                       setState(() {
                         _focusedDay = focusedDay; // Update the focused day
                       });
                     },
+
                     onPageChanged: (focusedDay) {
                       setState(() {
                         _focusedDay = focusedDay; // Update the focused day when swiping
@@ -409,8 +430,11 @@ class _CalendarPageState extends State<CalendarPage> {
                       });
                     },
                     selectedDayPredicate: (day) {
-                      return _selectedDates.contains(day); // Highlight selected dates
+                      return _selectedDates.any((selectedDate) => isSameDay(selectedDate, day));
                     },
+
+
+                    headerVisible: false,
                     calendarBuilders: CalendarBuilders(
                       markerBuilder: (context, date, events) {
                         if (_eventDates.contains(date)) {
@@ -428,54 +452,55 @@ class _CalendarPageState extends State<CalendarPage> {
                       },
                     ),
                   )
-                  :_currentView == 'leave'
-                      ? TableCalendar(
-                      focusedDay: _focusedDay,
-                      onDaySelected: (selectedDay, focusedDay) {
-                        setState(() {
-                          _focusedDay = focusedDay;
-                          _selectedDate = normalizeDate(selectedDay); // Normalize selected date
-                        });
 
-                        Leave? leaveDetails = _leaveDetails[_selectedDate];
-                        if (leaveDetails != null) {
-                          print('Leave Details: ${leaveDetails.reason}');
-                          setState(() {
-                            _leaveDetail = leaveDetails.reason; // Update holiday detail
-                          });
-                        } else {
-                          print('No leave details found for this date.');
-                          setState(() {
-                            _leaveDetail = null; // Reset holiday detail
-                          });
-                        }
-                      },
-                      onPageChanged: (focusedDay) {
+                      :_currentView == 'leave'
+                      ? TableCalendar(
+                    focusedDay: _focusedDay,
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                        _selectedDate = normalizeDate(selectedDay); // Normalize selected date
+                      });
+
+                      Leave? leaveDetails = _leaveDetails[_selectedDate];
+                      if (leaveDetails != null) {
+                        print('Leave Details: ${leaveDetails.reason}');
                         setState(() {
-                          _focusedDay = focusedDay;
+                          _leaveDetail = leaveDetails.reason; // Update holiday detail
                         });
-                      },
-                      headerVisible: false,
-                      firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
-                  calendarFormat: CalendarFormat.month,
-                  calendarStyle: CalendarStyle(
-                    todayDecoration: BoxDecoration(
-                      color: Colors.blue,
-                      shape: BoxShape.circle,
+                      } else {
+                        print('No leave details found for this date.');
+                        setState(() {
+                          _leaveDetail = null; // Reset holiday detail
+                        });
+                      }
+                    },
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    headerVisible: false,
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    calendarFormat: CalendarFormat.month,
+                    calendarStyle: CalendarStyle(
+                      todayDecoration: BoxDecoration(
+                        color: Colors.blue,
+                        shape: BoxShape.circle,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      holidayDecoration: BoxDecoration(
+                        color: Colors.pink[100], // Light pink color for leave dates
+                        shape: BoxShape.circle,
+                      ),
+                      holidayTextStyle: TextStyle(
+                        color: Colors.black, // Text color for holidays
+                      ),
                     ),
-                    selectedDecoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    holidayDecoration: BoxDecoration(
-                      color: Colors.pink[100], // Light pink color for leave dates
-                      shape: BoxShape.circle,
-                    ),
-                    holidayTextStyle: TextStyle(
-                      color: Colors.black, // Text color for holidays
-                    ),
-                  ),
                     holidayPredicate: (day) {
                       // Normalize the day for comparison
                       DateTime normalizedDay = normalizeDate(day);
@@ -491,23 +516,32 @@ class _CalendarPageState extends State<CalendarPage> {
                             normalizedDay.isAtSameMomentAs(leaveEnd);
                       });
                     },
-                  selectedDayPredicate: (day) => _selectedDate != null && _selectedDate!.isSameDay(day),
-                )
+                    selectedDayPredicate: (day) => _selectedDate != null && _selectedDate!.isSameDay(day),
+                  )
 
                       : Container(),
 
 
                 ),
                 SizedBox(height: 16),
+                if (_currentView == 'events')
+                  _buildTaskAndMeetingStatusSummary(),
                 if (_isLoading) // Check if loading
                   _buildShimmerLoading()
                 // Check if calendar event data is null
                 else if (_calendarEventData == null && _currentView == 'events')
-                  Center(
-                    child: Text(
-                      'No events found for this date.',
-                      style: GoogleFonts.montserrat(fontSize: 16, color: Colors.grey),
-                    ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center, // Center vertically
+                    crossAxisAlignment: CrossAxisAlignment.center, // Center horizontally
+                    children: [
+                      SizedBox(height: 20), // Optional: Add some space at the top
+                      Text(
+                        'No events found for this date.',
+                        style: GoogleFonts.montserrat(fontSize: 16, color: Colors.grey),
+                        textAlign: TextAlign.center, // Center the text
+                      ),
+                      SizedBox(height: 20), // Optional: Add some space at the bottom
+                    ],
                   )
                 else if (_currentView != 'holidays' && _currentView != 'leave') ...[
                     if (_selectedDate != null && _endDate == null)
@@ -824,6 +858,49 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
     );
   }
+  Map<String, int> _getCombinedCounts() {
+    // Initialize a map to hold task and meeting counts
+    Map<String, int> combinedCounts = {
+      'Not Started': 0,
+      'In Progress': 0,
+      'Completed': 0,
+      'Overdue': 0, // If you have an 'Overdue' status
+    };
+
+    // Check if _calendarEventData is not null
+    if (_calendarEventData != null) {
+      // Count tasks for each status
+      for (var task in _calendarEventData!.tasks) {
+        if (task.statusName == 'Not Started') {
+          combinedCounts['Not Started'] = combinedCounts['Not Started']! + 1;
+        } else if (task.statusName == 'In Progress') {
+          combinedCounts['In Progress'] = combinedCounts['In Progress']! + 1;
+        } else if (task.statusName == 'Completed') {
+          combinedCounts['Completed'] = combinedCounts['Completed']! + 1;
+        } else if (task.statusName == 'Overdue') {
+          combinedCounts['Overdue'] = combinedCounts['Overdue']! + 1;
+        }    /*else if (task.statusName == '') {
+          combinedCounts['Overdue'] = combinedCounts['Overdue']! + 1;
+        }*/
+      }
+
+      // Count meetings for each status
+      for (var meeting in _calendarEventData!.meetings) {
+        if (meeting.statusName == 'Not Started') {
+          combinedCounts['Not Started'] = combinedCounts['Not Started']! + 1;
+        } else if (meeting.statusName == 'In Progress') {
+          combinedCounts['In Progress'] = combinedCounts['In Progress']! + 1;
+        } else if (meeting.statusName == 'Completed') {
+          combinedCounts['Completed'] = combinedCounts['Completed']! + 1;
+        } else if (meeting.statusName == 'Overdue') {
+          combinedCounts['Overdue'] = combinedCounts['Overdue']! + 1;
+        }
+
+      }
+    }
+
+    return combinedCounts;
+  }
 
   Widget _buildTaskAndMeetingStatusSummary() {
     // Get the combined counts
@@ -837,28 +914,23 @@ class _CalendarPageState extends State<CalendarPage> {
         switch (status) {
           case 'Not Started':
             dotColor = Colors.grey;
-            backgroundColor =
-                Colors.grey[200]!; // Light grey background for Not Started
+            backgroundColor = Colors.grey[200]!; // Light grey background for Not Started
             break;
           case 'In Progress':
             dotColor = Colors.orange;
-            backgroundColor =
-                Colors.grey[200]!; // Light orange background for In Progress
+            backgroundColor = Colors.grey[200]!; // Light orange background for In Progress
             break;
           case 'Completed':
             dotColor = Colors.green;
-            backgroundColor =
-                Colors.grey[200]!; // Light green background for Completed
+            backgroundColor = Colors.grey[200]!; // Light green background for Completed
             break;
           case 'Overdue':
             dotColor = Colors.red;
-            backgroundColor =
-                Colors.grey[200]!; // Light red background for Overdue
+            backgroundColor = Colors.grey[200]!; // Light red background for Overdue
             break;
           default:
             dotColor = Colors.red;
-            backgroundColor =
-                Colors.grey[200]!; // Light red background for default
+            backgroundColor = Colors.grey[200]!; // Light red background for default
         }
 
         return Container(
@@ -866,13 +938,10 @@ class _CalendarPageState extends State<CalendarPage> {
             color: backgroundColor, // Set the background color for each status
             borderRadius: BorderRadius.circular(8.0), // Set the border radius
           ),
-          padding: EdgeInsets.symmetric(
-              horizontal: 3.0, vertical: 4.0), // Add padding for better spacing
-          margin:
-              EdgeInsets.symmetric(horizontal: 1.0), // Add margin between items
+          padding: EdgeInsets.symmetric(horizontal: 3.0, vertical: 4.0), // Add padding for better spacing
+          margin: EdgeInsets.symmetric(horizontal: 1.0), // Add margin between items
           child: Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.center, // Center the dot and text vertically
+            crossAxisAlignment: CrossAxisAlignment.center, // Center the dot and text vertically
             children: [
               Container(
                 width: 5,
@@ -885,7 +954,7 @@ class _CalendarPageState extends State<CalendarPage> {
               SizedBox(width: 1), // Add space between the dot and the text
               Text(
                 '$status (${counts[status]})', // Display the combined count
-                style: GoogleFonts.montserrat(fontSize: 9),
+                style: GoogleFonts .montserrat(fontSize: 9),
               ),
             ],
           ),
@@ -977,11 +1046,9 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Widget _buildSummary(List<TaskCalender> tasks, List<MeetingCalender> meetings) {
-    // Create a list to hold all event widgets
     List<Widget> eventWidgets = [];
 
-    // Check if there are any tasks or meetings
-    if (tasks.isEmpty && meetings.isEmpty) {
+    if (_selectedDates.isEmpty) {
       return Center(
         child: Text(
           'No events found for this date.',
@@ -990,11 +1057,11 @@ class _CalendarPageState extends State<CalendarPage> {
       );
     }
 
-    // Add Task widgets based on the filtering condition
-    eventWidgets.addAll(tasks.map((task) {
+    // Add Task widgets for all selected dates
+    eventWidgets.addAll(_filteredTasks.map((task) {
       return GestureDetector(
         onTap: () {
-          // Navigate to the EventDetailPage when the task box is tapped
+          // Navigate to the EventDetailPage
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -1012,7 +1079,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 fromDate: task.dueDate,
                 toDate: task.dueDate,
                 fromTime: "",
-                toTime: "",
+                toTime: "", id: task.id, eventmode: '',
               ),
             ),
           );
@@ -1023,26 +1090,27 @@ class _CalendarPageState extends State<CalendarPage> {
               title: task.eventName,
               description: task.description,
               priority: task.priority,
-              date: task.dueDate, // Format date
+              date: task.dueDate,
               location: task.location,
               event: task.eventType,
               assignedBy: task.isSelfEvent ? "" : "HQ",
             ),
-            SizedBox(height: 16), // Space between boxes
+            SizedBox(height: 16),
           ],
         ),
       );
     }));
 
-    // Add Meeting widgets based on the filtering condition
-    eventWidgets.addAll(meetings.map((meeting) {
+    // Add Meeting widgets for all selected dates
+    eventWidgets.addAll(_filteredMeetings.map((meeting) {
       return GestureDetector(
         onTap: () {
-          // Navigate to the EventDetailPage when the meeting box is tapped
+          // Navigate to the EventDetailPage
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => EventDetailPage(
+                id: meeting.id,
                 title: meeting.eventName,
                 description: meeting.description,
                 priority: meeting.priority,
@@ -1056,7 +1124,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 fromDate: meeting.startDate,
                 toDate: meeting.endDate,
                 fromTime: meeting.fromTime,
-                toTime: meeting.toTime,
+                toTime: meeting.toTime, eventmode: meeting.eventMode,
               ),
             ),
           );
@@ -1076,19 +1144,20 @@ class _CalendarPageState extends State<CalendarPage> {
               assignedby: meeting.isSelfEvent ? "" : "HQ",
               location: meeting.venue,
             ),
-            SizedBox(height: 16), // Space between boxes
+            SizedBox(height: 16),
           ],
         ),
       );
     }));
 
-    // Return the complete column with all events
+    // Return the complete column with all events for the selected dates
     return Column(
       children: eventWidgets,
     );
   }
 
   Widget _Eventbox({
+
     required String title,
     required String description,
     String? priority,
@@ -1157,7 +1226,7 @@ class _CalendarPageState extends State<CalendarPage> {
                               if (priority != null) ...[
                                 SizedBox(
                                     width:
-                                        30), // Add space between title and priority
+                                    30), // Add space between title and priority
                                 Transform.translate(
                                   offset: Offset(
                                       -20, 0), // Move 20 pixels to the left
@@ -1244,6 +1313,7 @@ class _CalendarPageState extends State<CalendarPage> {
       ],
     );
   }
+
   void _fetchHolidayDetailsForDate(DateTime date) {
     DateTime normalizedDate = normalizeDate(date);
     if (_holidays.containsKey(normalizedDate)) {
@@ -1252,6 +1322,7 @@ class _CalendarPageState extends State<CalendarPage> {
       _holidayDetail = null; // Reset if no holiday
     }
   }
+
   Widget _clickableTitle(String title) {
     return GestureDetector(
       onTap: () {
@@ -1270,6 +1341,9 @@ class _CalendarPageState extends State<CalendarPage> {
         if (_currentView == 'leave') {
           _fetchLeaveData(DateTime.now()); // Fetch leave data for today when switching to leave view
         }
+        if (_currentView == 'events') {
+          _onDaySelected(DateTime.now()); // Set selected date to today when switching to events view
+        }
       },
       child: Text(
         title,
@@ -1283,6 +1357,7 @@ class _CalendarPageState extends State<CalendarPage> {
       ),
     );
   }
+
 
 
   Widget _buildShimmerLoading() {
@@ -1317,47 +1392,6 @@ class _CalendarPageState extends State<CalendarPage> {
       ],
     );
   }
-  Map<String, int> _getCombinedCounts() {
-    // Initialize a map to hold task and meeting counts
-    Map<String, int> combinedCounts = {
-      'Not Started': 0,
-      'In Progress': 0,
-      'Completed': 0,
-      'Overdue': 0, // If you have an 'Overdue' status
-    };
-
-    // Check if _calendarEventData is not null
-    if (_calendarEventData != null) {
-      // Count tasks for each status
-      for (var task in _calendarEventData!.tasks) {
-        if (task.statusName == 'Not Started') {
-          combinedCounts['Not Started'] = combinedCounts['Not Started']! + 1;
-        } else if (task.statusName == 'In Progress') {
-          combinedCounts['In Progress'] = combinedCounts['In Progress']! + 1;
-        } else if (task.statusName == 'Completed') {
-          combinedCounts['Completed'] = combinedCounts['Completed']! + 1;
-        } else if (task.statusName == 'Overdue') {
-          combinedCounts['Overdue'] = combinedCounts['Overdue']! + 1;
-        }
-      }
-
-      // Count meetings for each status
-      for (var meeting in _calendarEventData!.meetings) {
-        if (meeting.statusName == 'Not Started') {
-          combinedCounts['Not Started'] = combinedCounts['Not Started']! + 1;
-        } else if (meeting.statusName == 'In Progress') {
-          combinedCounts['In Progress'] = combinedCounts['In Progress']! + 1;
-        } else if (meeting.statusName == 'Completed') {
-          combinedCounts['Completed'] = combinedCounts['Completed']! + 1;
-        } else if (meeting.statusName == 'Overdue') {
-          combinedCounts['Overdue'] = combinedCounts['Overdue']! + 1;
-        }
-      }
-    }
-
-    return combinedCounts;
-  }
-
   Future<void> _refreshCalendar() async {
     setState(() {
       _focusedDay = DateTime.now(); // Reset focused day to today
