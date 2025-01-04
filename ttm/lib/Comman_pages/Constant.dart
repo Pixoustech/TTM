@@ -53,6 +53,10 @@ class AppApi {
       print('Error refreshing token: $e');
     }
   }
+  // Method to print authToken
+  static void printAuthToken() {
+    print('Auth Token: $authToken');
+  }
 }
 
 class googlemapkey {

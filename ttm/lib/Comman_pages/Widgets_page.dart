@@ -61,6 +61,7 @@ Widget buildTaskDetailBox({
             color: getPriorityColor(priority ?? 'Medium'),
             borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(10),
+
               bottomLeft: Radius.circular(10),
             ),
           ),
@@ -84,6 +85,12 @@ Widget buildTaskDetailBox({
                       spreadRadius: 0,
                       blurRadius: 5,
                       offset: const Offset(0, 3),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 0,
+                      blurRadius: 5,
+                      offset: const Offset(0, -2), // Shadow towards the top
                     ),
                   ],
                 ),
@@ -252,6 +259,8 @@ Widget buildMeetingDetailBox({
       // Main meeting detail box
       Expanded(
         child: Container(
+          width: 10,
+          height: 130,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.only(

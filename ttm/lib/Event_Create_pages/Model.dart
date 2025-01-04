@@ -1,4 +1,5 @@
 // models/task_model.dart
+// models/task_model.dart
 
 class TaskModel {
   String id;
@@ -17,6 +18,10 @@ class TaskModel {
   String? pincode; // Pincode as a nullable string
   String? state; // State as a nullable string
   String? city; // City as a nullable string
+  List<String> distributionIds; // New field for distribution IDs
+  List<String> userIds; // New field for user IDs
+  List<String> days; // New field for days
+  String occurrenceType; // New field for occurrence type
 
   TaskModel({
     required this.id,
@@ -35,6 +40,10 @@ class TaskModel {
     this.pincode,
     this.state,
     this.city,
+    required this.distributionIds, // Include distributionIds in the constructor
+    required this.userIds, // Include userIds in the constructor
+    required this.days, // Include days in the constructor
+    required this.occurrenceType,
   });
 
   // Factory constructor to create a TaskModel instance from JSON
@@ -56,6 +65,10 @@ class TaskModel {
       pincode: json['pincode'],
       state: json['state'],
       city: json['city'],
+      distributionIds: List<String>.from(json['distributionIds'] ?? []), // Map distributionIds from JSON
+      userIds: List<String>.from(json['userIds'] ?? []), // Map userIds from JSON
+      days: List<String>.from(json['days'] ?? []), // Map days from JSON
+      occurrenceType: json['occurenceType'] ?? 'Once', // Map occurrenceType from JSON
     );
   }
 
@@ -78,10 +91,14 @@ class TaskModel {
       "pincode": pincode,
       "state": state,
       "city": city,
+      "distributionIds": distributionIds, // Include distributionIds in JSON
+      "userIds": userIds, // Include userIds in JSON
+      "days": days, // Include days in JSON
+    "occurenceType":occurrenceType,
     };
   }
 }
-
+// models/meeting_model.dart
 // models/meeting_model.dart
 class MeetingModel {
   String id;
@@ -103,8 +120,13 @@ class MeetingModel {
   String? pincode;
   String? state;
   String? city;
+  List<String> distributionIds; // New field for distribution IDs
+  List<String> userIds; // New field for user IDs
+  List<String> days; // New field for days
+  String occurrenceType; // New field for occurrence type
 
   MeetingModel({
+
     required this.id,
     required this.userId,
     required this.eventName,
@@ -124,6 +146,10 @@ class MeetingModel {
     this.pincode,
     this.state,
     this.city,
+    required this.distributionIds, // Include distributionIds in the constructor
+    required this.userIds, // Include userIds in the constructor
+    required this.days, // Include days in the constructor
+    required this.occurrenceType,
   });
 
   // Factory constructor to create a MeetingModel from JSON
@@ -134,7 +160,6 @@ class MeetingModel {
       eventName: json['eventName'] ?? '',
       startDate: json['startDate'] ?? '',
       endDate: json['endDate'] ?? '',
-      // Ensure fromTime is parsed safely, using `tryParse` if the value might be invalid
       fromTime: json['fromTime'] ?? '',
       toTime: json['toTime'] ?? '',
       priority: json['priority'] ?? '',
@@ -149,6 +174,10 @@ class MeetingModel {
       pincode: json['pincode'],
       state: json['state'],
       city: json['city'],
+      distributionIds: List<String>.from(json['distributionIds'] ?? []), // Map distributionIds from JSON
+      userIds: List<String>.from(json['userIds'] ?? []), // Map userIds from JSON
+      days: List<String>.from(json['days'] ?? []), // Map days from JSON
+      occurrenceType: json['occurenceType'] ?? 'Once', // Map occurrenceType from JSON
     );
   }
 
@@ -160,7 +189,6 @@ class MeetingModel {
       "eventName": eventName,
       "startDate": startDate,
       "endDate": endDate,
-      // Convert DateTime to ISO string safely
       "fromTime": fromTime,
       "toTime": toTime,
       "priority": priority,
@@ -175,6 +203,10 @@ class MeetingModel {
       "pincode": pincode,
       "state": state,
       "city": city,
+      "distributionIds": distributionIds, // Include distributionIds in JSON
+      "userIds": userIds, // Include userIds in JSON
+      "days": days, // Include days in JSON
+      "occurenceType":occurrenceType,
     };
   }
 }

@@ -1007,7 +1007,11 @@ class _CreateEventState extends State<CreateEvent> {
           lon: selectedLongitude, // Add selected longitude
           pincode: selectedPincode, // Add selected pincode
           state: selectedState, // Add selected state
-          city: selectedCity, // Add selected city
+          city: selectedCity,
+          distributionIds: [],
+          userIds: [AppConstants.userId ?? ''],
+          days: [],
+          occurrenceType: 'Once',
         );
 
         // Call the event service to create the task
@@ -1051,6 +1055,8 @@ class _CreateEventState extends State<CreateEvent> {
           pincode: selectedPincode, // Add selected pincode
           state: selectedState, // Add selected state
           city: selectedCity, // Add selected city
+          distributionIds: [], userIds: [AppConstants.userId ?? ''], days: [],
+          occurrenceType: 'Once',
         );
 
         // Call the event service to create the meeting
@@ -1098,7 +1104,7 @@ class _CreateEventState extends State<CreateEvent> {
       if (_currentView == 'Task') {
         // Create the TaskModel instance
         TaskModel task = TaskModel(
-          id: widget.task?.id ?? '', // Use the existing task ID for updates
+          id:"109f19e2-d3d5-49a1-9fe7-304705bee851" , //"widget.task!.id"
           userId: AppConstants.userId ?? '',
           eventName: _taskNameController.text,
           dueDate: _dueDateController.text,
@@ -1116,6 +1122,10 @@ class _CreateEventState extends State<CreateEvent> {
           pincode: selectedPincode, // Add selected pincode
           state: selectedState, // Add selected state
           city: selectedCity, // Add selected city
+          distributionIds: [],
+          userIds: [AppConstants.userId ?? ''],
+          days: [],
+          occurrenceType: 'Once',
         );
 
         // Call the event service to update the task
@@ -1138,8 +1148,7 @@ class _CreateEventState extends State<CreateEvent> {
       } else if (_currentView == 'Meeting') {
         // Create the MeetingModel instance
         MeetingModel meeting = MeetingModel(
-          id: widget.meeting?.id ??
-              '', // Use the existing meeting ID for updates
+          id: widget.meeting!.id, // Use the existing meeting ID for updates
           userId: AppConstants.userId ?? '',
           eventName: _meetingNameController.text,
           eventType: _currentView,
@@ -1160,6 +1169,10 @@ class _CreateEventState extends State<CreateEvent> {
           pincode: selectedPincode, // Add selected pincode
           state: selectedState, // Add selected state
           city: selectedCity, // Add selected city
+          distributionIds: [],
+          userIds: [AppConstants.userId ?? ''],
+          days: [],
+            occurrenceType: 'Once',
         );
 
         // Call the event service to update the meeting

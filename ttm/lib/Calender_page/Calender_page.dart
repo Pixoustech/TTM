@@ -525,7 +525,10 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
                 SizedBox(height: 16),
                 if (_currentView == 'events')
+
                   _buildTaskAndMeetingStatusSummary(),
+                SizedBox(height: 5),
+
                 if (_isLoading) // Check if loading
                   _buildShimmerLoading()
                 // Check if calendar event data is null
@@ -1095,7 +1098,7 @@ class _CalendarPageState extends State<CalendarPage> {
               event: task.eventType,
               assignedBy: task.isSelfEvent ? "" : "HQ",
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 4),
           ],
         ),
       );
@@ -1342,7 +1345,12 @@ class _CalendarPageState extends State<CalendarPage> {
           _fetchLeaveData(DateTime.now()); // Fetch leave data for today when switching to leave view
         }
         if (_currentView == 'events') {
-          _onDaySelected(DateTime.now()); // Set selected date to today when switching to events view
+          // Automatically select the current date when the user enters the page
+          final currentDate = DateTime.now();
+          if (!_selectedDates.any((date) => isSameDay(date, currentDate))) {
+            _selectedDates.add(currentDate); // Add current date if not already selected
+          }
+          _selectedDate = currentDate;
         }
       },
       child: Text(

@@ -31,10 +31,6 @@ class EventDetailPage extends StatefulWidget {
   final String toTime;
   final String eventmode;
 
-
-
-
-
   EventDetailPage({
     required this.id,
     required this.title,
@@ -61,7 +57,6 @@ class EventDetailPage extends StatefulWidget {
 class _EventDetailPageState extends State<EventDetailPage> {
   List<String> selectedPdfFiles = [];
 
-
   bool _notificationsEnabled = false; // Track notification permission status
 
   @override
@@ -73,16 +68,17 @@ class _EventDetailPageState extends State<EventDetailPage> {
   Future<void> _requestNotificationPermission() async {
     if (Platform.isAndroid) {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
 
       final bool? grantedNotificationPermission =
-      await androidImplementation?.requestNotificationsPermission();
+          await androidImplementation?.requestNotificationsPermission();
       setState(() {
         _notificationsEnabled = grantedNotificationPermission ?? false;
       });
     }
   }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -108,8 +104,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 if (widget.Event.toLowerCase() == "task") {
                   // Create a TaskModel instance
                   TaskModel task = TaskModel(
-                    id: widget.id, // You can generate or fetch this ID if needed
-                    userId: AppConstants.userId ?? '', // Ensure you have the user ID
+                    id: widget
+                        .id, // You can generate or fetch this ID if needed
+                    userId: AppConstants.userId ??
+                        '', // Ensure you have the user ID
                     eventName: widget.title,
                     dueDate: widget.date,
                     location: widget.location,
@@ -124,12 +122,16 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     pincode: null, // Set pincode if available
                     state: null, // Set state if available
                     city: null, // Set city if available
+                    distributionIds: [], userIds: [AppConstants.userId ?? ''],
+                    days: [],
+                      occurrenceType: 'Once',
                   );
 
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CreateEvent(task: task), // Pass the task
+                      builder: (context) =>
+                          CreateEvent(task: task), // Pass the task
                     ),
                   );
                 }
@@ -155,12 +157,16 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     pincode: null, // Set pincode if available
                     state: null, // Set state if available
                     city: null, // Set city if available
+                    distributionIds: [], userIds: [AppConstants.userId ?? ''],
+                    days: [],
+                      occurrenceType: 'Once',
                   );
 
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => CreateEvent(meeting: meeting), // Pass the meeting
+                      builder: (context) =>
+                          CreateEvent(meeting: meeting), // Pass the meeting
                     ),
                   );
                 }
@@ -175,18 +181,20 @@ class _EventDetailPageState extends State<EventDetailPage> {
             ListView(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     // Title Text
-                    Text(
-                      widget.title,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 24,
-                        fontWeight: FontWeight.normal,
+                    Expanded( // Use Expanded to allow the title to take available space
+                      child: Text(
+                        widget.title,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 24,
+                          fontWeight: FontWeight.normal,
+                        ),
                       ),
                     ),
-                    // Spacer to push the button to the right
-                    Spacer(),
+
+                    /*Spacer(),*/
                     // Conditional Button
                     if (widget.status == 'Overdue' && widget.Assignedby == 'Own')
                       ElevatedButton(
@@ -219,7 +227,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   children: List.generate(widget.pdfUrls?.length ?? 0, (index) {
                     String pdfName = widget.pdfUrls![index].split('/').last;
                     return GestureDetector(
-                      onTap: () => _openPdfViewer(context, widget.pdfUrls![index]),
+                      onTap: () =>
+                          _openPdfViewer(context, widget.pdfUrls![index]),
                       child: Container(
                         width: screenWidth * 0.4, // Responsive width
                         padding: EdgeInsets.all(4),
@@ -280,10 +289,12 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildDetailRow(context, Icons.adjust, 'Status:', widget.status),
+                      _buildDetailRow(
+                          context, Icons.adjust, 'Status:', widget.status),
 
                       // Check if the event is a meeting
-                      if (widget.Event.toLowerCase() == "meeting".toLowerCase()) ...[
+                      if (widget.Event.toLowerCase() ==
+                          "meeting".toLowerCase()) ...[
                         _buildDetailRow(
                           context,
                           Icons.calendar_today_rounded,
@@ -292,7 +303,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                         _buildDetailRow(
                           context,
-                          Icons.access_time, // You can use a clock icon for time
+                          Icons
+                              .access_time, // You can use a clock icon for time
                           'From Time:',
                           widget.fromTime, // Extract time part
                         ),
@@ -304,7 +316,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                         _buildDetailRow(
                           context,
-                          Icons.access_time, // You can use a clock icon for time
+                          Icons
+                              .access_time, // You can use a clock icon for time
                           'To Time:',
                           widget.toTime, // Extract time part
                         ),
@@ -317,10 +330,14 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                       ],
 
-                      _buildDetailRow(context, Icons.sell_outlined, 'Priority:', widget.priority),
-                      _buildDetailRow(context, Icons.task_outlined, 'Event:', widget.Event),
-                      _buildDetailRow(context, Icons.person_2_outlined, 'Assigned By:', widget.Assignedby),
-                      _buildDetailRow(context, Icons.location_on, 'Location:', widget.location),
+                      _buildDetailRow(context, Icons.sell_outlined, 'Priority:',
+                          widget.priority),
+                      _buildDetailRow(
+                          context, Icons.task_outlined, 'Event:', widget.Event),
+                      _buildDetailRow(context, Icons.person_2_outlined,
+                          'Assigned By:', widget.Assignedby),
+                      _buildDetailRow(context, Icons.location_on, 'Location:',
+                          widget.location),
                     ],
                   ),
                 ),
@@ -432,10 +449,13 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     Wrap(
                       spacing: 10.0,
                       runSpacing: 10.0,
-                      children: List.generate(widget.Attachmentpdfurl?.length ?? 0, (index) {
-                        String pdfName = widget.Attachmentpdfurl![index].split('/').last;
+                      children: List.generate(
+                          widget.Attachmentpdfurl?.length ?? 0, (index) {
+                        String pdfName =
+                            widget.Attachmentpdfurl![index].split('/').last;
                         return GestureDetector(
-                          onTap: () => _openPdfViewer(context, widget.Attachmentpdfurl![index]),
+                          onTap: () => _openPdfViewer(
+                              context, widget.Attachmentpdfurl![index]),
                           child: Container(
                             width: screenWidth * 0.4,
                             padding: EdgeInsets.all(4),
@@ -459,7 +479,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                                       width: screenWidth * 0.15,
                                       child: Text(
                                         pdfName,
-                                        style: GoogleFonts.montserrat(fontSize: 12),
+                                        style: GoogleFonts.montserrat(
+                                            fontSize: 12),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
@@ -513,7 +534,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
                       ),
                     ),
                   ],
-
                 ] else ...[
                   // If status is "Not Started", show the Start button
                   Center(
@@ -544,7 +564,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
                 ],
               ],
             ),
-
           ],
         ),
       ),
@@ -588,11 +607,11 @@ class _EventDetailPageState extends State<EventDetailPage> {
                       // Status Container
                       Container(
                         padding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: getStatusColor(value),
                           borderRadius:
-                          BorderRadius.circular(4), // Rounded corners
+                              BorderRadius.circular(4), // Rounded corners
                         ),
                         child: Text(
                           value,
@@ -618,7 +637,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                           color: getPriorityColor(
                               value), // Get color based on priority
                           borderRadius:
-                          BorderRadius.circular(2), // Rounded corners
+                              BorderRadius.circular(2), // Rounded corners
                         ),
                       ),
                       SizedBox(width: 8), // Space between color box and value
@@ -693,7 +712,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
           priority: Priority.high,
           showWhen: false,
         );
-        var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+        var platformChannelSpecifics =
+            NotificationDetails(android: androidPlatformChannelSpecifics);
         await flutterLocalNotificationsPlugin.show(
           0,
           'Download Complete',
@@ -710,7 +730,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
       // Optionally, you could show a dialog to inform the user to enable notifications
     } else if (notificationStatus.isPermanentlyDenied) {
       // If permission is permanently denied, prompt the user to go to settings
-      print('Notification permission permanently denied. Please enable it in app settings.');
+      print(
+          'Notification permission permanently denied. Please enable it in app settings.');
       // Optionally, you could open the app settings
       openAppSettings();
     }
@@ -731,7 +752,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
   }
 
   void _pickFile() async {
-
     var status = await Permission.storage.request();
     if (status.isGranted) {
       FilePickerResult? result = await FilePicker.platform.pickFiles(

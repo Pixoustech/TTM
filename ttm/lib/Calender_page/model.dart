@@ -160,7 +160,7 @@ class EventData {
       isSelfEvent: json['isSelfEvent'] ?? false,
       createdBy: json['createdBy'] ?? '',
       createdByUserName: json['createdByUserName'] ?? '',
-      createdDate: json['createdDate'] ?? '', id: json['id'] ?? '',
+      createdDate: json['createdDate'] ?? '', id: json['eventId'] ?? '',
     );
   }
 }
