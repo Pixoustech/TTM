@@ -1,61 +1,114 @@
 // lib/constants/app_constants.dart
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
+import '../Login_Page/login_page.dart';
 import '../MapScreen.dart';
+import 'dart:developer' as developer;
 
 class AppColors {
   static const Color concolor = Color(0xFF7E1416);
   static const Color backwhite = Color(0xFFFFFFFF);
 }
 
+
 class AppApi {
-  static const String baseurl = "http://ttm.dev.pixous.info/api";
+  static const String baseUrl = "http://ttm.dev.pixous.info/api";
   static String authToken = AppConstants.token ?? '';
+
+  // Create a Dio instance with base options
   static final Dio dio = Dio(
     BaseOptions(
-      baseUrl: baseurl,
+      baseUrl: baseUrl,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': '$authToken',
+        'Authorization': authToken,
       },
     ),
   );
 
-  // Method to store the token
-  static Future<void> storeToken(String token) async {
-    authToken = token; // Update the local variable
-    AppConstants._prefs?.setString('userToken', token); // Store in SharedPreferences
-    dio.options.headers['Authorization'] = '$authToken'; // Update Dio headers
+  // Initialize Dio and add an interceptor for token validation
+  static void initialize() {
+    dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        // Attach the latest token to every request
+        options.headers['Authorization'] = authToken;
+        return handler.next(options);
+      },
+      onResponse: (response, handler) {
+        // Process successful responses
+        return handler.next(response);
+      },
+      onError: (DioError error, handler) async {
+        if (error.response?.statusCode == 401) {
+          // Handle Unauthorized response
+          await sessionOut(); // Log out user and redirect to login page
+        } else {
+          // Handle other errors if necessary
+          print("Error occurred: ${error.message}");
+        }
+        return handler.next(error);
+      },
+    ));
   }
 
-  // Method to refresh the token
-  static Future<void> refreshToken(String token) async {
-    authToken = token;
-    try {
-      final response = await dio.post('/auth/refresh', data: {
-        'refreshToken': authToken, // Assuming you have a refresh token
-      });
+  // Handle session logout and redirection to the login page
+  static Future<void> sessionOut() async {
+    final prefs = AppConstants._prefs;
+    final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
 
-      if (response.statusCode == 200) {
-        String newToken = response.data['accessToken'];
-        await storeToken(newToken); // Store the new token
-      } else {
-        print('Failed to refresh token: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error refreshing token: $e');
+    // Clear user session data
+    await prefs?.remove('userToken');
+    await prefs?.remove('userId');
+    await secureStorage.delete(key: 'username'); // Clear username
+    await secureStorage.delete(key: 'password'); // Clear password
+
+    // Navigate to the LoginPage
+    if (AppConstants.navigatorKey.currentState != null) {
+      AppConstants.navigatorKey.currentState!.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginPage()),
+            (Route<dynamic> route) => false,
+      );
+    }
+
+    // Show a SnackBar to inform the user
+    if (AppConstants.scaffoldMessengerKey.currentState != null) {
+      AppConstants.scaffoldMessengerKey.currentState!.showSnackBar(
+        SnackBar(
+          content: Text(
+            "Session expired. Please log in again.",
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
   }
-  // Method to print authToken
+
+  // Update and store the token after login
+  static Future<void> updateToken(String token) async {
+    authToken = token;
+    await AppConstants._prefs?.setString('userToken', token);
+    dio.options.headers['Authorization'] = authToken; // Update the header with the new token
+  }
+
+  // Print the current token for debugging
   static void printAuthToken() {
-    print('Auth Token: $authToken');
+    print('Current Auth Token: $authToken');
   }
 }
 
@@ -104,8 +157,17 @@ class EventUtils {
     }
   }
 }
+
 class AppConstants {
   static SharedPreferences? _prefs;
+
+  // Keys for storing data in SharedPreferences
+  static const String _userIdKey = 'userId';
+  static const String _userTokenKey = 'userToken';
+
+  // Navigation and Messenger Keys
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   // Initialize SharedPreferences
   static Future<void> initialize() async {
@@ -114,13 +176,29 @@ class AppConstants {
 
   // Getter to retrieve userId
   static String? get userId {
-    return _prefs?.getString('userId');
+    return _prefs?.getString(_userIdKey);
   }
+
+  // Setter to store userId
+  static Future<void> setUserId(String userId) async {
+    await _prefs?.setString(_userIdKey, userId);
+  }
+
+  // Getter to retrieve userToken
   static String? get token {
-    return _prefs?.getString('userToken');
+    return _prefs?.getString(_userTokenKey);
+  }
+
+  // Setter to store userToken
+  static Future<void> setToken(String token) async {
+    await _prefs?.setString(_userTokenKey, token);
+  }
+
+  // Clear all stored preferences (e.g., during logout)
+  static Future<void> clearPreferences() async {
+    await _prefs?.clear();
   }
 }
-
 
 class DialogUtils {
   static void showSuccessDialog(BuildContext context, String message, {VoidCallback? onOk}) {
@@ -146,6 +224,7 @@ class DialogUtils {
     );
   }
 }
+
 Color getStatusColor(String status) {
   if (status == "In-Progress") {
     return Colors.orange;
@@ -189,3 +268,61 @@ String formatDate(String dateString) {
 }
 
 
+class LocationRequest {
+  // Request location permission
+  static Future<LocationPermission> requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    return permission;
+  }
+
+  // Get the current location
+  static Future<Position> getCurrentLocation() async {
+    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  }
+}
+
+
+
+class PermissionUtils {
+  static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+  FlutterLocalNotificationsPlugin();
+
+  // Method to request notification permission
+  static Future<bool> requestNotificationPermission() async {
+    if (Platform.isAndroid) {
+      // Handle Android platform using the local notifications plugin
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+
+      final bool? grantedNotificationPermission =
+      await androidImplementation?.requestNotificationsPermission();
+      return grantedNotificationPermission ?? false; // Return true if granted, false otherwise
+    } else if (Platform.isIOS) {
+      // For iOS, use the permission_handler package to request notification permission
+      var status = await requestNotificationPermissions();
+      return status.isGranted; // Return true if granted, false otherwise
+    }
+    return false; // Default to false for unsupported platforms
+  }
+
+  // Request notification permissions, used by iOS devices
+  static Future<PermissionStatus> requestNotificationPermissions() async {
+    final PermissionStatus status = await Permission.notification.request();
+    if (status.isGranted) {
+      // Notification permissions granted
+      return status;
+    } else if (status.isDenied) {
+      // Notification permissions denied
+      return status;
+    } else if (status.isPermanentlyDenied) {
+      // Notification permissions permanently denied, open app settings
+      await openAppSettings();
+      return status;
+    }
+    return status;
+  }
+}

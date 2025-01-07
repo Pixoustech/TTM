@@ -3,6 +3,7 @@ class ProfileModel {
   final String firstName;
   final String lastName;
   final String email;
+  final String zipcode;
   final String mobile;
   final String dob;
   final String district;
@@ -14,17 +15,29 @@ class ProfileModel {
   final String userGroup;
   final String branchId;
   final String gender;
+  final String city;
   final String profileImageId; // Corrected typo here
-  final String loginId;
   final String divisionId;
   final String districtId;
   final String userName;
   final String roleName;
-  final String lastUpdatedBy;
-  final String lastUpdatedUserName;
-  final String lastUpdatedDate;
+  final String createdBy;
+  final String createdByUserName; // Corrected typo here
+  final String createdDate;
+  final String modifiedBy;
+  final String modifiedByUserName; // Corrected typo here
+  final String modifiedDate;
+  final String deletedBy;
+  final String deletedByUserName; // Corrected typo here
+  final String deletedDate;
+  final String savedBy;
+  final String savedByUserName; // Corrected typo here
+  final String savedDate;
+  final String password; // Added password field
 
   ProfileModel({
+    required this.city,
+    required this.zipcode,
     required this.userId,
     required this.firstName,
     required this.lastName,
@@ -40,19 +53,32 @@ class ProfileModel {
     required this.userGroup,
     required this.branchId,
     required this.profileImageId,
-    required this.loginId,
     required this.divisionId,
     required this.districtId,
     required this.userName,
     required this.roleName,
-    required this.lastUpdatedBy,
-    required this.lastUpdatedUserName,
-    required this.lastUpdatedDate, required this.gender,
+    required this.createdBy,
+    required this.createdByUserName, // Corrected typo here
+    required this.createdDate,
+    required this.modifiedBy,
+    required this.modifiedByUserName, // Corrected typo here
+    required this.modifiedDate,
+    required this.deletedBy,
+    required this.deletedByUserName, // Corrected typo here
+    required this.deletedDate,
+    required this.savedBy,
+    required this.savedByUserName, // Corrected typo here
+    required this.savedDate,
+    required this.gender,
+    required this.password, // Added password field
   });
 
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
+
       userId: json['userId'] ?? '',
+      zipcode: json['pincode'] ?? '',
+      city: json['city'] ?? '',
       firstName: json['firstName'] ?? '',
       lastName: json['lastName'] ?? '',
       email: json['email'] ?? '',
@@ -66,16 +92,25 @@ class ProfileModel {
       roleId: json['roleId'] ?? '',
       userGroup: json['userGroup'] ?? '',
       branchId: json['branchId'] ?? '',
-      profileImageId: json['pofileImageId'] ?? '', // Corrected typo here
-      loginId: json['loginId'] ?? '',
-      gender: json['gender'] ?? '',
+      profileImageId: json['profileImageId'] ?? '', // Corrected typo here
       divisionId: json['divisionId'] ?? '',
       districtId: json['districtId'] ?? '',
       userName: json['userName'] ?? '',
       roleName: json['roleName'] ?? '',
-      lastUpdatedBy: json['lastUpdatedBy'] ?? '',
-      lastUpdatedUserName: json['lastUpdatedUserName'] ?? '',
-      lastUpdatedDate: json['lastUpdatedDate'] ?? '',
+      createdBy: json['createdBy'] ?? '',
+      createdByUserName: json['createdByUserName'] ?? '', // Corrected typo here
+      createdDate: json['createdDate'] ?? '',
+      modifiedBy: json['modifiedBy'] ?? '',
+      modifiedByUserName: json['modifiedByUserName'] ?? '', // Corrected typo here
+      modifiedDate: json['modifiedDate'] ?? '',
+      deletedBy: json['deletedBy'] ?? '',
+      deletedByUserName: json['deletedByUserName'] ?? '', // Corrected typo here
+      deletedDate: json['deletedDate'] ?? '',
+      savedBy: json['savedBy'] ?? '',
+      savedByUserName: json['savedByUserName'] ?? '', // Corrected typo here
+      savedDate: json['savedDate'] ?? '',
+      gender: json['gender'] ?? '',
+      password: json['password'] ?? '', // Added password field
     );
   }
 
@@ -96,15 +131,40 @@ class ProfileModel {
       'roleId': roleId,
       'userGroup': userGroup,
       'branchId': branchId,
-      'pofileImageId': profileImageId, // Corrected typo here
-      'loginId': loginId,
+      'profileImageId': profileImageId,
       'divisionId': divisionId,
       'districtId': districtId,
       'userName': userName,
       'roleName': roleName,
-      'lastUpdatedBy': lastUpdatedBy,
-      'lastUpdatedUser Name': lastUpdatedUserName,
-      'lastUpdatedDate': lastUpdatedDate,
+      'createdBy': createdBy,
+      'createdByUser  Name': createdByUserName, // Corrected typo here
+      'createdDate': createdDate,
+      'modifiedBy': modifiedBy,
+      'modifiedByUserName': modifiedByUserName, // Corrected typo here
+      'modifiedDate': modifiedDate,
+      'deletedBy': deletedBy,
+      'deletedByUserName': deletedByUserName, // Corrected typo here
+      'deletedDate': deletedDate,
+      'savedBy': savedBy,
+      'savedByUserName': savedByUserName, // Corrected typo here
+      'savedDate': savedDate,
+      'pincode':zipcode,
+      'password': password,
+      'city': city, // Added password field
     };
+  }
+}
+
+class GenderOption {
+  final String id;
+  final String value;
+
+  GenderOption({required this.id, required this.value});
+
+  factory GenderOption.fromJson(Map<String, dynamic> json) {
+    return GenderOption(
+      id: json['id'],
+      value: json['value'],
+    );
   }
 }

@@ -27,18 +27,9 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadPreferences(); // Load preferences when the profile page is initialized// Fetch user profile data on initialization
-    _fetchUserProfile();
-  }
-  Future<void> _fetchUserProfile() async {
-    final userService = ApiService(); // Create an instance of your API service
-    String userId = AppConstants.userId ?? ''; // Get the user ID from your constants
 
-    fetchedProfile = (await userService.fetchUserProfile(userId)) as ProfileModel?; // Fetch the profile
-
-    setState(() {
-      // Update the UI with the fetched profile data
-    });
   }
+
   Future<void> _loadPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -268,14 +259,31 @@ class _ProfilePageState extends State<ProfilePage> {
       Icons.notifications,
       'Notification',
       _notificationsEnabled,
-          (value) {
+          (value) async {
         setState(() {
           _notificationsEnabled = value; // Update toggle state
         });
-        _saveNotificationPreference(value); // Save Notification preference
+        if (value) {
+          // Request notification permission using the utility method
+          bool granted = await PermissionUtils.requestNotificationPermission();
+          if (granted) {
+            _saveNotificationPreference(value); // Save Notification preference
+          } else {
+            // Handle the case when permission is denied
+            setState(() {
+              _notificationsEnabled = false; // Revert the toggle
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Notification permission denied')),
+            );
+          }
+        } else {
+          _saveNotificationPreference(value); // Save Notification preference
+        }
       },
     );
   }
+
 
   Widget _buildToggleBox(BuildContext context, IconData icon, String title, bool value, Function(bool) onToggle) {
     return Container(

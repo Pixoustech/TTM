@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,6 +11,11 @@ import 'Home_page_Widgets.dart';
 import 'Service.dart';
 import 'model.dart';
 import 'package:shimmer/shimmer.dart';
+import 'dart:async';
+import 'dart:developer' as developer;
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class HomePageData {
   final List<Task> tasks;
@@ -30,6 +37,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+
   bool _isLoadingoverall = true; // Add this line
   bool _isLoading = true; // Add this line
   String buttonText = "Check In";
@@ -60,10 +68,44 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-  void _toggleCheckInOut() {
-    setState(() {
-      buttonText = (buttonText == "Check In") ? "Check Out" : "Check In";
-    });
+  void dispose() {
+    super.dispose();
+  }
+
+
+  void _toggleCheckInOut() async {
+    // Request location permission
+    LocationPermission permission =
+        await LocationRequest.requestLocationPermission();
+
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      // Get the user's location
+      Position position = await LocationRequest.getCurrentLocation();
+
+      if (position != null) {
+        // Determine check-in or check-out action based on the current button text
+        if (buttonText == "Check In") {
+          // Handle check-in logic
+          print(
+              "User checked in at: ${position.latitude}, ${position.longitude}");
+          // Send this location to your server or handle it as needed
+        } else {
+          // Handle check-out logic
+          print(
+              "User checked out at: ${position.latitude}, ${position.longitude}");
+          // Send this location to your server or handle it as needed
+        }
+
+        // Toggle the button text
+        setState(() {
+          buttonText = (buttonText == "Check In") ? "Check Out" : "Check In";
+        });
+      }
+    } else {
+      // Handle permission denied case
+      print("Location permission denied");
+    }
   }
 
   Future<void> _fetchData(String filterType) async {
@@ -158,8 +200,6 @@ class _HomePageState extends State<HomePage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Gradient Background Container
-
               Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
@@ -400,8 +440,12 @@ class _HomePageState extends State<HomePage> {
               Container(
                 color: Colors.white,
                 child: Padding(
-
-                  padding: const EdgeInsets.all(10.0),
+                  padding: const EdgeInsets.only(
+                      top: 10.0,
+                      left: 10.0,
+                      right: 10.0,
+                      bottom:
+                          50.0), // Set padding for top, left, and right only
                   child: Column(
                     children: [
                       if (_filterTasksstatusbasedbox().isNotEmpty ||
@@ -471,7 +515,6 @@ class _HomePageState extends State<HomePage> {
                                                         MaterialPageRoute(
                                                           builder: (context) =>
                                                               EventDetailPage(
-
                                                             title:
                                                                 task.eventName,
                                                             description: task
@@ -499,7 +542,9 @@ class _HomePageState extends State<HomePage> {
                                                             toDate:
                                                                 task.dueDate,
                                                             fromTime: "",
-                                                            toTime: "", id:task.id,eventmode: '',
+                                                            toTime: "",
+                                                            id: task.id,
+                                                            eventmode: '',
                                                           ),
                                                         ),
                                                       );
@@ -581,7 +626,10 @@ class _HomePageState extends State<HomePage> {
                                                             fromTime: meeting
                                                                 .fromTime,
                                                             toTime:
-                                                                meeting.toTime, id: meeting.id,eventmode: meeting.eventMode,
+                                                                meeting.toTime,
+                                                            id: meeting.id,
+                                                            eventmode: meeting
+                                                                .eventMode,
                                                           ),
                                                         ),
                                                       );
@@ -873,7 +921,9 @@ class _HomePageState extends State<HomePage> {
                                               fromDate: task.dueDate,
                                               toDate: task.dueDate,
                                               fromTime: "",
-                                              toTime: "", id: task.id,eventmode: '',
+                                              toTime: "",
+                                              id: task.id,
+                                              eventmode: '',
                                             ),
                                           ),
                                         );
@@ -980,7 +1030,9 @@ class _HomePageState extends State<HomePage> {
                                                 fromDate: meeting.startDate,
                                                 toDate: meeting.endDate,
                                                 fromTime: meeting.fromTime,
-                                                toTime: meeting.toTime, id: meeting.id,eventmode: meeting.eventMode,
+                                                toTime: meeting.toTime,
+                                                id: meeting.id,
+                                                eventmode: meeting.eventMode,
                                               ),
                                             ),
                                           );
@@ -1087,7 +1139,9 @@ class _HomePageState extends State<HomePage> {
                                             fromDate: task.dueDate,
                                             toDate: task.dueDate,
                                             fromTime: "",
-                                            toTime: "", id: task.id,eventmode: '',
+                                            toTime: "",
+                                            id: task.id,
+                                            eventmode: '',
                                           ),
                                         ),
                                       );
@@ -1202,7 +1256,9 @@ class _HomePageState extends State<HomePage> {
                                                 fromDate: meeting.startDate,
                                                 toDate: meeting.endDate,
                                                 fromTime: meeting.fromTime,
-                                                toTime: meeting.toTime, id: meeting.id, eventmode: meeting.eventMode,
+                                                toTime: meeting.toTime,
+                                                id: meeting.id,
+                                                eventmode: meeting.eventMode,
                                               ),
                                             ),
                                           );

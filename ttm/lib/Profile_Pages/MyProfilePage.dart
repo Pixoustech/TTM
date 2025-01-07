@@ -19,22 +19,35 @@ class _MyProfilePageState extends State<MyProfilePage> {
   bool isEditing = false;
   XFile? _imageFile; // Variable to hold the selected image
   ProfileModel? profile; // Variable to hold the fetched profile data
+  List<GenderOption> genderOptions = [];
 
-  // Controllers for text fields
+  final TextEditingController userIdController = TextEditingController();
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
-  final TextEditingController dobController = TextEditingController();
-  final TextEditingController genderController = TextEditingController();
-  final TextEditingController roleController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController mobileController = TextEditingController();
+  final TextEditingController isActiveController = TextEditingController();
+  final TextEditingController roleIdController = TextEditingController();
+  final TextEditingController divisionIdController = TextEditingController();
+  final TextEditingController branchIdController = TextEditingController();
+  final TextEditingController userGroupController = TextEditingController();
+  final TextEditingController dobController = TextEditingController();
+  final TextEditingController districtIdController = TextEditingController();
+  final TextEditingController genderIdController = TextEditingController();
+  final TextEditingController countryIdController = TextEditingController();
+  final TextEditingController stateIdController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController zipCodeController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController genderController = TextEditingController();
+  final TextEditingController roleController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchUserProfile(); // Fetch user profile data on initialization
+    _fetchGenderOptions();
   }
   Future<void> _fetchUserProfile() async {
     final userService = ApiService();
@@ -46,9 +59,16 @@ class _MyProfilePageState extends State<MyProfilePage> {
           lastNameController.text = fetchedProfile.lastName ?? '';
           dobController.text = fetchedProfile.dob ?? '';
           emailController.text = fetchedProfile.email ?? '';
-          phoneController.text = fetchedProfile.mobile ?? '';
+          mobileController.text = fetchedProfile.mobile ?? '';
           cityController.text = fetchedProfile.district ?? ''; // Assuming district = city
-          // Add other fields if needed
+          usernameController.text = fetchedProfile.userName ?? ''; // Assuming userName is available
+          passwordController.text = fetchedProfile.password;
+          roleController.text=fetchedProfile.roleName;
+          zipCodeController.text = fetchedProfile.zipcode;
+          roleIdController.text = fetchedProfile.roleId;
+          cityController.text = fetchedProfile.city;
+genderController.text=fetchedProfile.gender;
+
         });
       } else {
         print('Profile is null');
@@ -57,7 +77,35 @@ class _MyProfilePageState extends State<MyProfilePage> {
       print('Error in _fetchUserProfile: $e');
     }
   }
+  Future<void> _fetchGenderOptions() async {
+    try {
+      final response = await AppApi.dio.get(
+        '/Settings/Configuration_Get',
+        queryParameters: {
+          'ConfigurationId': '',
+          'CategoryId': '0e686716-ac1a-11ef-9ec1-fa163ea6a5c4',
+          'ParentConfigurationId': '',
+          'IsActive': 'true',
+          'CategoryCode': '',
+        },
+      );
 
+      if (response.statusCode == 200) {
+        final data = response.data; // Use the response data directly
+        if (data['status'] == 'SUCCESS') {
+          setState(() {
+            genderOptions = (data['data'] as List)
+                .map((item) => GenderOption.fromJson(item))
+                .toList();
+          });
+        }
+      } else {
+        throw Exception('Failed to load gender options');
+      }
+    } catch (e) {
+      print('Error fetching gender options: $e');
+    }
+  }
   Future<void> _requestPermissions() async {
     final status = await Permission.storage.status;
     if (!status.isGranted) {
@@ -156,28 +204,29 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   void _updateProfile() async {
+    final selectedGender = genderOptions.firstWhere((option) => option.value == genderController.text);
     // Gather data from text fields
     final updatedProfileData = {
       'userId': AppConstants.userId ?? '', // Use the user ID from your constants
       'firstName': firstNameController.text,
       'lastName': lastNameController.text,
       'email': emailController.text,
-      'mobile': phoneController.text,
+      'mobile': mobileController.text,
       'isActive': true, // Assuming the user is active
-      'roleId': 'string', // Replace with actual role ID if available
-      'divisionId': 'string', // Replace with actual division ID if available
-      'branchId': 'string', // Replace with actual branch ID if available
-      'userGroup': 'string', // Replace with actual user group if available
+      'roleId': roleIdController.text, // Replace with actual role ID if available
+      'divisionId': divisionIdController.text, // Replace with actual division ID if available
+      'branchId': branchIdController.text, // Replace with actual branch ID if available
+      'userGroup': userGroupController.text, // Replace with actual user group if available
       'dob': dobController.text, // Ensure this is in the correct format
-      'districtId': 'string', // Replace with actual district ID if available
-      'genderId': 'string', // Replace with actual gender ID if available
-      'countryId': 'string', // Replace with actual country ID if available
-      'stateId': 'string', // Replace with actual state ID if available
+      'districtId': districtIdController.text, // Replace with actual district ID if available
+      'genderId': selectedGender.id,
+      'countryId': countryIdController.text, // Replace with actual country ID if available
+      'stateId': stateIdController.text, // Replace with actual state ID if available
       'city': cityController.text, // Assuming city is the same as district
       'pincode': zipCodeController.text, // Assuming zip code is the same as pincode
-      'address': 'string', // Replace with actual address if available
-      'password': '', // Replace with actual password if needed
-      'userName': '', // Replace with actual username if available
+      'address': cityController.text, // Replace with actual address if available
+      'password': passwordController.text, // Replace with actual password if needed
+      'userName': usernameController.text, // Replace with actual username if available
     };
 // Make the POST request using Dio
     final response = await AppApi.dio.post(
@@ -306,7 +355,7 @@ class _MyProfilePageState extends State<MyProfilePage> {
                 _buildProfileField("Gender", genderController),
                 _buildProfileField("Role", roleController),
                 _buildProfileField("Email Address", emailController),
-                _buildProfileField("Phone Number", phoneController),
+                _buildProfileField("Phone Number", mobileController),
                 _buildProfileField("City", cityController),
                 _buildProfileField("Zip Code", zipCodeController),
                 if (isEditing)
@@ -366,44 +415,161 @@ class _MyProfilePageState extends State<MyProfilePage> {
   }
 
   Widget _buildProfileField(String label, TextEditingController controller) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: GoogleFonts.montserrat(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          Container(
-            height: 50, // Set a fixed height for the TextField
-            child: TextField(
+    if (label == "Date of Birth" && isEditing) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Stack(
+          alignment: Alignment.centerRight, // Align calendar icon to the right
+          children: [
+            TextField(
               controller: controller,
-              enabled: isEditing, // Enable or disable based on edit mode
+              enabled: false, // Make the TextField non-editable
               style: TextStyle(
-                color: isEditing ? Colors.black : Colors.grey, // Change text color
+                color: Colors.black,
               ),
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 10.0,
-                  horizontal: 12.0, // Adjust vertical padding
+                  horizontal: 12.0,
                 ),
                 border: const OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey), // Default border color
+                  borderSide: BorderSide(color: Colors.grey),
                 ),
                 focusedBorder: const OutlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.concolor), // Focused border color
+                  borderSide: BorderSide(color: AppColors.concolor),
                 ),
                 hintText: 'Enter your $label',
               ),
-              cursorColor: AppColors.concolor, // Cursor color
+              readOnly: true, // Ensure it cannot be directly edited
+              onTap: () async {
+                // Trigger the date picker when the field is tapped
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime.now(),
+                );
+
+                if (pickedDate != null) {
+                  // Format the selected date as needed
+                  String formattedDate = "${pickedDate.toLocal()}".split(' ')[0];
+                  setState(() {
+                    controller.text = formattedDate; // Update the controller
+                  });
+                }
+              },
             ),
-          ),
-        ],
-      ),
-    );
+            IconButton(
+              icon: Icon(Icons.calendar_today, color: AppColors.concolor),
+              onPressed: () async {
+                // Show the date picker on icon press
+                DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime.now(),
+                );
+
+                if (pickedDate != null) {
+                  // Format the selected date
+                  String formattedDate = "${pickedDate.toLocal()}".split(' ')[0];
+                  setState(() {
+                    controller.text = formattedDate;
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    else if (label == "Gender" && isEditing) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            DropdownButtonFormField<GenderOption>(
+              value: genderOptions.firstWhere((option) => option.value == genderController.text, orElse: () => genderOptions[0]),
+              items: genderOptions.map((GenderOption option) {
+                return DropdownMenuItem<GenderOption>(
+                  value: option,
+                  child: Text(option.value),
+                );
+              }).toList(),
+              onChanged: (GenderOption? newValue) {
+                setState(() {
+                  genderController.text = newValue?.value ?? '';
+                });
+              },
+
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 10.0,
+                  horizontal: 12.0,
+                ),
+                border: const OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(color: AppColors.concolor),
+                ),
+                hintText: 'Enter your $label',
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Container(
+              height: 50,
+              child: TextField(
+                controller: controller,
+                enabled: isEditing,
+                style: TextStyle(
+                  color: isEditing ? Colors.black : Colors.grey,
+                ),
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 10.0,
+                    horizontal: 12.0,
+                  ),
+                  border: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.concolor),
+                  ),
+                  hintText: 'Enter your $label',
+                ),
+                cursorColor: AppColors.concolor,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
+
+
 }

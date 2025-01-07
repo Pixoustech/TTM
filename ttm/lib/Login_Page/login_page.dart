@@ -332,10 +332,34 @@ class _LoginPageState extends State<LoginPage> {
                               activeColor: AppColors.concolor,
                               inactiveColor: Colors.grey,
                               toggleSize: 13.0,
-                              onToggle: (value) {
-                                setState(() {
-                                  _useFaceId = value;
-                                });
+                              onToggle: (value) async {
+                                // Check if biometrics can be checked
+                                final canCheckBiometrics = await auth.canCheckBiometrics;
+                                print('Can check biometrics: $canCheckBiometrics'); // Debugging statement
+
+                                if (canCheckBiometrics) {
+                                  // If biometrics are available, update the state and save the preference
+                                  setState(() {
+                                    _useFaceId = value;
+                                  });
+
+                                  // Save the preference
+                                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                                  await prefs.setBool('useFaceId', _useFaceId);
+                                } else {
+                                  // If biometrics are not available, show a snackbar and reset the switch
+                                  print('Face ID is not available.'); // Debugging statement
+                                  _showSnackbar("Face ID is not available on this device. Please check your settings.");
+
+                                  // Reset the switch to false
+                                  setState(() {
+                                    _useFaceId = false;
+                                  });
+
+                                  // Optionally, you can also save the preference to false
+                                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                                  await prefs.setBool('useFaceId', false);
+                                }
                               },
                             ),
                             SizedBox(width: 10),

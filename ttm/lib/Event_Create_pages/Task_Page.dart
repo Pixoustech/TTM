@@ -143,6 +143,7 @@ class _CreateEventState extends State<CreateEvent> {
               _buildPrioritySelector(),
               const SizedBox(height: 16),
               _buildDescriptionFieldAndButtons(),
+              const SizedBox(height: 20), // Adjust the height as needed
             ],
           ),
         ),
@@ -1104,7 +1105,7 @@ class _CreateEventState extends State<CreateEvent> {
       if (_currentView == 'Task') {
         // Create the TaskModel instance
         TaskModel task = TaskModel(
-          id:"109f19e2-d3d5-49a1-9fe7-304705bee851" , //"widget.task!.id"
+          id:widget.task!.id, //"widget.task!.id"
           userId: AppConstants.userId ?? '',
           eventName: _taskNameController.text,
           dueDate: _dueDateController.text,

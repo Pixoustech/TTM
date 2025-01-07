@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ttm/Comman_pages/Constant.dart';
@@ -59,29 +60,39 @@ class _SplashPageState extends State<SplashScreen>
     bool? isFirstLaunch = prefs.getBool('isFirstLaunch');
     String? userToken = prefs.getString('userToken'); // Retrieve stored token
 
-    String? userid = prefs.getString('userId'); // Retrieve stored token
-
     // Delay for splash screen effect
     await Future.delayed(const Duration(seconds: 3));
 
-    if (isFirstLaunch == null || isFirstLaunch) {
-      await prefs.setBool('isFirstLaunch', false);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const WalkthroughPage()),
-      );
-    } else if (userToken != null) {
-      // Redirect to HomePage if token exists
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => Navigation()),
-      );
-    } else {
-      // Redirect to LoginPage if no token
+    // Check internet connectivity
+    ConnectivityResult connectivityResult = await Connectivity().checkConnectivity();
+
+    if (connectivityResult == ConnectivityResult.none) {
+      // No internet connection, navigate to LoginPage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),
       );
+    } else {
+      // Proceed with existing logic
+      if (isFirstLaunch == null || isFirstLaunch) {
+        await prefs.setBool('isFirstLaunch', false);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const WalkthroughPage()),
+        );
+      } else if (userToken != null) {
+        // Redirect to HomePage if token exists
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Navigation()),
+        );
+      } else {
+        // Redirect to LoginPage if no token
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      }
     }
   }
 

@@ -18,6 +18,8 @@ class ApiService {
 
       if (response.statusCode == 200 && response.data['status'] == 'SUCCESS') {
         // Successful login and status is true
+        String token = response.data['data']['accessToken'];
+        await AppApi.updateToken(token);
         return UserModel.fromJson(response.data['data']);
       } else {
         // Login failed or status is false
