@@ -113,6 +113,7 @@ class MeetingModel {
   String description;
   String eventType;
   String eventMode;
+  bool isSelfEvent;
   bool isActive;
   String savedDate;
   String? lat;
@@ -126,7 +127,7 @@ class MeetingModel {
   String occurrenceType; // New field for occurrence type
 
   MeetingModel({
-
+    required this.isSelfEvent,
     required this.id,
     required this.userId,
     required this.eventName,
@@ -166,6 +167,7 @@ class MeetingModel {
       description: json['description'] ?? '',
       eventMode: json['eventMode'] ?? 'offline',
       isActive: json['isActive'] ?? true,
+      isSelfEvent: json['isSelfEvent'] ?? true,
       savedDate: json['savedDate'] ?? DateTime.now().toUtc().toIso8601String(),
       eventType: json['eventType'] ?? '',
       venue: json['venue'] ?? '',
@@ -195,6 +197,7 @@ class MeetingModel {
       "description": description,
       "eventMode": eventMode,
       "isActive": isActive,
+      "isSelfEvent": isSelfEvent,
       "savedDate": savedDate,
       "eventType": eventType,
       "venue": venue,

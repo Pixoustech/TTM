@@ -462,6 +462,7 @@ class _ProfilePageState extends State<ProfilePage> {
     await prefs.setBool('notificationsEnabled', value); // Save Notification preference
   }
 }
+
 class AuthService {
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
 

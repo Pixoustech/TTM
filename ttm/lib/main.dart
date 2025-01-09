@@ -6,40 +6,65 @@ import 'Comman_pages/Constant.dart';
 import 'Comman_pages/Splash_Screen.dart';
 import 'Connectivity_Check.dart';
 
+/// Flutter Local Notifications plugin instance
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
-void main() async {
+Future<void> main() async {
+  // Ensure all widgets are initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize constants and API
   await AppConstants.initialize();
   AppApi.initialize();
+
+  // Inject the InternetController for connectivity checks
   Get.put(InternetController(), permanent: true);
 
-  const AndroidInitializationSettings initializationSettingsAndroid =
-  AndroidInitializationSettings('@mipmap/ic_launcher'); // Your app icon
+  // Initialize local notifications
+  await initializeNotifications();
 
-  final InitializationSettings initializationSettings = InitializationSettings(
-    android: initializationSettingsAndroid,
-  );
-
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
+  // Run the Flutter application
   runApp(const MyApp());
 }
 
+/// Function to initialize notifications
+Future<void> initializeNotifications() async {
+  // Android-specific initialization settings
+  const AndroidInitializationSettings androidInitializationSettings =
+  AndroidInitializationSettings('@mipmap/ic_launcher'); // Replace with your app icon
+
+  // Cross-platform initialization settings
+  const InitializationSettings initializationSettings = InitializationSettings(
+    android: androidInitializationSettings,
+  );
+
+  // Initialize the plugin with the settings
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      // Handle notification tap (optional)
+      if (response.payload != null) {
+        debugPrint('Notification payload: ${response.payload}');
+      }
+    },
+  );
+}
+
+/// Main Application Widget
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp( // Use GetMaterialApp instead of MaterialApp
-      debugShowCheckedModeBanner: false,
-      title: 'TTM',
+    return GetMaterialApp(
+      debugShowCheckedModeBanner: false, // Disable debug banner
+      title: 'TTM', // Application title
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.blue, // Define the primary theme color
       ),
-      navigatorKey: AppConstants.navigatorKey, // Set the navigator key
-      scaffoldMessengerKey: AppConstants.scaffoldMessengerKey, // Set the scaffold messenger key
-      home: SplashScreen(), // Start with the SplashScreen
+      navigatorKey: AppConstants.navigatorKey, // Global navigator key for navigation
+      scaffoldMessengerKey: AppConstants.scaffoldMessengerKey, // Global scaffold messenger key
+      home: SplashScreen(), // Start with the SplashScreen widget
     );
   }
 }

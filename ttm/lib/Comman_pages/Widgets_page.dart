@@ -246,7 +246,7 @@ Widget buildMeetingDetailBox({
       // Colored side indicator
       Container(
         width: 10,
-        height: 130,
+        height: 150,
         decoration: BoxDecoration(
           color: getPriorityColor(priority),
           borderRadius: const BorderRadius.only(
@@ -260,7 +260,7 @@ Widget buildMeetingDetailBox({
       Expanded(
         child: Container(
           width: 10,
-          height: 130,
+          height: 150,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: const BorderRadius.only(

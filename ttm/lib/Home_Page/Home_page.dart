@@ -4,7 +4,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:ttm/Comman_pages/Constant.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../Event_Detail_Pages/Event_Detail.dart';
 import '../Comman_pages/Widgets_page.dart';
 import 'Home_page_Widgets.dart';
@@ -13,8 +15,6 @@ import 'model.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:async';
 import 'dart:developer' as developer;
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class HomePageData {
@@ -72,14 +72,11 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-
   void _toggleCheckInOut() async {
     // Request location permission
-    LocationPermission permission =
-        await LocationRequest.requestLocationPermission();
+    LocationPermission permission = await LocationRequest.requestLocationPermission();
 
-    if (permission == LocationPermission.whileInUse ||
-        permission == LocationPermission.always) {
+    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
       // Get the user's location
       Position position = await LocationRequest.getCurrentLocation();
 
@@ -87,13 +84,11 @@ class _HomePageState extends State<HomePage> {
         // Determine check-in or check-out action based on the current button text
         if (buttonText == "Check In") {
           // Handle check-in logic
-          print(
-              "User checked in at: ${position.latitude}, ${position.longitude}");
+          print("User  checked in at: ${position.latitude}, ${position.longitude}");
           // Send this location to your server or handle it as needed
         } else {
           // Handle check-out logic
-          print(
-              "User checked out at: ${position.latitude}, ${position.longitude}");
+          print("User  checked out at: ${position.latitude}, ${position.longitude}");
           // Send this location to your server or handle it as needed
         }
 
@@ -105,7 +100,39 @@ class _HomePageState extends State<HomePage> {
     } else {
       // Handle permission denied case
       print("Location permission denied");
+      _showPermissionDeniedDialog();
     }
+  }
+
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Location Permission Denied"),
+          content: Text("Please enable location services in settings to use this feature."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the dialog
+                await _openLocationSettings(); // Open app settings
+              },
+              child: Text("Settings"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _openLocationSettings() async {
+    await openAppSettings();
   }
 
   Future<void> _fetchData(String filterType) async {

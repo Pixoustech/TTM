@@ -266,8 +266,20 @@ String formatDate(String dateString) {
     return "Invalid Date";
   }
 }
+String formatDate1(String dateString) {
+  // Check if the dateString is already in the correct format
+  try {
+    // Use the appropriate format for parsing
+    DateFormat inputFormat = DateFormat("yyyy-MM-dd");
+    DateTime dateTime = inputFormat.parse(dateString);
 
-
+    // Return the date in the required format (yyyy-MM-dd)
+    return inputFormat.format(dateTime);
+  } catch (e) {
+    print('Error parsing date: $dateString - $e');
+    return "Invalid Date"; // Handle invalid date format
+  }
+}
 class LocationRequest {
   // Request location permission
   static Future<LocationPermission> requestLocationPermission() async {
@@ -284,8 +296,6 @@ class LocationRequest {
   }
 }
 
-
-
 class PermissionUtils {
   static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
@@ -300,6 +310,7 @@ class PermissionUtils {
 
       final bool? grantedNotificationPermission =
       await androidImplementation?.requestNotificationsPermission();
+
       return grantedNotificationPermission ?? false; // Return true if granted, false otherwise
     } else if (Platform.isIOS) {
       // For iOS, use the permission_handler package to request notification permission
@@ -312,6 +323,7 @@ class PermissionUtils {
   // Request notification permissions, used by iOS devices
   static Future<PermissionStatus> requestNotificationPermissions() async {
     final PermissionStatus status = await Permission.notification.request();
+
     if (status.isGranted) {
       // Notification permissions granted
       return status;
@@ -325,4 +337,6 @@ class PermissionUtils {
     }
     return status;
   }
+
 }
+

@@ -1057,7 +1057,7 @@ class _CreateEventState extends State<CreateEvent> {
           state: selectedState, // Add selected state
           city: selectedCity, // Add selected city
           distributionIds: [], userIds: [AppConstants.userId ?? ''], days: [],
-          occurrenceType: 'Once',
+          occurrenceType: 'Once', isSelfEvent: true,
         );
 
         // Call the event service to create the meeting
@@ -1173,7 +1173,7 @@ class _CreateEventState extends State<CreateEvent> {
           distributionIds: [],
           userIds: [AppConstants.userId ?? ''],
           days: [],
-            occurrenceType: 'Once',
+            occurrenceType: 'Once', isSelfEvent: true,
         );
 
         // Call the event service to update the meeting

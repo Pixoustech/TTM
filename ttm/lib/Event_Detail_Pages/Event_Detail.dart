@@ -141,8 +141,8 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     id: widget.id, // Pass the ID of the meeting
                     userId: AppConstants.userId ?? '',
                     eventName: widget.title,
-                    startDate: widget.fromDate,
-                    endDate: widget.toDate,
+                    startDate: formatDate1(widget.fromDate),
+                    endDate: formatDate1(widget.toDate),
                     fromTime: widget.fromTime,
                     toTime: widget.toTime,
                     priority: widget.priority,
@@ -159,7 +159,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                     city: null, // Set city if available
                     distributionIds: [], userIds: [AppConstants.userId ?? ''],
                     days: [],
-                      occurrenceType: 'Once',
+                      occurrenceType: 'Once', isSelfEvent: true,
                   );
 
                   Navigator.push(
