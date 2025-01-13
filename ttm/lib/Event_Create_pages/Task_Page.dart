@@ -543,7 +543,13 @@ class _CreateEventState extends State<CreateEvent> {
       await _selectTime(timeController);
     }
   }
-
+  void _pickFile() async {
+    await PermissionUtils.pickFile(context, (fileName) {
+      setState(() {
+        _selectedFileName = fileName;
+      });
+    });
+  }
   Future<void> _selectTime(TextEditingController controller) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -953,22 +959,7 @@ class _CreateEventState extends State<CreateEvent> {
     );
   }
 
-  Future<void> _pickFile() async {
-    var status = await Permission.storage.request();
 
-    if (status.isGranted) {
-      final result = await FilePicker.platform.pickFiles();
-      if (result != null) {
-        setState(() {
-          _selectedFileName = result.files.single.name;
-        });
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Storage permission denied')),
-      );
-    }
-  }
 
   Future<void> sendDataToApi() async {
     try {
@@ -1105,7 +1096,7 @@ class _CreateEventState extends State<CreateEvent> {
       if (_currentView == 'Task') {
         // Create the TaskModel instance
         TaskModel task = TaskModel(
-          id:widget.task!.id, //"widget.task!.id"
+          id: widget.task!.id, //"widget.task!.id"
           userId: AppConstants.userId ?? '',
           eventName: _taskNameController.text,
           dueDate: _dueDateController.text,
@@ -1173,7 +1164,7 @@ class _CreateEventState extends State<CreateEvent> {
           distributionIds: [],
           userIds: [AppConstants.userId ?? ''],
           days: [],
-            occurrenceType: 'Once', isSelfEvent: true,
+          occurrenceType: 'Once', isSelfEvent: true,
         );
 
         // Call the event service to update the meeting

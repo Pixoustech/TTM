@@ -752,20 +752,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
   }
 
   void _pickFile() async {
-    var status = await Permission.storage.request();
-    if (status.isGranted) {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'], // Only allow PDF files
-      );
-      if (result != null) {
-        setState(() {
-          selectedPdfFiles.addAll(
-              result.paths.where((path) => path != null).map((path) => path!));
-        });
-      }
-    } else {
-      print("Storage permission denied");
-    }
+    await PermissionUtils.pickFile(context, (fileName) {
+      setState(() {
+        selectedPdfFiles.add(fileName);
+      });
+    });
   }
 }

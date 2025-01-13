@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -23,7 +24,6 @@ class AppColors {
   static const Color concolor = Color(0xFF7E1416);
   static const Color backwhite = Color(0xFFFFFFFF);
 }
-
 
 class AppApi {
   static const String baseUrl = "http://ttm.dev.pixous.info/api";
@@ -80,7 +80,7 @@ class AppApi {
     if (AppConstants.navigatorKey.currentState != null) {
       AppConstants.navigatorKey.currentState!.pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => LoginPage()),
-            (Route<dynamic> route) => false,
+        (Route<dynamic> route) => false,
       );
     }
 
@@ -103,7 +103,8 @@ class AppApi {
   static Future<void> updateToken(String token) async {
     authToken = token;
     await AppConstants._prefs?.setString('userToken', token);
-    dio.options.headers['Authorization'] = authToken; // Update the header with the new token
+    dio.options.headers['Authorization'] =
+        authToken; // Update the header with the new token
   }
 
   // Print the current token for debugging
@@ -118,7 +119,8 @@ class googlemapkey {
 
 class EventUtils {
   // Fetch address suggestions
-  static Future<List<String>> fetchAddressSuggestions(String input, String apiKey) async {
+  static Future<List<String>> fetchAddressSuggestions(
+      String input, String apiKey) async {
     final String url =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$input&key=$apiKey';
 
@@ -166,8 +168,10 @@ class AppConstants {
   static const String _userTokenKey = 'userToken';
 
   // Navigation and Messenger Keys
-  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+  static final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+      GlobalKey<ScaffoldMessengerState>();
 
   // Initialize SharedPreferences
   static Future<void> initialize() async {
@@ -201,7 +205,8 @@ class AppConstants {
 }
 
 class DialogUtils {
-  static void showSuccessDialog(BuildContext context, String message, {VoidCallback? onOk}) {
+  static void showSuccessDialog(BuildContext context, String message,
+      {VoidCallback? onOk}) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -266,6 +271,7 @@ String formatDate(String dateString) {
     return "Invalid Date";
   }
 }
+
 String formatDate1(String dateString) {
   // Check if the dateString is already in the correct format
   try {
@@ -280,6 +286,7 @@ String formatDate1(String dateString) {
     return "Invalid Date"; // Handle invalid date format
   }
 }
+
 class LocationRequest {
   // Request location permission
   static Future<LocationPermission> requestLocationPermission() async {
@@ -292,26 +299,28 @@ class LocationRequest {
 
   // Get the current location
   static Future<Position> getCurrentLocation() async {
-    return await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    return await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
   }
 }
 
 class PermissionUtils {
   static final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+      FlutterLocalNotificationsPlugin();
 
   // Method to request notification permission
   static Future<bool> requestNotificationPermission() async {
     if (Platform.isAndroid) {
       // Handle Android platform using the local notifications plugin
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
 
       final bool? grantedNotificationPermission =
-      await androidImplementation?.requestNotificationsPermission();
+          await androidImplementation?.requestNotificationsPermission();
 
-      return grantedNotificationPermission ?? false; // Return true if granted, false otherwise
+      return grantedNotificationPermission ??
+          false; // Return true if granted, false otherwise
     } else if (Platform.isIOS) {
       // For iOS, use the permission_handler package to request notification permission
       var status = await requestNotificationPermissions();
@@ -338,5 +347,46 @@ class PermissionUtils {
     return status;
   }
 
+  static Future<void> pickFile(
+      BuildContext context, Function(String) onFilePicked) async {
+    var status = await Permission.manageExternalStorage.request();
+    if (status.isGranted) {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+      if (result != null && result.files.isNotEmpty) {
+        final fileName = result.files.single.name;
+        if (fileName.endsWith('.pdf')) {
+          onFilePicked(fileName);
+          print("Selected file: $fileName");
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Please select a PDF file.')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('No file selected')),
+        );
+      }
+    } else if (status.isDenied) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Storage permission denied')),
+      );
+    } else if (status.isPermanentlyDenied) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Storage permission permanently denied. Please enable it in app settings.'),
+          action: SnackBarAction(
+            label: 'Settings',
+            onPressed: () {
+              openAppSettings();
+            },
+          ),
+        ),
+      );
+    }
+  }
 }
-
