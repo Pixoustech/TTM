@@ -92,7 +92,7 @@ class ProfileModel {
       roleId: json['roleId'] ?? '',
       userGroup: json['userGroup'] ?? '',
       branchId: json['branchId'] ?? '',
-      profileImageId: json['profileImageId'] ?? '', // Corrected typo here
+      profileImageId: json['pofileImageId'] ?? '', // Corrected typo here
       divisionId: json['divisionId'] ?? '',
       districtId: json['districtId'] ?? '',
       userName: json['userName'] ?? '',
@@ -131,13 +131,13 @@ class ProfileModel {
       'roleId': roleId,
       'userGroup': userGroup,
       'branchId': branchId,
-      'profileImageId': profileImageId,
+      'pofileImageId': profileImageId,
       'divisionId': divisionId,
       'districtId': districtId,
       'userName': userName,
       'roleName': roleName,
       'createdBy': createdBy,
-      'createdByUser  Name': createdByUserName, // Corrected typo here
+      'createdByUserName': createdByUserName, // Corrected typo here
       'createdDate': createdDate,
       'modifiedBy': modifiedBy,
       'modifiedByUserName': modifiedByUserName, // Corrected typo here
@@ -156,15 +156,21 @@ class ProfileModel {
 }
 
 class GenderOption {
-  final String id;
+  final String text;
   final String value;
+  final bool selected;
 
-  GenderOption({required this.id, required this.value});
+  GenderOption({
+    required this.text,
+    required this.value,
+    required this.selected,
+  });
 
   factory GenderOption.fromJson(Map<String, dynamic> json) {
     return GenderOption(
-      id: json['id'],
-      value: json['value'],
+      text: json['text'] ?? '', // Provide a default value for null
+      value: json['value'] ?? '', // Provide a default value for null
+      selected: json['selected'] ?? false, // Provide a default value for null
     );
   }
 }

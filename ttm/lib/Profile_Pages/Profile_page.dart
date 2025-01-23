@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:ttm/Profile_Pages/Service.dart';
@@ -22,12 +25,12 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _notificationsEnabled = false; // Track Notifications toggle state
   final FlutterSecureStorage secureStorage = FlutterSecureStorage();
   ProfileModel? fetchedProfile; // Store the fetched profile
-
+  XFile? _imageFile; // Variable to hold the selected image
   @override
   void initState() {
     super.initState();
     _loadPreferences(); // Load preferences when the profile page is initialized// Fetch user profile data on initialization
-
+    _fetchUserProfile();
   }
 
   Future<void> _loadPreferences() async {
@@ -37,6 +40,25 @@ class _ProfilePageState extends State<ProfilePage> {
       _locationEnabled = prefs.getBool('locationEnabled') ?? false; // Load Location preference
       _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? false; // Load Notifications preference
     });
+  }
+
+  Future<void> _fetchUserProfile() async {
+    final userService = ApiService();
+    try {
+      final fetchedProfile = await userService.fetchUserProfile(AppConstants.userId ?? '');
+
+      // Ensure the fetched data is not null or empty before updating the UI
+      setState(() {
+        if (fetchedProfile != null && fetchedProfile.profileImageId.isNotEmpty) {
+          // Update the profile image if available
+          _imageFile = XFile('http://ttm.dev.pixous.info/images/${fetchedProfile.profileImageId}');
+        }
+      });
+    } catch (e) {
+      // Handle any exceptions (e.g., network error)
+      print('Error fetching user profile: $e');
+      // Optionally, show a message to the user or log the error
+    }
   }
 
   @override
@@ -96,6 +118,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+
   Widget _buildUserProfile() {
     return Column(
       children: [
@@ -129,15 +152,21 @@ class _ProfilePageState extends State<ProfilePage> {
             Container(
               padding: EdgeInsets.all(9),
               child: CircleAvatar(
-                radius: 45,
+                radius: 70,
                 backgroundColor: Colors.grey[200],
-                child: Icon(
+                backgroundImage: _imageFile != null && _imageFile!.path.startsWith('http')
+                    ? NetworkImage(_imageFile!.path) as ImageProvider
+                    : null,
+                child: (_imageFile == null || !_imageFile!.path.startsWith('http'))
+                    ? Icon(
                   Icons.person,
                   size: 50,
                   color: Colors.grey,
-                ),
+                )
+                    : null,
               ),
             ),
+
           ],
         ),
         SizedBox(height: 10),
@@ -158,19 +187,28 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildMyProfileBox(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        // Navigate to MyProfilePage and wait for the result
+        final updatedProfile = await Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => MyProfilePage()), // Navigate to My Profile Page
         );
+
+        // If updatedProfile is not null, update the UI
+        if (updatedProfile != null) {
+          setState(() {
+            fetchedProfile = updatedProfile; // Update the fetched profile
+            // Optionally, you can also update the image if needed
+          });
+        }
       },
       child: _buildProfileBox(
         context,
         Icons.person,
-  'My Profile',
-  ),
-  );
-}
+        'My Profile',
+      ),
+    );
+  }
 
   Widget _buildChangePassBox(BuildContext context) {
     return GestureDetector(

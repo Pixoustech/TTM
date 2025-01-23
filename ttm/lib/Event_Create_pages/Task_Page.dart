@@ -274,7 +274,7 @@ class _CreateEventState extends State<CreateEvent> {
         if (_currentView == 'Task') ...[
           _buildSimpleTextField('Task Name', _taskNameController),
           const SizedBox(height: 12),
-          _buildTextFieldWithCalendar('Due Date', _dueDateController),
+          _buildTextFieldWithCalendar('Due Date', _dueDateController, shouldOpenTimePicker: false), // No time picker
           const SizedBox(height: 12),
           _buildTextField('Location', _locationController, true),
         ] else if (_currentView == 'Meeting') ...[
@@ -283,14 +283,11 @@ class _CreateEventState extends State<CreateEvent> {
           Row(
             children: [
               Expanded(
-                child: _buildTextFieldWithCalendar(
-                    'From Date', _fromDateController,
-                    isFromDate: true),
+                child: _buildTextFieldWithCalendar('From Date', _fromDateController, isFromDate: true, shouldOpenTimePicker: true), // Open time picker
               ),
               const SizedBox(width: 8),
               Expanded(
-                child:
-                    _buildTextFieldWithTime('From Time', _fromTimeController),
+                child: _buildTextFieldWithTime('From Time', _fromTimeController),
               ),
             ],
           ),
@@ -298,8 +295,7 @@ class _CreateEventState extends State<CreateEvent> {
           Row(
             children: [
               Expanded(
-                child: _buildTextFieldWithCalendar('To Date', _toDateController,
-                    isToDate: true),
+                child: _buildTextFieldWithCalendar('To Date', _toDateController, isToDate: true, shouldOpenTimePicker: true), // Open time picker
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -376,24 +372,29 @@ class _CreateEventState extends State<CreateEvent> {
                   const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: hasIcon
                   ? IconButton(
-                      icon: const Icon(Icons.location_on),
-                      onPressed: () async {
-                        var status = await Permission.location.request();
-                        if (status.isGranted) {
-                          final LatLng? selectedLocation =
-                              await EventUtils.selectLocation(context);
-                          if (selectedLocation != null) {
-                            _locationController.text =
-                                '${selectedLocation.latitude}, ${selectedLocation.longitude}';
-                          }
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('Location permission denied')),
-                          );
-                        }
-                      },
-                    )
+                icon: const Icon(Icons.location_on),
+                onPressed: () async {
+                  var status = await Permission.location.request();
+                  if (status.isGranted) {
+                    final LatLng? selectedLocation =
+                    await EventUtils.selectLocation(context);
+                    if (selectedLocation != null) {
+                      _locationController.text =
+                      '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+                    }
+                  }
+                  else if (status.isPermanentlyDenied) {
+                    // Show a dialog to inform the user about the permanently denied permission
+                    _showPermissionPermanentlyDeniedDialog();
+                  }else if (status.isDenied) {
+                    _showPermissionPermanentlyDeniedDialog();
+                    // Show a snackbar if permission is denied
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Location permission denied')),
+                    );
+                  }
+                },
+              )
                   : null,
             ),
             onChanged: (value) {
@@ -435,10 +436,36 @@ class _CreateEventState extends State<CreateEvent> {
       ),
     );
   }
+  void _showPermissionPermanentlyDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Location Permission Permanently Denied'),
+          content: Text('You need to enable location permission in the app settings.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                openAppSettings(); // Open app settings
+              },
+              child: Text('Open Settings'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Widget _buildTextFieldWithCalendar(
       String label, TextEditingController controller,
-      {bool isFromDate = false, bool isToDate = false}) {
+      {bool isFromDate = false, bool isToDate = false, bool shouldOpenTimePicker = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -464,19 +491,21 @@ class _CreateEventState extends State<CreateEvent> {
                 borderSide: BorderSide(color: AppColors.concolor, width: 2.0),
               ),
               contentPadding:
-                  const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
+              const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
               suffixIcon: IconButton(
                 icon: const Icon(Icons.calendar_today),
                 onPressed: () {
                   _selectDateAndTime(controller,
-                      isFromDate ? _fromTimeController : _toTimeController);
+                      isFromDate ? _fromTimeController : _toTimeController,
+                      shouldOpenTimePicker: shouldOpenTimePicker);
                 },
               ),
             ),
             readOnly: true,
             onTap: () {
               _selectDateAndTime(controller,
-                  isFromDate ? _fromTimeController : _toTimeController);
+                  isFromDate ? _fromTimeController : _toTimeController,
+                  shouldOpenTimePicker: shouldOpenTimePicker);
             },
           ),
         ],
@@ -526,7 +555,7 @@ class _CreateEventState extends State<CreateEvent> {
   }
 
   Future<void> _selectDateAndTime(TextEditingController dateController,
-      TextEditingController timeController) async {
+      TextEditingController timeController, {bool shouldOpenTimePicker = false}) async {
     // Select the date
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -539,8 +568,10 @@ class _CreateEventState extends State<CreateEvent> {
       // Set the date in the controller
       dateController.text = DateFormat('yyyy-MM-dd').format(pickedDate);
 
-      // Automatically open the time picker after selecting the date
-      await _selectTime(timeController);
+      // Automatically open the time picker if specified
+      if (shouldOpenTimePicker) {
+        await _selectTime(timeController);
+      }
     }
   }
   void _pickFile() async {

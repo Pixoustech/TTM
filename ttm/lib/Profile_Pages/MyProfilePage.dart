@@ -10,12 +10,15 @@ import '../Comman_pages/Constant.dart';
 import 'Profile_model.dart';
 import 'package:http/http.dart' as http;
 
+import 'Profile_page.dart';
+
 class MyProfilePage extends StatefulWidget {
   @override
   _MyProfilePageState createState() => _MyProfilePageState();
 }
 
 class _MyProfilePageState extends State<MyProfilePage> {
+  bool isLoading = true; // Variable to track if data is still loading
   bool isEditing = false;
   XFile? _imageFile; // Variable to hold the selected image
   ProfileModel? profile; // Variable to hold the fetched profile data
@@ -69,6 +72,12 @@ class _MyProfilePageState extends State<MyProfilePage> {
           cityController.text = fetchedProfile.city;
 genderController.text=fetchedProfile.gender;
 
+          if (fetchedProfile.profileImageId.isNotEmpty) {
+            _imageFile = XFile('http://ttm.dev.pixous.info/images/${fetchedProfile.profileImageId}');
+          }
+          setState(() {
+            isLoading = false;
+          });
         });
       } else {
         print('Profile is null');
@@ -77,24 +86,17 @@ genderController.text=fetchedProfile.gender;
       print('Error in _fetchUserProfile: $e');
     }
   }
+
   Future<void> _fetchGenderOptions() async {
     try {
-      final response = await AppApi.dio.get(
-        '/Settings/Configuration_Get',
-        queryParameters: {
-          'ConfigurationId': '',
-          'CategoryId': '0e686716-ac1a-11ef-9ec1-fa163ea6a5c4',
-          'ParentConfigurationId': '',
-          'IsActive': 'true',
-          'CategoryCode': '',
-        },
-      );
+      final response = await AppApi.dio.get('/Settings/User_Form_Get');
 
       if (response.statusCode == 200) {
         final data = response.data; // Use the response data directly
         if (data['status'] == 'SUCCESS') {
           setState(() {
-            genderOptions = (data['data'] as List)
+            // Extract genderList from the nested data object
+            genderOptions = (data['data']['genderList'] as List)
                 .map((item) => GenderOption.fromJson(item))
                 .toList();
           });
@@ -106,6 +108,8 @@ genderController.text=fetchedProfile.gender;
       print('Error fetching gender options: $e');
     }
   }
+
+
   Future<void> _requestPermissions() async {
     final status = await Permission.storage.status;
     if (!status.isGranted) {
@@ -204,61 +208,146 @@ genderController.text=fetchedProfile.gender;
   }
 
   void _updateProfile() async {
-    final selectedGender = genderOptions.firstWhere((option) => option.value == genderController.text);
-    // Gather data from text fields
-    final updatedProfileData = {
-      'userId': AppConstants.userId ?? '', // Use the user ID from your constants
-      'firstName': firstNameController.text,
-      'lastName': lastNameController.text,
-      'email': emailController.text,
-      'mobile': mobileController.text,
-      'isActive': true, // Assuming the user is active
-      'roleId': roleIdController.text, // Replace with actual role ID if available
-      'divisionId': divisionIdController.text, // Replace with actual division ID if available
-      'branchId': branchIdController.text, // Replace with actual branch ID if available
-      'userGroup': userGroupController.text, // Replace with actual user group if available
-      'dob': dobController.text, // Ensure this is in the correct format
-      'districtId': districtIdController.text, // Replace with actual district ID if available
-      'genderId': selectedGender.id,
-      'countryId': countryIdController.text, // Replace with actual country ID if available
-      'stateId': stateIdController.text, // Replace with actual state ID if available
-      'city': cityController.text, // Assuming city is the same as district
-      'pincode': zipCodeController.text, // Assuming zip code is the same as pincode
-      'address': cityController.text, // Replace with actual address if available
-      'password': passwordController.text, // Replace with actual password if needed
-      'userName': usernameController.text, // Replace with actual username if available
-    };
-// Make the POST request using Dio
-    final response = await AppApi.dio.post(
-      '/Settings/User_SaveUpdate', // Relative path for the endpoint
-      data: updatedProfileData,
-    );
+    try {
+      // Check if `genderOptions` is populated and get the selected gender
+      final selectedGender = genderOptions.isNotEmpty
+          ? genderOptions.firstWhere(
+            (option) => option.value == genderController.text,
+        orElse: () => genderOptions[0],
+      )
+          : null;
 
-    if (response.statusCode == 200) {
-      // If the update is successful, show a success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.green,
-          content: const Text('Profile updated successfully!'),
-          duration: const Duration(seconds: 2),
-        ),
+      if (selectedGender == null) {
+        // Show an error if no gender is selected
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red,
+            content: const Text('Please select a valid gender.'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        return;
+      }
+
+      // Gather data from text fields
+      final updatedProfileData = {
+        'userId': AppConstants.userId ?? '', // Use the user ID from your constants
+        'firstName': firstNameController.text.trim(),
+        'lastName': lastNameController.text.trim(),
+        'email': emailController.text.trim(),
+        'mobile': mobileController.text.trim(),
+        'isActive': true,
+        'roleId': roleIdController.text.trim(),
+        'divisionId': divisionIdController.text.trim(),
+        'branchId': branchIdController.text.trim(),
+        'userGroup': userGroupController.text.trim(),
+        'dob': dobController.text.trim(),
+        'districtId': districtIdController.text.trim(),
+        'genderId': selectedGender.value,
+        'countryId': countryIdController.text.trim(),
+        'stateId': stateIdController.text.trim(),
+        'city': cityController.text.trim(),
+        'pincode': zipCodeController.text.trim(),
+        'address': cityController.text.trim(),
+        'password': passwordController.text.trim(),
+        'userName': usernameController.text.trim(),
+      };
+
+      // Make the POST request using Dio
+      final response = await AppApi.dio.post(
+        '/Settings/User_SaveUpdate', // Relative path for the endpoint
+        data: updatedProfileData,
       );
 
-      // Optionally, you can navigate back after a delay
-      Future.delayed(const Duration(seconds: 2), () {
-        Navigator.pop(context); // Pop the profile page
-      });
-    } else {
-      // If the update fails, show an error message
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: const Text('Failed to update profile. Please try again.'),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      if (response.statusCode == 200) {
+        // Success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: const Text('Profile updated successfully!'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        // Upload the profile image if it exists
+        if (_imageFile != null) {
+          await _uploadProfileImage(_imageFile!);
+        }
+
+        await _fetchUserProfile(); // Refresh the profile data
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => ProfilePage()), // Navigate to ProfilePage
+        );
+      } else {
+        // Handle API failure
+        _showErrorSnackBar('Failed to update profile. Please try again.');
+      }
+    } catch (e) {
+      print('Error updating profile: $e');
+      _showErrorSnackBar('An unexpected error occurred. Please try again.');
     }
   }
+
+  Future<void> _uploadProfileImage(XFile imageFile) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('http://ttm.dev.pixous.info/api/Settings/User_UploadProfile'),
+      );
+
+      // Add the userId and any other required fields to the request
+      request.fields['UserId'] = AppConstants.userId ?? ''; // Ensure this is the correct field name
+
+      request.files.add(await http.MultipartFile.fromPath(
+        'File', // Ensure this matches the expected field name in the API
+        imageFile.path,
+      ));
+
+      // Send the request
+      var response = await request.send();
+
+      // Dismiss any previous SnackBar before showing a new one
+      ScaffoldMessenger.of(context).clearSnackBars();
+
+      if (response.statusCode == 200) {
+        // Success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: const Text('Profile image uploaded successfully!'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        // Handle upload failure
+        print('Failed to upload profile image: ${response.statusCode}');
+        _showErrorSnackBar('Failed to upload profile image. Please try again.');
+      }
+    } catch (e) {
+      print('Error uploading profile image: $e');
+      _showErrorSnackBar('Error uploading profile image. Please try again.');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    // Dismiss any previous SnackBar before showing a new one
+    ScaffoldMessenger.of(context).clearSnackBars();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.red,
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -316,14 +405,20 @@ genderController.text=fetchedProfile.gender;
                       Container(
                         padding: EdgeInsets.all(9),
                         child: CircleAvatar(
-                          radius: 45,
+                          radius: 70,
                           backgroundColor: Colors.grey[200],
-                          backgroundImage: _imageFile != null ? FileImage(File(_imageFile!.path)) : null,
-                          child: _imageFile == null ? Icon(
+                          backgroundImage: _imageFile != null
+                              ? (_imageFile!.path.startsWith('http') // Check if the path is a URL
+                              ? NetworkImage(_imageFile!.path) // Use NetworkImage for URLs
+                              : FileImage(File(_imageFile!.path))) // Use FileImage for local files
+                              : null,
+                          child: _imageFile == null
+                              ? Icon(
                             Icons.person,
                             size: 50,
                             color: Colors.grey,
-                          ) : null,
+                          )
+                              : null,
                         ),
                       ),
                       if (isEditing)
@@ -383,10 +478,10 @@ genderController.text=fetchedProfile.gender;
               ],
             ),
             // Pencil Icon
-            if (!isEditing) // Show pencil icon only when not editing
+            if (!isEditing && !isLoading)
               Positioned(
-                right: 2 , // Distance from the right edge
-                top: 2, // Distance from the top edge
+                right: 2,
+                top: 2,
                 child: GestureDetector(
                   onTap: () {
                     setState(() {
@@ -403,11 +498,12 @@ genderController.text=fetchedProfile.gender;
                     child: const Icon(
                       Icons.edit,
                       color: AppColors.concolor,
-                      size: 30, // Size of the pencil icon
+                      size: 30,
                     ),
                   ),
                 ),
               ),
+
           ],
         ),
       ),
@@ -498,11 +594,16 @@ genderController.text=fetchedProfile.gender;
               ),
             ),
             DropdownButtonFormField<GenderOption>(
-              value: genderOptions.firstWhere((option) => option.value == genderController.text, orElse: () => genderOptions[0]),
+              value: genderOptions.isNotEmpty && genderController.text.isNotEmpty
+                  ? genderOptions.firstWhere(
+                    (option) => option.value == genderController.text,
+                orElse: () => genderOptions[0],
+              )
+                  : null, // Set to null if genderOptions is empty
               items: genderOptions.map((GenderOption option) {
                 return DropdownMenuItem<GenderOption>(
                   value: option,
-                  child: Text(option.value),
+                  child: Text(option.text),
                 );
               }).toList(),
               onChanged: (GenderOption? newValue) {
@@ -510,7 +611,6 @@ genderController.text=fetchedProfile.gender;
                   genderController.text = newValue?.value ?? '';
                 });
               },
-
               decoration: InputDecoration(
                 contentPadding: const EdgeInsets.symmetric(
                   vertical: 10.0,
@@ -522,13 +622,14 @@ genderController.text=fetchedProfile.gender;
                 focusedBorder: const OutlineInputBorder(
                   borderSide: BorderSide(color: AppColors.concolor),
                 ),
-                hintText: 'Enter your $label',
+                hintText: 'Select your $label',
               ),
             ),
           ],
         ),
       );
-    } else {
+    }
+    else {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(

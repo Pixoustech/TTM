@@ -4,11 +4,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ttm/Comman_pages/Constant.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../Event_Detail_Pages/Event_Detail.dart';
 import '../Comman_pages/Widgets_page.dart';
+import '../Profile_Pages/Service.dart';
 import 'Home_page_Widgets.dart';
 import 'Service.dart';
 import 'model.dart';
@@ -57,7 +59,7 @@ class _HomePageState extends State<HomePage> {
   int inProgressCount = 0;
   int completedCount = 0;
   int overdueCount = 0;
-
+  XFile? _imageFile; // Variable to hold the selected image
   @override
   void initState() {
     super.initState();
@@ -65,11 +67,30 @@ class _HomePageState extends State<HomePage> {
     _dataService = DataService(userId);
     _fetchData('today'); // Fetch today's data on page load
     _fetchData1();
+    _fetchUserProfile();
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+  Future<void> _fetchUserProfile() async {
+    final userService = ApiService();
+    try {
+      final fetchedProfile = await userService.fetchUserProfile(AppConstants.userId ?? '');
+
+      // Ensure the fetched data is not null or empty before updating the UI
+      setState(() {
+        if (fetchedProfile != null && fetchedProfile.profileImageId.isNotEmpty) {
+          // Update the profile image if available
+          _imageFile = XFile('http://ttm.dev.pixous.info/images/${fetchedProfile.profileImageId}');
+        }
+      });
+    } catch (e) {
+      // Handle any exceptions (e.g., network error)
+      print('Error fetching user profile: $e');
+      // Optionally, show a message to the user or log the error
+    }
   }
 
   void _toggleCheckInOut() async {
@@ -85,11 +106,21 @@ class _HomePageState extends State<HomePage> {
         if (buttonText == "Check In") {
           // Handle check-in logic
           print("User  checked in at: ${position.latitude}, ${position.longitude}");
-          // Send this location to your server or handle it as needed
+
+          // Allow user to take a picture
+          final ImagePicker _picker = ImagePicker();
+          XFile? image = await _picker.pickImage(source: ImageSource.camera);
+
+          if (image != null) {
+            // Handle the image (e.g., upload it to the server)
+            print("Image taken: ${image.path}");
+            // You can upload the image to your server here
+          } else {
+            print("No image selected.");
+          }
         } else {
           // Handle check-out logic
           print("User  checked out at: ${position.latitude}, ${position.longitude}");
-          // Send this location to your server or handle it as needed
         }
 
         // Toggle the button text
@@ -258,8 +289,12 @@ class _HomePageState extends State<HomePage> {
                               color: Colors.white,
                             ),
                             child: PopupMenuButton<String>(
-                              icon: Icon(Icons.account_circle,
-                                  size: 40, color: AppColors.concolor),
+                              icon: _imageFile != null
+                                  ? CircleAvatar(
+                                backgroundImage: NetworkImage(_imageFile!.path),
+                                radius: 20, // Adjust the size to match the icon size
+                              )
+                                  : Icon(Icons.account_circle, size: 40, color: AppColors.concolor),
                               onSelected: (value) =>
                                   onMenuItemSelected(value, context),
                               itemBuilder: (BuildContext context) => [

@@ -1,8 +1,80 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:ttm/Comman_pages/Constant.dart';
+
+import '../Comman_pages/Constant.dart';
+
+class EventData {
+  final String id;
+  final String userId;
+  final String eventId;
+  final String eventName;
+  final String eventDate; // Date without time
+  final String eventDateFromTime; // Date with time
+  final String eventDateToTime; // Date with time
+  final String fromTime;
+  final String toTime;
+  final String venue;
+  final String location;
+  final String priority;
+  final String description;
+  final String eventType;
+  final String eventMode;
+  final String statusId;
+  final bool isSelfEvent;
+  final String createdBy;
+  final String createdByUserName;
+  final String createdDate;
+
+  EventData({
+    required this.id,
+    required this.userId,
+    required this.eventId,
+    required this.eventName,
+    required this.eventDate,
+    required this.eventDateFromTime,
+    required this.eventDateToTime,
+    required this.fromTime,
+    required this.toTime,
+    required this.venue,
+    required this.location,
+    required this.priority,
+    required this.description,
+    required this.eventType,
+    required this.eventMode,
+    required this.statusId,
+    required this.isSelfEvent,
+    required this.createdBy,
+    required this.createdByUserName,
+    required this.createdDate,
+  });
+
+  factory EventData.fromJson(Map<String, dynamic> json) {
+    return EventData(
+      userId: json['userId'] ?? '',
+      eventId: json['eventId'] ?? '',
+      eventName: json['eventName'] ?? '',
+      eventDate: json['eventDate'] ?? '',
+      eventDateFromTime: json['eventDateFromTime'] ?? '',
+      eventDateToTime: json['eventDateToTime'] ?? '',
+      fromTime: json['fromTime'] ?? '',
+      toTime: json['toTime'] ?? '',
+      venue: json['venue'] ?? '',
+      location: json['location'] ?? '',
+      priority: json['priority'] ?? '',
+      description: json['description'] ?? '',
+      eventType: json['eventType'] ?? '',
+      eventMode: json['eventMode'] ?? '',
+      statusId: json['statusId'] ?? '',
+      isSelfEvent: json['isSelfEvent'] ?? false,
+      createdBy: json['createdBy'] ?? '',
+      createdByUserName: json['createdByUserName'] ?? '',
+      createdDate: json['createdDate'] ?? '', id: json['eventId'] ?? '',
+    );
+  }
+}
 
 class MapPage extends StatefulWidget {
   @override
@@ -15,6 +87,8 @@ class _MapPageState extends State<MapPage> {
   String _address = "Fetching address...";
   Marker? _selectedMarker;
   LatLng? _selectedMarkerPosition;
+  String _selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  List<EventData> _events = [];
 
   static const CameraPosition initialPosition = CameraPosition(
     target: LatLng(10.839396, 77.186328),
@@ -23,9 +97,9 @@ class _MapPageState extends State<MapPage> {
 
   final Set<Marker> _markers = {};
   final List<LatLng> _markerPositions = [
-    LatLng(10.839396, 77.186328), // Marker 1
-    LatLng(10.837048, 77.187851), // Marker 2
-    LatLng(11.023646, 76.968289), // Marker 3
+    LatLng(10.839396, 77.186328),
+    LatLng(10.837048, 77.187851),
+    LatLng(11.023646, 76.968289),
   ];
 
   @override
@@ -41,7 +115,6 @@ class _MapPageState extends State<MapPage> {
           markerId: MarkerId('marker$i'),
           position: _markerPositions[i],
           onTap: () => _onMarkerTapped(i),
-          // Removed the infoWindow property
         ),
       );
     }
@@ -54,7 +127,6 @@ class _MapPageState extends State<MapPage> {
       _selectedMarkerPosition = _markerPositions[index];
       _getAddressFromLatLng(_markerPositions[index]);
 
-      // Move the camera to the selected marker
       mapController.moveCamera(CameraUpdate.newLatLng(_markerPositions[index]));
     });
   }
@@ -76,12 +148,58 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate = DateFormat('yyyy-MM-dd').format(picked);
+        String month = DateFormat('MM').format(picked);
+        String year = DateFormat('yyyy').format(picked);
+        fetchEvents(month, year).then((events) {
+          setState(() {
+            _events = events; // Store fetched events
+          });
+        });
+      });
+    }
+  }
+
+  Future<List<EventData>> fetchEvents(String month, String year) async {
+    final String url = '/Event/User_Calender_Get?Month=$month&Year=$year';
+
+    try {
+      final response = await AppApi.dio.get(url);
+
+      if (response.statusCode == 200) {
+        List<dynamic> eventsJson = response.data['data']; // Adjust this line based on your actual response structure
+        return eventsJson.map((eventJson) => EventData.fromJson(eventJson)).toList();
+      } else {
+        throw Exception('Failed to load events: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching events: $e');
+    }
+  }
+
+
+  List<EventData> _filterTasks() {
+    return _events.where((event) => event.eventDate == _selectedDate).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Map'),
-      foregroundColor: Colors.white,
-      backgroundColor: AppColors.concolor),
+      appBar: AppBar(
+        title: const Text('Map'),
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blue,
+      ),
       body: Stack(
         children: [
           GoogleMap(
@@ -92,66 +210,121 @@ class _MapPageState extends State<MapPage> {
               _hideInfoWindow(); // Hide the info window when the camera moves
             },
           ),
-          if (_isInfoWindowVisible && _address != "Fetching address...")
-            Positioned(
-              left: MediaQuery.of(context).size.width / 2 - 90,
-              top: _calculateInfoWindowPosition().dy,
-              child: GestureDetector(
-                onTap: _hideInfoWindow,
-                child: _customInfoWindow(),
+          Positioned(
+            top: 16,
+            left: 16,
+            right: 16,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.5),
+                          spreadRadius: 1,
+                          blurRadius: 5,
+                          offset: Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      readOnly: true,
+                      onTap: () => _selectDate(context),
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                        border: InputBorder.none,
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.calendar_today),
+                          onPressed: () => _selectDate(context),
+                        ),
+                        hintText: _selectedDate,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 16,
+            left: 16,
+            right: 16,
+            child: SizedBox(
+              height: 220,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _filterTasks().length,
+                itemBuilder: (context, index) {
+                  final task = _filterTasks()[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 4.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        // Navigate to event detail page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EventDetailPage(
+                              title: task.eventName,
+                              description: task.description,
+                              priority: task.priority,
+                              status: task.eventType,
+                              date: task.eventDate,
+                              location: task.location,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        height: 120,
+                        width: 150,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.5),
+                              spreadRadius: 1,
+                              blurRadius: 5,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                task.eventName,
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                task.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 4),
+                              Text('Date: ${task.eventDate}'),
+                              Text('Location: ${task.location}'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
+          ),
         ],
       ),
-    );
-  }
-
-  Offset _calculateInfoWindowPosition() {
-    if (_selectedMarkerPosition == null) return Offset(0, 0);
-    double markerOffsetY = 100.0;
-    return Offset(MediaQuery.of(context).size.width / 2, MediaQuery.of(context).size.height / 2 - markerOffsetY);
-  }
-
-  Widget _customInfoWindow() {
-    return Container(
-      width: 118,
-      height: 100,
-      child: Card(
-        elevation: 5,
-        color: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('App Design Title', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 8), maxLines: 1, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 4),
-              _infoRow(Icons.date_range, 'Date: ${DateFormat('dd/MM/yyyy').format(DateTime.now())}'),
-              const SizedBox(height: 4),
-              _infoRow(Icons.access_time, 'Time: ${DateFormat('HH:mm:ss').format(DateTime.now())}'),
-              const SizedBox(height: 4),
-              _infoRow(Icons.location_on, 'Address: $_address'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _infoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 12),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 10),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 
@@ -159,5 +332,50 @@ class _MapPageState extends State<MapPage> {
     setState(() {
       _isInfoWindowVisible = false;
     });
+  }
+}
+
+// Dummy EventDetailPage for demonstration purposes
+class EventDetailPage extends StatelessWidget {
+  final String title;
+  final String description;
+  final String priority;
+  final String status;
+  final String date;
+  final String location;
+
+  EventDetailPage({
+    required this.title,
+    required this.description,
+    required this.priority,
+    required this.status,
+    required this.date,
+    required this.location,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(title),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Description: $description'),
+            SizedBox(height: 8),
+            Text('Priority: $priority'),
+            SizedBox(height: 8),
+            Text('Status: $status'),
+            SizedBox(height: 8),
+            Text('Date: $date'),
+            SizedBox(height: 8),
+            Text('Location: $location'),
+          ],
+        ),
+      ),
+    );
   }
 }
