@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:intl/intl.dart';
@@ -373,28 +374,27 @@ class _CreateEventState extends State<CreateEvent> {
               suffixIcon: hasIcon
                   ? IconButton(
                 icon: const Icon(Icons.location_on),
-                onPressed: () async {
-                  var status = await Permission.location.request();
-                  if (status.isGranted) {
-                    final LatLng? selectedLocation =
-                    await EventUtils.selectLocation(context);
-                    if (selectedLocation != null) {
-                      _locationController.text =
-                      '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+                  onPressed: () async {
+                    LocationPermission permission = await LocationRequest.requestLocationPermission();
+                    if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+                      final LatLng? selectedLocation = await EventUtils.selectLocation(context);
+                      if (selectedLocation != null) {
+                        _locationController.text = '${selectedLocation.latitude}, ${selectedLocation.longitude}';
+                      }
+                    } else if (permission == LocationPermission.denied) {
+                      // Show a snackbar if permission is denied
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Location permission denied')),
+                      );
+                    } else if (permission == LocationPermission.deniedForever) {
+                      // Show a dialog to inform the user about the permanently denied permission
+                      _showPermissionPermanentlyDeniedDialog();
                     }
-                  }
-                  else if (status.isPermanentlyDenied) {
-                    // Show a dialog to inform the user about the permanently denied permission
-                    _showPermissionPermanentlyDeniedDialog();
-                  }else if (status.isDenied) {
-                    _showPermissionPermanentlyDeniedDialog();
-                    // Show a snackbar if permission is denied
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Location permission denied')),
-                    );
-                  }
-                },
-              )
+                  },
+
+
+
+          )
                   : null,
             ),
             onChanged: (value) {

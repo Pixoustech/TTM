@@ -144,19 +144,13 @@ class EventUtils {
   }
 
   static Future<LatLng?> selectLocation(BuildContext context) async {
-    var status = await Permission.location.request();
-    if (status.isGranted) {
+
       final LatLng? selectedLocation = await Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => MapWithStreetViewPage()),
       );
       return selectedLocation;
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Location permission denied')),
-      );
-      return null;
-    }
+
   }
 }
 

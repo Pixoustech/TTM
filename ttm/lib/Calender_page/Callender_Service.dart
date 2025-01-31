@@ -102,6 +102,7 @@ class CalendarService {
   }
 
   Future<CalendarEventResponse?> fetchCalendarData(int month, int year) async {
+
     try {
       // Construct the full URL using the base URL and query parameters
       final String url = '/Event/User_Calender_Get?Month=$month&Year=$year';
@@ -121,6 +122,7 @@ class CalendarService {
         return null;
       }
     } catch (e) {
+
       print('Error: $e');
       return null;
     }

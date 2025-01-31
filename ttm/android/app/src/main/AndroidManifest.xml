@@ -24,7 +24,8 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"> <!-- Necessary for external storage access on Android 10 -->
-
+        android:usesCleartextTraffic="true"   <!-- Add this line -->
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"

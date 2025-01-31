@@ -33,9 +33,17 @@ Future<void> initializeNotifications() async {
   const AndroidInitializationSettings androidInitializationSettings =
   AndroidInitializationSettings('@mipmap/ic_launcher'); // Replace with your app icon
 
+  // iOS-specific initialization settings
+  const DarwinInitializationSettings darwinInitializationSettings = DarwinInitializationSettings(
+    requestAlertPermission: true, // Request permission to show alerts
+    requestBadgePermission: true, // Request permission to update app badge
+    requestSoundPermission: true, // Request permission to play sounds
+  );
+
   // Cross-platform initialization settings
   const InitializationSettings initializationSettings = InitializationSettings(
     android: androidInitializationSettings,
+    iOS: darwinInitializationSettings, // Use DarwinInitializationSettings for iOS
   );
 
   // Initialize the plugin with the settings

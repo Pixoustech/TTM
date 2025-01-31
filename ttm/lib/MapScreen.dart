@@ -97,7 +97,7 @@ class _MapWithStreetViewPageState extends State<MapWithStreetViewPage> {
             },
           ),
           // Add a button to toggle Street View
-          Positioned(
+ Positioned(
             bottom: 16,
             right: 16,
             child: FloatingActionButton(

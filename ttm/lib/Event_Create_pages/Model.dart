@@ -1,5 +1,3 @@
-// models/task_model.dart
-// models/task_model.dart
 
 class TaskModel {
   String id;
@@ -68,7 +66,7 @@ class TaskModel {
       distributionIds: List<String>.from(json['distributionIds'] ?? []), // Map distributionIds from JSON
       userIds: List<String>.from(json['userIds'] ?? []), // Map userIds from JSON
       days: List<String>.from(json['days'] ?? []), // Map days from JSON
-      occurrenceType: json['occurenceType'] ?? 'Once', // Map occurrenceType from JSON
+      occurrenceType: json['occurrenceType'] ?? 'Once', // Fixed typo in field name
     );
   }
 
@@ -94,12 +92,11 @@ class TaskModel {
       "distributionIds": distributionIds, // Include distributionIds in JSON
       "userIds": userIds, // Include userIds in JSON
       "days": days, // Include days in JSON
-    "occurenceType":occurrenceType,
+      "occurrenceType": occurrenceType, // Fixed typo in field name
     };
   }
 }
-// models/meeting_model.dart
-// models/meeting_model.dart
+
 class MeetingModel {
   String id;
   String userId;
