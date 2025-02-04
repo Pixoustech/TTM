@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:geocoding/geocoding.dart';
 
 import '../Comman_pages/Constant.dart';
+import '../Comman_pages/Navigation_page.dart';
 
 class EventData {
   final String id;
@@ -196,10 +197,26 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Map'),
+        title: Align(
+          alignment: Alignment.centerLeft, // Aligns text to the left
+          child: Text(
+            'Map',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back), // Back arrow
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => Navigation()),
+            );
+          },
+        ),
         foregroundColor: Colors.white,
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.concolor,
       ),
+
       body: Stack(
         children: [
           GoogleMap(

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../Comman_pages/Constant.dart';
+import '../Comman_pages/Dialog_Constant.dart';
 import '../Comman_pages/Navigation_page.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -1041,7 +1042,6 @@ class _CreateEventState extends State<CreateEvent> {
         bool success = await eventService.createTask(task);
 
         if (success) {
-          print('Task created successfully');
           DialogUtils.showSuccessDialog(context, 'Task created successfully!',
               onOk: () {
             Navigator.pushReplacement(

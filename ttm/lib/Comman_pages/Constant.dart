@@ -198,31 +198,7 @@ class AppConstants {
   }
 }
 
-class DialogUtils {
-  static void showSuccessDialog(BuildContext context, String message,
-      {VoidCallback? onOk}) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Success'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                if (onOk != null) {
-                  onOk(); // Call the callback if provided
-                }
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
+
 
 Color getStatusColor(String status) {
   if (status == "In-Progress") {
@@ -342,18 +318,26 @@ class PermissionUtils {
   }
 
   static Future<void> pickFile(
-      BuildContext context, Function(String) onFilePicked) async {
-    var status = await Permission.manageExternalStorage.request();
-    if (status.isGranted) {
+      BuildContext context, Function(String) onFilePicked) async
+  {
+    // Request permission to manage external storage
+    var status = await Permission.storage.request();
+
+    if (status.isGranted || await Permission.manageExternalStorage.request().isGranted ) {
+      // Permission granted, proceed to pick a file
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf'],
       );
+
       if (result != null && result.files.isNotEmpty) {
         final fileName = result.files.single.name;
+        final filePath = result.files.single.path;
+
+        // Check if the selected file is a PDF
         if (fileName.endsWith('.pdf')) {
-          onFilePicked(fileName);
-          print("Selected file: $fileName");
+          onFilePicked(filePath!); // Pass the file path to the callback
+          print("Selected file: $filePath");
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Please select a PDF file.')),
@@ -365,10 +349,12 @@ class PermissionUtils {
         );
       }
     } else if (status.isDenied) {
+      // Permission denied
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Storage permission denied')),
       );
     } else if (status.isPermanentlyDenied) {
+      // Permission permanently denied
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -376,7 +362,7 @@ class PermissionUtils {
           action: SnackBarAction(
             label: 'Settings',
             onPressed: () {
-              openAppSettings();
+              openAppSettings(); // Open app settings
             },
           ),
         ),

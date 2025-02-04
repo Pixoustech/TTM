@@ -248,14 +248,13 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // New Password Field
 // New Password Field
                   TextField(
                     controller: _newPasswordController,
                     focusNode: _newPasswordFocusNode,
                     decoration: InputDecoration(
-                      labelText: 'New Password',
-                      labelStyle: TextStyle(
+                      hintText: 'New Password',  // Hint text as the label inside initially
+                      hintStyle: TextStyle(
                         color: _getLabelColor(_newPasswordFocusNode, _newPasswordController),
                       ),
                       border: OutlineInputBorder(
@@ -268,6 +267,7 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                           width: 2.0,
                         ),
                       ),
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,  // Make the label float
                     ),
                     obscureText: true,
                   ),
@@ -278,8 +278,8 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                     controller: _confirmPasswordController,
                     focusNode: _confirmPasswordFocusNode,
                     decoration: InputDecoration(
-                      labelText: 'Confirm Password',
-                      labelStyle: TextStyle(
+                      hintText: 'Confirm Password',  // Hint text as the label inside initially
+                      hintStyle: TextStyle(
                         color: _getLabelColor(_confirmPasswordFocusNode, _confirmPasswordController),
                       ),
                       border: OutlineInputBorder(
@@ -292,9 +292,11 @@ class _CreateNewPasswordPageState extends State<CreateNewPasswordPage> {
                           width: 2.0,
                         ),
                       ),
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,  // Make the label float
                     ),
                     obscureText: true,
                   ),
+
 
                   const SizedBox(height: 20),
 
